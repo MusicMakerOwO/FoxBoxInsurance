@@ -4,9 +4,43 @@ type AnySelectMenuInteraction = UserSelectMenuInteraction | StringSelectMenuInte
 type AnyContextMenu = UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction;
 import ShardManager from './Utils/Sharding/ShardManager';
 import Collector from './Utils/Overrides/Collector';
+import TimedCache from './Utils/TimedCache';
 
 import Log from './Utils/Logs';
 import CachePool from './Utils/Caching/CachePool';
+
+export enum ExportFormats {
+	TEXT = 'txt',
+	JSON = 'json',
+	HTML = 'html',
+	CSV = 'csv'
+}
+
+export type ExportOptions = {
+	guildID: string;
+	channelID: string;
+	maxMessages: number;
+	format: ExportFormats;
+	timestamp: Date;
+	options: {
+		images: boolean; // Attachments, emojis, and stickers
+		integrity: boolean; // Check internal hashes to prevent tampering on the host
+		bots: boolean;
+		largeFiles: boolean; // Larger than 8MB - Depends on `attachments`
+	}
+}
+
+export type ExportResult = {
+	data: Buffer;
+	hash: string; // md5
+	counts: {
+		messages: number;
+		attachments: number;
+		emojis: number;
+		stickers: number;
+		embeds: number;
+	}
+}
 
 type AssetDimensions = {
 	width: number;
@@ -198,6 +232,7 @@ export interface MicroClient extends Client {
 	// Caching
 	messageCache: CachePool<BasicMessage>;
 	downloadQueue: [table: string, id: string, url: string][];
+	exportCache: TimedCache<string, ExportOptions>;
 }
 
 export interface MicroInteractionResponse extends InteractionReplyOptions {

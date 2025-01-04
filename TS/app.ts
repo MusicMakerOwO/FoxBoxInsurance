@@ -30,6 +30,7 @@ import SaveMessages from './Utils/Storage/SaveMessages';
 import DownloadAssets from './Utils/Storage/DownloadAssets';
 import Database from './Utils/Database';
 import CreateBackup, { BackupType } from './Utils/Storage/CreateBackup';
+import TimedCache from './Utils/TimedCache';
 
 const client = new Client({
 	... isFinite(shardID) ? { shards: [shardID, shardCount] } : {},
@@ -50,6 +51,7 @@ client.shards = new ShardManager(client, shardID, shardCount);// class will not 
 
 client.messageCache = new CachePool(3);
 client.downloadQueue = [];
+client.exportCache = new TimedCache(1000 * 60 * 10); // 10 minutes
 
 function ProcessMessages() {
 	// It's a little funky but CachePool.pool is a getter so JS will return a pointer
@@ -81,6 +83,8 @@ function CloseProgram() {
 
     clearInterval(TickInterval);
     client.destroy();
+
+	client.exportCache.stopCleanup();
 	
 	ProcessMessages();
     DownloadAssets(client.downloadQueue).then(() => {

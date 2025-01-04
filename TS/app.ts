@@ -162,8 +162,9 @@ if (isNaN(shardID)) {
 client.logs.info(`Logging in...`);
 client.login(client.config.TOKEN);
 client.on('ready', function () {
-	// @ts-ignore
-	client.logs.custom(`Logged in as ${client.user.tag}!`, 0x7946ff);
+	client.logs.custom(`Logged in as ${client.user!.tag}!`, 0x7946ff);
+
+	CreateBackups();
 
 	if (!process.send) {
 		FileWatch(client); // listener for hot loading

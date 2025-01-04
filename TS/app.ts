@@ -70,7 +70,7 @@ function ProcessMessages() {
 function CreateBackups() {
 	const currentHour = new Date().getHours();
 	for (const guild of client.guilds.cache.values()) {
-		if (BigInt(guild.id) % BigInt(currentHour) === 0n) {
+		if (BigInt(guild.id) % 24n === BigInt(currentHour)) {
 			CreateBackup(guild, client, BackupType.AUTOMATIC);
 		}
 	}

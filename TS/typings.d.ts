@@ -8,27 +8,7 @@ import TimedCache from './Utils/TimedCache';
 
 import Log from './Utils/Logs';
 import CachePool from './Utils/Caching/CachePool';
-
-export enum ExportFormats {
-	TEXT = 'txt',
-	JSON = 'json',
-	HTML = 'html',
-	CSV = 'csv'
-}
-
-export type ExportOptions = {
-	guildID: string;
-	channelID: string;
-	maxMessages: number;
-	format: ExportFormats;
-	timestamp: Date;
-	options: {
-		images: boolean; // Attachments, emojis, and stickers
-		integrity: boolean; // Check internal hashes to prevent tampering on the host
-		bots: boolean;
-		largeFiles: boolean; // Larger than 8MB - Depends on `attachments`
-	}
-}
+import { ExportOptions } from './Utils/Exports/Export';
 
 export type ExportResult = {
 	data: Buffer;
@@ -175,7 +155,7 @@ export interface File {
 
 	// Alias(es)
 	alias?: string | string[]; // gets converted to 'aliases' in the loader
-	aliases: string | string[];
+	aliases?: string | string[];
 }
 
 // Slash Commands, Autocomplete

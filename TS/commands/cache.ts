@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import { MicroClient, MicroInteraction } from "../typings";
+import { CommandFile, MicroClient, MicroInteraction } from "../typings";
 import Database from "../Utils/Database";
 
 import ProgressBar from "../Utils/ProgressBar";
@@ -55,4 +55,4 @@ ${JSON.stringify(counts, null, 2)}
 
 		await interaction.reply({ embeds: [embed] });
 	}
-}
+} as CommandFile;

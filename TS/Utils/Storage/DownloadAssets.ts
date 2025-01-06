@@ -25,6 +25,8 @@ for (const [table, folder] of Object.entries(LOOKUP_DATABASE_FOLDERS)) {
 	if (!fs.existsSync(folder)) fs.mkdirSync(folder);
 }
 
+const HUNDRED_MEGABYTES = 1024 * 1024 * 100;
+
 /*
 CREATE TABLE IF NOT EXISTS Assets (
 	asset_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,19 +90,11 @@ export default async function DownloadAssets(assetsPtr: [table: string, id: stri
 		}
 
 		// Now download the file
-		const data = await DownloadFile(url)
+		const data = await DownloadFile(url);
 		const hash = crypto.createHash('md5').update(data).digest('hex');
 		const ext = url.split('.').pop()!.split('?')[0];
-
-		const folder = LOOKUP_DATABASE_FOLDERS[table];
-
-		const filename = `${folder}/${hash}.${ext}`;
-		await fs.promises.writeFile(filename, data);
-
 		try {
 			QUERY_NewAsset.run(url, hash, assets[i][1], ext);
-
-			// Avoid downloading the same file multiple times
 			URL_CACHE.add(url);
 		} catch (error) {
 			console.error(`Failed to download asset: ${url}`);
@@ -108,10 +102,35 @@ export default async function DownloadAssets(assetsPtr: [table: string, id: stri
 			console.error('Hash:', hash);
 			console.error(error);
 		}
+
+		if (data.length > HUNDRED_MEGABYTES) {
+			console.log(`Skipping asset download: ${url} (${CleanSize(data.length)})`);
+			continue;
+		}
+
+		const folder = LOOKUP_DATABASE_FOLDERS[table];
+
+		const filename = `${folder}/${hash}.${ext}`;
+		try {
+			await fs.promises.writeFile(filename, data);
+		} catch (error) {
+			console.error(`Failed to write asset to disk: ${filename}`);
+			console.error(error);
+		}
 	}
 
 	const end = process.hrtime.bigint();
 	console.log(`Downloaded ${assets.length} assets in ${Number(end - start) / 1e9} seconds`);
+}
+
+const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+function CleanSize(bytes: number) {
+	let i = 0;
+	while (bytes >= 1024) {
+		bytes >>= 10;
+		i++;
+	}
+	return `${bytes} ${sizes[i]}`;
 }
 
 

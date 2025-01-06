@@ -69,7 +69,9 @@ function ProcessMessages() {
 
 function CreateBackups() {
 	const currentHour = new Date().getHours();
-	for (const guild of client.guilds.cache.values()) {
+	const guilds = Array.from(client.guilds.cache.values());
+	for (let i = 0; i < guilds.length; i++) {
+		const guild = guilds[i];
 		if (BigInt(guild.id) % 24n === BigInt(currentHour)) {
 			CreateBackup(guild, client, BackupType.AUTOMATIC);
 		}
@@ -141,8 +143,9 @@ for (let i = 0; i < modules.length; i++) {
 
 EventLoader(client);
 let ListenerCount = 0;
-for (const listeners of Object.values(client._events)) {
-	ListenerCount += listeners.length;
+const listeners = Object.values(client._events);
+for (let i = 0; i < listeners.length; i++) {
+	ListenerCount += listeners[i].length;
 }
 // DJS adds a default 'shardDisconnect' listener that we ignore
 client.logs.debug(`Loaded ${ListenerCount - 1} events`);

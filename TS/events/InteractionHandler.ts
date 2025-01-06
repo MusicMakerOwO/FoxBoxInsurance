@@ -66,7 +66,15 @@ module.exports = {
 	}
 }
 
-async function InteractionHandler(client: MicroClient, interaction: MicroInteraction, type: 'commands' | 'context' | 'buttons' | 'menus' | 'modals') {
+async function InteractionHandler(client: MicroClient, interaction: MicroInteraction, type: 'commands' | 'context' | 'buttons' | 'menus' | 'modals') : Promise<void> {
+
+	// Disable all commands in DMs
+	if (!interaction.guild) {
+		await interaction.reply({
+			content: 'This command cannot be used in DMs',
+			ephemeral: true
+		}).catch(() => { });
+	}
 
 	const args = 'customId' in interaction ? interaction.customId.split("_") : [];
 	// @ts-ignore

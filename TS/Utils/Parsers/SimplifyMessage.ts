@@ -137,8 +137,7 @@ export default function (message: Message) : BasicMessage {
 			id: message.channel.id,
 			name: message.channel.name,
 			type: message.channel.type,
-			// @ts-ignore
-			parentID: message.channel.parentID || null
+			parentID: message.channel.parentId
 		},
 		user: {
 			id: message.author.id,

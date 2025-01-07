@@ -81,11 +81,11 @@ database.pragma('synchronous = NORMAL');
 database.pragma('cache_size = 10000');
 database.pragma('temp_store = MEMORY');
 
-for (const query of DBQueries) {
+for (let i = 0; i < DBQueries.length; i++) {
 	try {
-		database.exec(query);
+		database.exec( DBQueries[i] );
 	} catch (error) {
-		console.error(query);
+		console.error( DBQueries[i] );
 		console.error(error);
 		process.exit(1);
 	}

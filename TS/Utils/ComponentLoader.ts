@@ -87,14 +87,14 @@ export default function (client: MicroClient, folder: 'commands' | 'context' | '
 					if (!data.name) throw 'No name property found';
 					if (!data.description) throw 'No description property found';
 					addComponent(client[folder], data.name, data);
-					for (const alias of data.aliases) {
+					for (const alias of data.aliases!) {
 						addComponent(client[folder], alias, data);
 					}
 					break;
 					// @ts-ignore
 				case 'commands':
 					data = data as CommandFile;
-					for (const alias of data.aliases) {
+					for (const alias of data.aliases!) {
 						addComponent(client[folder], alias, { ...data, data: { ...data.data, name: alias } });
 					}
 					// fallthrough to context since they share the same structure

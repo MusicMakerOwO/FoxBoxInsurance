@@ -146,6 +146,14 @@ CREATE TABLE IF NOT EXISTS Messages (
 	created_at DATETIME GENERATED ALWAYS AS ({{SNOWFLAKE_DATE}}) VIRTUAL
 );
 
+CREATE TABLE IF NOT EXISTS MessageEmojis (
+	message_id TEXT NOT NULL,
+	emoji_id TEXT NOT NULL,
+	PRIMARY KEY(message_id, emoji_id)
+);
+CREATE INDEX IF NOT EXISTS message_emojis_emoji_id ON MessageEmojis (emoji_id);
+CREATE INDEX IF NOT EXISTS message_emojis_message_id ON MessageEmojis (message_id);
+
 
 
 

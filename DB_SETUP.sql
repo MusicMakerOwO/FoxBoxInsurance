@@ -193,3 +193,32 @@ CREATE TABLE IF NOT EXISTS BackupChannelOverrides (
 );
 CREATE INDEX IF NOT EXISTS backup_channel_overrides_channel_id ON BackupChannelOverrides (channel_id);
 CREATE INDEX IF NOT EXISTS backup_channel_overrides_role_id ON BackupChannelOverrides (role_id);
+
+
+
+
+/*
+export interface ExportData {
+	data: Buffer;
+	filename: string; // Export-<channelName>.<format>
+	size: number; // In bytes
+	hash: string; // md5
+	exportID: string;
+}
+*/
+
+CREATE TABLE IF NOT EXISTS Exports (
+	id TEXT NOT NULL PRIMARY KEY,
+
+	guild_id TEXT NOT NULL,
+	channel_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+	
+	format TEXT NOT NULL,
+	filename TEXT NOT NULL,
+	size INTEGER NOT NULL,
+	hash TEXT NOT NULL,
+
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS exports_user_id ON Exports (user_id);

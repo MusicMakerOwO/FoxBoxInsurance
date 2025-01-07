@@ -6,14 +6,14 @@ import Log from '../Logs';
 // Assets will be downloaded at a later time in a separate part of the code
 // For now save to a cache with the asset, cache location, and ID
 const QUERY_InsertGuild = Database.prepare(`
-	INSERT INTO guilds (id, name)
+	INSERT INTO Guilds (id, name)
 	VALUES (?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		name = excluded.name
 `);
 
 const QUERY_InsertChannel = Database.prepare(`
-	INSERT INTO channels (id, guild_id, name, parent_id, type)
+	INSERT INTO Channels (id, guild_id, name, parent_id, type)
 	VALUES (?, ?, ?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		name = excluded.name,
@@ -21,28 +21,28 @@ const QUERY_InsertChannel = Database.prepare(`
 `);
 
 const QUERY_InsertUser = Database.prepare(`
-	INSERT INTO users (id, username, bot)
+	INSERT INTO Users (id, username, bot)
 	VALUES (?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		username = excluded.username
 `);
 
 const QUERY_InsertEmoji = Database.prepare(`
-	INSERT INTO emojis (id, name, animated)
+	INSERT INTO Emojis (id, name, animated)
 	VALUES (?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		name = excluded.name
 `);
 
 const QUERY_InsertSticker = Database.prepare(`
-	INSERT INTO stickers (id, name)
+	INSERT INTO Stickers (id, name)
 	VALUES (?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		name = excluded.name
 `);
 
 const QUERY_InsertMessage = Database.prepare(`
-	INSERT INTO messages (id, guild_id, channel_id, user_id, content, sticker_id)
+	INSERT INTO Messages (id, guild_id, channel_id, user_id, content, sticker_id)
 	VALUES (?, ?, ?, ?, ?, ?)
 	ON CONFLICT(id) DO NOTHING
 `);
@@ -58,15 +58,21 @@ const QUERY_InsertEmbedField = Database.prepare(`
 `);
 
 const QUERY_InsertMember = Database.prepare(`
-	INSERT INTO members (guild_id, user_id, joined_at)
+	INSERT INTO Members (guild_id, user_id, joined_at)
 	VALUES (?, ?, ?)
 	ON CONFLICT(guild_id, user_id) DO NOTHING
 `);
 
 const QUERY_InsertAttachment = Database.prepare(`
-	INSERT INTO attachments (id, name, message_id)
+	INSERT INTO Attachments (id, name, message_id)
 	VALUES (?, ?, ?)
 	ON CONFLICT(id) DO NOTHING
+`);
+
+const QUERY_InsertMessageEmoji = Database.prepare(`
+	INSERT INTO MessageEmojis (message_id, emoji_id)
+	VALUES (?, ?)
+	ON CONFLICT(message_id, emoji_id) DO NOTHING
 `);
 
 
@@ -80,7 +86,8 @@ const LINKED_TABLES = [
 
 const ASSET_LINKS : Statement[] = [];
 
-for (const table of LINKED_TABLES) {
+for (let i = 0; i < LINKED_TABLES.length; i++) {
+	const table = LINKED_TABLES[i];
 	if (!Database.tables.includes(table)) throw new Error(`Unknown table: ${table}`);
 	ASSET_LINKS.push( Database.prepare(`UPDATE ${table} SET asset_id = (SELECT asset_id FROM Assets WHERE ${table}.id = Assets.id) WHERE asset_id IS NULL`) );
 }
@@ -106,6 +113,8 @@ export default function (messages: BasicMessage[]) {
 
 	const embeds: Record<string, BasicEmbed> = {};
 
+	const messageEmojis = new Set<string>(); // messageID-emojiID
+
 	const members: Record<string, string> = {}; // guildID-userID : joinedAt
 
 	for (let i = messages.length - 1; i >= 0; i--) {
@@ -119,6 +128,7 @@ export default function (messages: BasicMessage[]) {
 
 		for (let i = 0; i < message.emojis.length; i++) {
 			emojis[message.emojis[i].id] ||= message.emojis[i];
+			messageEmojis.add(`${message.id}-${message.emojis[i].id}`);
 		}
 
 		for (let i = 0; i < message.attachments.length; i++) {
@@ -147,6 +157,7 @@ export default function (messages: BasicMessage[]) {
 	const attachmentList = Array.from(Object.values(attachments));
 	const stickerList = Array.from(Object.values(stickers));
 	const embedList = Array.from(Object.values(embeds));
+	const messageEmojiList = Array.from(messageEmojis);
 
 	// Map<guildID-userID, joinedAt> -> Array<{guildID, userID, joinedAt}>
 	const memberList = Object.entries(members).map(([key, value]) => {
@@ -223,6 +234,11 @@ export default function (messages: BasicMessage[]) {
 				const field = embed.fields[i];
 				QUERY_InsertEmbedField.run(embed.id, field.name, field.value, +!!field.inline);
 			}
+		}
+
+		for (let i = 0; i < messageEmojiList.length; i++) {
+			const [messageID, emojiID] = messageEmojiList[i].split('-');
+			QUERY_InsertMessageEmoji.run(messageID, emojiID);
 		}
 
 		Database.exec('COMMIT');

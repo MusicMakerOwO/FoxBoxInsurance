@@ -1,3 +1,17 @@
+# Downloaded Files
+Assets/
+
+# Dropped cache
+DownloadCache/
+
+# Config files
+config.json
+
+# Database Files
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
 # Logs
 logs
 *.log

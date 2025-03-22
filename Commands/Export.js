@@ -32,7 +32,7 @@ module.exports = {
 		.setName('export')
 		.setDescription('Export messages from the channel'),
 	execute: async function(interaction, client) {
-		await interaction.reply({ embeds: [LoadingEmbed], ephemeral: false });
+		await interaction.reply({ embeds: [LoadingEmbed], ephemeral: true });
 		await new Promise(r => setTimeout(r, 1000));
 
 		const canExport = ChannelCanExport(interaction.channel.id);

@@ -9,11 +9,10 @@ module.exports = async function GetExportCache(client, interaction) {
 	const cacheKey = `export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`;
 	const exportOptions = client.timedCache.get(cacheKey);
 	if (!exportOptions) {
-		if (interaction.deferred || interaction.replied) {
-			await interaction.editReply({ embeds: [NoDataEmbed] });
-		} else {
-			await interaction.update({ embeds: [NoDataEmbed] });
+		if (!interaction.deferred && !interaction.replied) {
+			await interaction.deferReply({ ephemeral: true });
 		}
+		await interaction.editReply({ embeds: [NoDataEmbed] });
 		return null;
 	} else {
 		return exportOptions;

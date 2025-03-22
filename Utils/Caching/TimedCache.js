@@ -8,6 +8,10 @@ module.exports = class TimedCache {
 		this.interval = setInterval( () => this.prune(), this.ttl);
 	}
 
+	has(key) {
+		return this.cache.has(key);
+	}
+
 	set(key, value) {
 		this.cache.set(key, { value, expires: Date.now() + this.ttl });
 	}

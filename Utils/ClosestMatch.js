@@ -1,12 +1,13 @@
 module.exports = function ClosestMatch(input = '', strings = ['']) {
 	let minDistance = Number.MAX_VALUE;
-	let closestMatch = '';
+	let closestMatch = null;
 
 	if (typeof input !== 'string') throw new TypeError('Input must be a string');
 	if (!Array.isArray(strings)) throw new TypeError('Strings must be an array');
 	if (strings.some(s => typeof s !== 'string')) throw new TypeError('Strings must only contain strings');
 
-	if (strings.length <= 1) return strings[0];
+	if (strings.length === 0) return null;
+	if (strings.length === 1) return strings[0];
 
 	for (let i = 0; i < strings.length; i++) {
 		const distance = levenshteinDistance(input, strings[i]);

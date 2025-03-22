@@ -7,6 +7,7 @@ const Permission = require('../Utils/Checks/Permissions');
 const ErrorParse = require('../Utils/FindError');
 
 const { FANCY_ERRORS } = require('../config.json');
+const { COLOR } = require('../Utils/Constants');
 
 module.exports = {
 	name: 'interactionCreate',
@@ -103,13 +104,21 @@ async function InteractionHandler(client, interaction, type, cache) {
 		}
 		if (Array.isArray(error)) {
 			const [response, reason] = error;
-			payload.content = response;
+			payload.embeds = [{
+				color: COLOR.ERROR,
+				description: response,
+			}];
 			client.logs.error(`Blocked user from ${type}: ${reason}`);
 		} else {
-			payload.content = `There was an error while executing this command!\n\`\`\`${error}\`\`\``;
+			// payload.content = `There was an error while executing this command!\n\`\`\`${error}\`\`\``;
+			payload.embeds = [{
+				color: COLOR.ERROR,
+				description: `There was an error while executing this command!\n\`\`\`${error}\`\`\``,
+			}];
 			client.logs.error(error);
 		}
 		await interaction.editReply(payload).catch(() => {});
+		return;
 	}
 
 	try {

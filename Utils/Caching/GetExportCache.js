@@ -10,9 +10,9 @@ module.exports = async function GetExportCache(client, interaction) {
 	const exportOptions = client.timedCache.get(cacheKey);
 	if (!exportOptions) {
 		if (!interaction.deferred && !interaction.replied) {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferUpdate({ ephemeral: true });
 		}
-		await interaction.editReply({ embeds: [NoDataEmbed] });
+		await interaction.editReply({ embeds: [NoDataEmbed], components: [], files: [] });
 		return null;
 	} else {
 		return exportOptions;

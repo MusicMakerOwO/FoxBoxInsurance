@@ -40,6 +40,12 @@ const FORMAT = {
 	HTML: 'html'
 }
 
+// Reverse the format object so we can use the values as keys
+// Allows for human readable format names
+for (const [k, v] of Object.entries(FORMAT)) {
+	FORMAT[v] = k;
+}
+
 module.exports = {
 	ROOT_FOLDER,
 

@@ -25,8 +25,8 @@ for (let i = 0; i < LinkTables.length; i++) {
 
 module.exports = function LinkAssets () {
 	const start = process.hrtime.bigint();
-	for (const table of LinkTables) {
-		table.run();
+	for (let i = 0; i < LinkTables.length; i++) {
+		LinkTables[i].run();
 	}
 	const end = process.hrtime.bigint();
 	Log.debug(`Linked assets in ${(Number(end - start) / 1e6).toFixed(3)}ms`);

@@ -1,5 +1,6 @@
 const GetExportCache = require("../Utils/Caching/GetExportCache");
 const { COLOR, FORMAT } = require("../Utils/Constants");
+const Database = require("../Utils/Database");
 
 const optionButtons = {
 	type: 1,
@@ -52,6 +53,8 @@ module.exports = {
 	customID: 'export-main',
 	execute: async function(interaction, client, args) {
 
+		await interaction.deferUpdate?.().catch(() => {});
+
 		/*
 		const exportOptions = {
 			guildID: interaction.guild.id,
@@ -66,11 +69,17 @@ module.exports = {
 		const exportOptions = await GetExportCache(client, interaction);
 		if (!exportOptions) return;
 
+		const channel = interaction.guild.channels.cache.get(exportOptions.channelID);
+		const channelName = channel
+			? '<#' + channel.id + '>'
+			: Database.prepare("SELECT '#' || name FROM Channels WHERE id = ?").pluck().get(exportOptions.channelID)
+				?? 'Unknown Channel';
+
 		const embed = {
 			title: 'Export Options',
 			color: COLOR.PRIMARY,
 			description: `
-Channel: <#${exportOptions.channelID}>
+Channel: ${channelName}
 Format: ${FORMAT[exportOptions.format]}
 Messages: ${exportOptions.messages}
 `

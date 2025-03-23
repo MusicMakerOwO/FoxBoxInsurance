@@ -13,6 +13,9 @@ module.exports = async function GetExportCache(client, interaction) {
 			await interaction.deferUpdate({ ephemeral: true });
 		}
 		await interaction.editReply({ embeds: [NoDataEmbed], components: [], files: [] });
+		setTimeout(async () => {
+			await interaction.deleteReply().catch(() => {});
+		}, 7_000);
 		return null;
 	} else {
 		return exportOptions;

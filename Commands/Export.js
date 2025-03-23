@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, FORMAT } = require('../Utils/Constants');
 const ChannelCanExport = require('../Utils/Checks/ChannelCanExport');
+const Database = require('../Utils/Database');
 
 const DEFAULT_OPTIONS = {
 	bots: true,
@@ -33,7 +34,7 @@ module.exports = {
 		.setDescription('Export messages from the channel'),
 	execute: async function(interaction, client) {
 		await interaction.reply({ embeds: [LoadingEmbed], ephemeral: true });
-		await new Promise(r => setTimeout(r, 1000));
+		await new Promise(r => setTimeout(r, 700));
 
 		const canExport = ChannelCanExport(interaction.channel.id);
 		if (!canExport) {

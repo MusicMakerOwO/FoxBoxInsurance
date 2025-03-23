@@ -163,9 +163,9 @@ module.exports = function ProcessMessages (messageCache = sampleCache) {
 
 		queryCount += BatchInsert(
 			'Messages',
-			[ 'id', 'guild_id', 'channel_id', 'user_id', 'content', 'sticker_id' ],
+			[ 'id', 'guild_id', 'channel_id', 'user_id', 'content', 'sticker_id', 'reply_to' ],
 			'',
-			messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id])
+			messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id, m.reply_to])
 		);
 
 		queryCount += BatchInsert(

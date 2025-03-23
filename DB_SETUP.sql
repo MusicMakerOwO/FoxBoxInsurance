@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS Messages (
 	user_id TEXT NOT NULL,
 	content TEXT,
 	sticker_id TEXT,
+	reply_to TEXT DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
 ) STRICT;
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);

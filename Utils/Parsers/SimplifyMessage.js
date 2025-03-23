@@ -47,7 +47,8 @@ module.exports = function SimplifyMessage (message) {
 		sticker: ProcessSticker(message.stickers.first()),
 		emojis: ProcessEmojis(message.content),
 		id: message.id,
-		content: message.content || null, // empty string converted to null
+		content: message.content || null, // empty string converted to null,
+		reply_to: message.reference?.messageId || null,
 	}
 
 

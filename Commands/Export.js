@@ -42,14 +42,16 @@ module.exports = {
 		}
 		
 		await interaction.editReply({ embeds: [MessagesEmbed] });
-		await new Promise(r => setTimeout(r, 2000));
+		await new Promise(r => setTimeout(r, 1500));
+
+		const channelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?").pluck().get(interaction.channel.id);
 
 		const exportOptions = {
 			guildID: interaction.guild.id,
 			channelID: interaction.channel.id,
 			userID: interaction.user.id,
 			format: FORMAT.TEXT,
-			messages: 100,
+			messageCount: Math.min(channelMessageCount, 100),
 			options: { ... DEFAULT_OPTIONS }, // we have to clone the object so we don't modify the original
 			lastMessageID: (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING
 		}

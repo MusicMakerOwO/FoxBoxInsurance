@@ -61,7 +61,7 @@ module.exports = {
 			channelID: interaction.channel.id,
 			userID: interaction.user.id,
 			format: FORMAT.TEXT,
-			messages: 100,
+			messageCount: 100,
 			options: { ... DEFAULT_OPTIONS }, // we have to clone the object so we don't modify the original
 			lastMessageID: (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING
 		}
@@ -81,7 +81,7 @@ module.exports = {
 			description: `
 Channel: ${channelName}
 Format: ${FORMAT[exportOptions.format]}
-Messages: ${exportOptions.messages}
+Messages: ${exportOptions.messageCount}
 `
 		}
 

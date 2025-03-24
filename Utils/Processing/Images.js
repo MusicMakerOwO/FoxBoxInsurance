@@ -70,15 +70,16 @@ const RecentURLs = new Set( Database.prepare("SELECT url FROM Assets ORDER BY as
 const REGEX_EXTENSION = /\.(\w+)/g;
 
 const InsertAssets = Database.prepare(`
-	INSERT INTO Assets (discord_id, url, hash, extension, folder, width, height, size)
+	INSERT INTO Assets (type, discord_id, url, hash, extension, width, height, size)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	
 	-- Already exists, update in place, no need for a delete
 	ON CONFLICT(discord_id) DO UPDATE SET
+		type = excluded.type,
+		discord_id = excluded.discord_id,
 		url = excluded.url,
 		hash = excluded.hash,
 		extension = excluded.extension,
-		folder = excluded.folder,
 		width = excluded.width,
 		height = excluded.height,
 		size = excluded.size
@@ -129,11 +130,11 @@ async function DownloadAssets() {
 		}
 
 		InsertAssets.run(
+			asset.type,
 			asset.id,
 			asset.url,
 			hash,
 			extension,
-			folder,
 			asset.width,
 			asset.height,
 			buffer.length

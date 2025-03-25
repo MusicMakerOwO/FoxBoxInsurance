@@ -22,17 +22,19 @@ module.exports = {
 
 		const input = interaction.fields.getTextInputValue('data');
 
+		let targetID = '';
+
 		const isID = REGEX_ID.test(input);
 		if (isID) {
 			// check the id exists in the database
-			const channel = Database.prepare('SELECT id FROM channels WHERE id = ?').get(input);
+			const channel = Database.prepare('SELECT id FROM channels WHERE id = ? AND guild_id = ?').pluck().get(input, interaction.guild.id);
 			if (channel) {
-				exportOptions.channelID = channel.id;
+				targetID = channel.id;
 			} else {
 				// check if the channel exists in the guild
 				const channel = interaction.guild.channels.cache.get(input);
 				if (channel) {
-					exportOptions.channelID = channel.id;
+					targetID = channel.id;
 				} else {
 					await interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
 					return;
@@ -46,13 +48,28 @@ module.exports = {
 			const channelList = channelCache.get(interaction.guild.id);
 
 			if (input in channelList) {
-				exportOptions.channelID = channelList[input];
+				targetID = channelList[input];
 			} else {
 				// fuzzy search for closet channel name
 				const match = ClosestMatch(input, Object.keys(channelList));
-				exportOptions.channelID = channelList[match];
+				targetID = channelList[match];
 			}
 		}
+
+		const targetChannel = interaction.guild.channels.cache.get(targetID);
+
+		const hasAdmin = interaction.member.permissions.has('Administrator');
+		const canAccess = hasAdmin || targetChannel?.permissionsFor(interaction.member).has('ViewChannel');
+
+		if (
+			interaction.member.permissions.has('Administrator') ||
+			targetChannel?.permissionsFor(interaction.member).has('ViewChannel')
+		) {
+			await interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
+			return;
+		}
+
+		exportOptions.channelID = targetID;
 
 		client.timedCache.set(`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`, exportOptions);
 

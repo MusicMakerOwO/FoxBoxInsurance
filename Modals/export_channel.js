@@ -58,9 +58,6 @@ module.exports = {
 
 		const targetChannel = interaction.guild.channels.cache.get(targetID);
 
-		const hasAdmin = interaction.member.permissions.has('Administrator');
-		const canAccess = hasAdmin || targetChannel?.permissionsFor(interaction.member).has('ViewChannel');
-
 		if (
 			interaction.member.permissions.has('Administrator') ||
 			targetChannel?.permissionsFor(interaction.member).has('ViewChannel')

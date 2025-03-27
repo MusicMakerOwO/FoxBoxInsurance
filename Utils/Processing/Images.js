@@ -196,4 +196,4 @@ module.exports.ASSET_FOLDERS = ASSET_FOLDERS;
 module.exports.DownloadQueue = DownloadQueue;
 module.exports.DownloadAssets = DownloadAssets; // public access
 
-Task.schedule(DownloadAssets, 1000 * 60); // every 60 seconds
+Task.schedule(DownloadAssets, 5000, 1000 * 60); // every 60 seconds

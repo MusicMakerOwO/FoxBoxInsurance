@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS Guilds (
 	-- {{...}} denotes an external macro, see Utils/Database for available macros
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
 ) STRICT;
+CREATE INDEX IF NOT EXISTS guilds_name ON Guilds (name);
 CREATE INDEX IF NOT EXISTS guilds_asset_null ON Guilds (asset_id) WHERE asset_id IS NULL;
 
 CREATE TABLE IF NOT EXISTS Channels (
@@ -150,3 +151,5 @@ CREATE TABLE IF NOT EXISTS MessageEmojis (
 	count INTEGER NOT NULL,
 	PRIMARY KEY (message_id, emoji_id)
 ) STRICT;
+CREATE INDEX IF NOT EXISTS message_emojis_message_id ON MessageEmojis (message_id);
+CREATE INDEX IF NOT EXISTS message_emojis_emoji_id   ON MessageEmojis (emoji_id);

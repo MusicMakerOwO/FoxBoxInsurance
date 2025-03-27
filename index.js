@@ -91,7 +91,10 @@ const PRESET_FILES = {
 }
 
 for (const [componentFolder, presetFile] of Object.entries(PRESET_FILES)) {
-	if (!existsSync(presetFile)) {
+
+	const fullPresetPath = `${__dirname}/${presetFile}`;
+
+	if (!existsSync(fullPresetPath)) {
 		Log.error(`The preset "${presetFile}" file does not exist - Check the relative path!`);
 		PRESET_FILES[componentFolder] = null;
 		continue;
@@ -103,13 +106,14 @@ for (const [componentFolder, presetFile] of Object.entries(PRESET_FILES)) {
 		continue;
 	}
 
-	const data = readFileSync(presetFile, 'utf-8');
+	const data = readFileSync(fullPresetPath, 'utf-8');
 	if (data.length > 0) PRESET_FILES[componentFolder] = data;
 }
 
 for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
+	const fullPath = `${__dirname}/${path}`;
 	if (cache === null) {
-		EventLoader(client, path);
+		EventLoader(client, fullPath);
 		let ListenerCount = 0;
 		for (const listeners of Object.values(client._events)) {
 			ListenerCount += Array.isArray(listeners) ? listeners.length : 1;
@@ -119,19 +123,19 @@ for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 	}
 
 	if (!cache) {
-		Log.error(`No cache found for ${path}`);
+		Log.error(`No cache found for ${fullPath}`);
 		continue;
 	}
 
-	if (!existsSync(path)) {
-		Log.error(`The '${path.split('/')[1]}' folder does not exist - Check the relative path!`);
-		delete COMPONENT_FOLDERS[path]; // remove it from the lookup so it doesn't get checked later
-		delete PRESET_FILES[path];
+	if (!existsSync(fullPath)) {
+		Log.error(`The '${fullPath.split('/')[1]}' folder does not exist - Check the relative path!`);
+		delete COMPONENT_FOLDERS[fullPath]; // remove it from the lookup so it doesn't get checked later
+		delete PRESET_FILES[fullPath];
 		continue;
 	}
 	
-	ComponentLoader(path, cache);
-	Log.debug(`Loaded ${cache.size} ${path.split('/')[1]}`);
+	ComponentLoader(fullPath, cache);
+	Log.debug(`Loaded ${cache.size} ${fullPath.split('/')[1]}`);
 }
 
 // This will only check intents loaded by the event loader
@@ -156,7 +160,7 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 
 	if (isEvent) {
 		client.removeAllListeners();
-		EventLoader(client, componentFolder);
+		EventLoader(client, `${__dirname}/${componentFolder}`);
 		let ListenerCount = 0;
 		for (const listeners of Object.values(client._events)) {
 			ListenerCount += listeners.length;
@@ -167,8 +171,10 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 
 	cache.clear();
 
-	ComponentLoader(componentFolder, cache);
+	ComponentLoader(`${__dirname}/${componentFolder}`, cache);
 	Log.debug(`Loaded ${cache.size} ${componentFolder.split('/')[1]}`);
+
+	if (!existsSync(filePath)) return;
 
 	const newComponent = require(filePath);
 

@@ -46,6 +46,18 @@ for (const [k, v] of Object.entries(FORMAT)) {
 	FORMAT[v] = k;
 }
 
+const TASK = {
+	CLEAN_DATABASE: 'clean_database',
+	CLEAN_DISK: 'clean_disk',
+	CHANNEL_PURGE: 'channel_purge'
+}
+
+const TASK_INTERVAL = {
+	[TASK.CLEAN_DATABASE]: SECONDS.WEEK,
+	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
+	[TASK.CLEAN_DISK]: SECONDS.WEEK,
+}
+
 module.exports = {
 	ROOT_FOLDER,
 
@@ -64,4 +76,6 @@ module.exports = {
 	SECONDS,
 	COLOR,
 	FORMAT,
+	TASK,
+	TASK_INTERVAL
 }

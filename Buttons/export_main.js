@@ -29,26 +29,6 @@ const optionButtons = {
 	]
 }
 
-const exportButtons = {
-	type: 1,
-	components: [
-		{
-			type: 2,
-			style: 3,
-			label: 'Export',
-			custom_id: 'export-finish',
-			emoji: '📎'
-		},
-		{
-			type: 2,
-			style: 4,
-			label: 'Cancel',
-			custom_id: 'export-cancel',
-			emoji: '🗑️'
-		}
-	]
-};
-
 module.exports = {
 	customID: 'export-main',
 	execute: async function(interaction, client, args) {
@@ -81,9 +61,29 @@ module.exports = {
 			description: `
 Channel: ${channelName}
 Format: ${FORMAT[exportOptions.format]}
-Messages: ${exportOptions.messageCount}
-`
+Messages: ${exportOptions.messageCount}`
 		}
+
+		const exportButtons = {
+			type: 1,
+			components: [
+				{
+					type: 2,
+					style: 3,
+					label: 'Export',
+					custom_id: 'export-finish',
+					emoji: '📎',
+					disabled: exportOptions.messageCount < 1
+				},
+				{
+					type: 2,
+					style: 4,
+					label: 'Cancel',
+					custom_id: 'export-cancel',
+					emoji: '🗑️'
+				}
+			]
+		};
 
 		await interaction.editReply({ embeds: [embed], components: [optionButtons, exportButtons] });
 	}

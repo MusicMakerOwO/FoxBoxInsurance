@@ -11,12 +11,12 @@ const IGNORED_EVENTS = [
 ]
 
 module.exports = function (client, folderPath) {
-	if (!fs.existsSync(`${__dirname}/../${folderPath}`)) {
+	if (!fs.existsSync(folderPath)) {
 		Logs.warn('Events folder not found, skipping...');
 		return;
 	}
 
-	const filePaths = ReadFolder(`${__dirname}/../${folderPath}`);
+	const filePaths = ReadFolder(folderPath);
 
 	for (let i = 0; i < filePaths.length; i++) {
 		const path = filePaths[i];

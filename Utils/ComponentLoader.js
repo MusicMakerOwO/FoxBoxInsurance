@@ -7,11 +7,11 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = function ComponentLoader(folder, cache) {
 	if (typeof folder !== 'string') throw new TypeError(`Folder must be a string - Received ${typeof folder}`);
 
-	if (!existsSync(`${__dirname}/../${folder}`)) {
+	if (!existsSync(folder)) {
 		throw new Error(`No "${folder}" folder found`);
 	}
 
-	const filePaths = ReadFolder(`${__dirname}/../${folder}`);
+	const filePaths = ReadFolder(folder);
 	for (let i = 0; i < filePaths.length; i++) {
 		if (!filePaths[i].endsWith('.js')) continue;
 		

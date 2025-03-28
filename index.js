@@ -118,7 +118,7 @@ for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 		for (const listeners of Object.values(client._events)) {
 			ListenerCount += Array.isArray(listeners) ? listeners.length : 1;
 		}
-		Log.debug(`Loaded ${ListenerCount} events`);
+		Log.debug(`Loaded ${ListenerCount} Events`);
 		continue;
 	}
 
@@ -135,7 +135,7 @@ for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 	}
 	
 	ComponentLoader(fullPath, cache);
-	Log.debug(`Loaded ${cache.size} ${fullPath.split('/')[1]}`);
+	Log.debug(`Loaded ${cache.size} ${fullPath.split('/').pop()}`);
 }
 
 // This will only check intents loaded by the event loader

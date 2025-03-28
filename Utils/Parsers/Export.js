@@ -47,6 +47,8 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		Messages: new Array( options.messageCount ).fill({})
 	}
 
+	if (options.messageCount < 1) throw new Error('Cannot export 0 messages');
+
 	/*
 	{
 		id: '1353442409295384640',

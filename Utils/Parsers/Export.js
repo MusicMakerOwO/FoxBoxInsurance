@@ -194,3 +194,135 @@ function ExportCSV(Context) {
 
 	return Buffer.from( output.join('\n').trim() );
 }
+
+function ExportHTML(Context) {
+	const Lookups = {
+		users: Object.fromEntries(Context.Users),
+		emojis: Object.fromEntries(Context.Emojis),
+		stickers: Object.fromEntries(Context.Stickers),
+		files: Object.fromEntries(Context.Files),
+		assets: Object.fromEntries(Context.Assets)
+	}
+
+	for (const [userID, user] of Object.entries(Lookups.users)) {
+		// generate a random color for each user
+		const r = Math.floor(64 + Math.random() * 192).toString(16).padStart(2, '0');
+		const g = Math.floor(64 + Math.random() * 192).toString(16).padStart(2, '0');
+		const b = Math.floor(64 + Math.random() * 192).toString(16).padStart(2, '0');
+		user.color = `#${r}${g}${b}`; // #000000 -> #ffffff
+	}
+
+	const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#${Context.Channel.name}</title>
+	<style>
+        body { font-family: Arial, sans-serif; background: #2C2F33; color: #DCDDDE; padding: 20px; }
+		img { max-width: 100%; max-height: 200px; }
+        .message { padding: 5px 10px; margin: 5px 0; border-radius: 5px; background: #36393F; }
+        .username { font-weight: bold; }
+        .timestamp { font-size: 0.85em; color: #bbb; }
+    </style>
+</head>
+<body>
+    <h1>Export of #${Context.Channel.name}</h1>
+    <div id="messages"></div>
+
+    <script>
+        const lookup = ${JSON.stringify(Lookups)};
+        const messages = ${JSON.stringify(Context.Messages)};
+
+		function replaceEmojis(text) {
+			const emojiRegex = /<a?:\\w+:\\d+>/g;
+
+			const emojis = text.match(emojiRegex);
+			if (!emojis) return text;
+
+			for (const emojiString of emojis) {
+				const [name, id] = emojiString.slice(2, -1).split(":");
+
+				const emojiData = lookup.emojis[id];
+				if (!emojiData) continue;
+				const assetData = lookup.assets[emojiData.asset_id];
+				if (!assetData) continue;
+
+				text = text.replace(emojiString, \`<img src="\${assetData.url}" alt="\${name}" title="\${name}" width="24" height="24">\`);
+			}
+
+			return text;
+		}
+
+		function PrettyPings(text, colors = true) {
+			const pingRegex = /<@!?(\\d+)>/g;
+
+			const pings = text.match(pingRegex);
+			if (!pings) return text;
+
+			const idRegex = /(\\d+)/;
+
+			for (const pingString of pings) {
+				const id = pingString.match(idRegex)[0];
+				const user = lookup.users[id] || { name: "Unknown" };
+				// text = text.replace(pingString, \`<span style="color: \${user.color}">@\${user.username}</span>\`);
+				text = text.replace(pingString, colors ? \`<span style="color: \${user.color}">@\${user.username}</span>\` : \`@\${user.username}\`);
+			}
+
+			return text;
+		}
+
+        const container = document.getElementById("messages");
+		const start = Date.now();
+		for (const msg of messages) {
+			const localTime = new Date(msg.created_at).toLocaleString();
+
+			const user = lookup.users[msg.user_id] || { name: "Unknown", color: "#fff" };
+			const sticker = lookup.stickers[msg.sticker_id];
+			const attachments = lookup.files[msg.id];
+			
+			const div = document.createElement("div");
+			div.className = "message";
+			div.innerHTML = \`<span class="username" style="color: \${user.color}">@\${user.username}</span>
+							<span class="timestamp">(\${localTime})</span>
+							<br>\`;
+			
+			if (msg.reply_to) {
+				const repliedMessage = messages.find(m => m.id === msg.reply_to); // it's slow but I don't care enough
+				let content = (repliedMessage.content || '') + ''; // break the reference so we don't write to the original object
+				content = content.split(' ').slice(0, 10).join(' '); // truncate to 10 words
+				content = replaceEmojis(content);
+				content = PrettyPings(content, false);
+				div.innerHTML = \`<span style="color: #888">@\${lookup.users[repliedMessage.user_id].username}: </span>\${content}<br>\` + div.innerHTML;
+			}
+
+			if (msg.content) {
+				const p = document.createElement("p");
+				
+				let content = msg.content;
+				content = replaceEmojis(content);
+				content = PrettyPings(content);
+
+				p.innerHTML = content;
+				div.appendChild(p);
+			}
+			
+			if (sticker) {
+				const img = document.createElement("img");
+				img.src = lookup.assets[sticker.asset_id].url;
+				img.alt = sticker.name;
+				img.title = sticker.name;
+				div.appendChild(img);
+			}
+			
+			container.appendChild(div);
+		}
+		const end = Date.now();
+		console.log(\`Rendered \${messages.length} messages in \${end - start}ms\`);
+    </script>
+</body>
+</html>`;
+
+	return Buffer.from(html);
+}

@@ -46,6 +46,7 @@ const ProcessMessages = require('./Utils/Processing/Messages');
 const { DownloadAssets } = require('./Utils/Processing/Images');
 const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
+const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 
 const client = new Client({
 	intents: [
@@ -213,6 +214,8 @@ client.on('ready', function () {
 	Log.custom(`Logged in as ${client.user.tag}!`, 0x7946ff);
 
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
+
+	StartTasks();
 
 	if (!config.HOT_RELOAD) {
 		Log.warn('Hot reload is disabled in config.json');

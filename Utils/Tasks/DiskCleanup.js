@@ -2,8 +2,9 @@ const Database = require("../Database");
 const ReadFolder = require("../ReadFolder");
 const Log = require("../Logs");
 const fs = require("node:fs");
-const { ASSET_FOLDERS } = require("./Images");
+const { ASSET_FOLDERS } = require("../Processing/Images");
 const { resolve } = require("node:path");
+const { ASSETS_FOLDER } = require("../Constants");
 
 const DatabaseFiles = Database.prepare("SELECT type, fileName, asset_id AS id FROM Assets");
 const DeleteAsset = Database.prepare("DELETE FROM Assets WHERE asset_id = ?");
@@ -20,7 +21,7 @@ module.exports = async function DiskCleanup() {
 
 	// Sets instead of arrays for faster lookup - beats looping all elements lol
 	const assetFiles = new Set( dbAssets.map(AssetFullPath) );
-	const diskFiles = new Set( ReadFolder(Constants.ASSETS_FOLDER) ).map(resolve);
+	const diskFiles = new Set( ReadFolder(ASSETS_FOLDER).map(p => resolve(p)) );
 
 	let deletedCount = 0;
 	let orphanCount = 0;
@@ -47,5 +48,5 @@ module.exports = async function DiskCleanup() {
 	const end = process.hrtime.bigint();
 	const duration = Number(end - start) / 1e6;
 
-	Log.debug(`Disk cleanup took ${duration.toFixed(2)}ms - Deleted ${deletedCount} files and found ${orphanCount} orphaned entries`);
+	Log.success(`Disk cleanup took ${duration.toFixed(2)}ms - Deleted ${deletedCount} files and found ${orphanCount} orphaned entries`);
 }

@@ -7,19 +7,21 @@
 // 6 months of inactivity: delete all messages and the channel data itself
 
 const Database = require("../Database");
-const { SECONDS } = require("../Constants");
+const Task = require("../TaskScheduler");
+const Log = require("../Logs");
+const { SECONDS, TASK, TASK_INTERVAL } = require("../Constants");
 
-const FindStaleChannels = Database.prepare("SELECT channel_id FROM Channels WHERE last_purge < ?");
-const FindLastMessage = Database.prepare("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY message_id DESC LIMIT 1");
+const FindStaleChannels = Database.prepare("SELECT id FROM Channels WHERE last_purge < ?");
+const FindLastMessage = Database.prepare("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY id DESC LIMIT 1");
 
-const UpdatePurgeTime = Database.prepare("UPDATE Channels SET last_purge = ? WHERE channel_id = ?");
+const UpdatePurgeTime = Database.prepare("UPDATE Channels SET last_purge = ? WHERE id = ?");
 
-const DeleteChannel = Database.prepare("DELETE FROM Channels WHERE channel_id = ?");
+const DeleteChannel = Database.prepare("DELETE FROM Channels WHERE id = ?");
 const DeleteMessages = Database.prepare("DELETE FROM Messages WHERE channel_id = ?");
 
 const ChannelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?");
 
-const DeleteOldMessages = Database.prepare("DELETE FROM Messages WHERE channel_id = ? ORDER BY message_id ASC LIMIT ?");
+const DeleteOldMessages = Database.prepare("DELETE FROM Messages WHERE channel_id = ? ORDER BY id ASC LIMIT ?");
 
 module.exports = function ChannelPurge() {
 
@@ -82,8 +84,9 @@ module.exports = function ChannelPurge() {
 	const end = process.hrtime.bigint();
 	const duration = Number(end - start) / 1e6;
 
-	Log.debug(`Channel purge took ${duration.toFixed(2)}ms - Checked ${ChannelsToPurge.length} channels`);
-	Log.debug(`\t- Delete ${messagePurgeCount} messages`);
-	Log.debug(`\t- Deleted ${channelPurgeCount} channels`);
-	Log.debug(`\t- Skipped ${noopCount} channels`);
+	Log.success(`Channel purge took ${duration.toFixed(2)}ms`);
+	Log.success(` - Checked ${ChannelsToPurge.length} channels`);
+	Log.success(` - Deleted ${messagePurgeCount} messages`);
+	Log.success(` - Deleted ${channelPurgeCount} channels`);
+	Log.success(` - Skipped ${noopCount} channels`);
 }

@@ -39,9 +39,9 @@ class TaskScheduler {
             if (task.interval !== null) {
                 task.time = now + task.interval;
                 this.taskQueue.push(task);
-                this.taskQueue.sort((a, b) => a.time - b.time);
             }
         }
+		this.taskQueue.sort((a, b) => a.time - b.time);
         this.#reschedule();
     }
 

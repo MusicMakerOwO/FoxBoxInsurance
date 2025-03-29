@@ -31,11 +31,11 @@ class TaskScheduler {
 		}, timeUntilNext);
     }
 
-    #runNextTask() {
+    async #runNextTask() {
         const now = Date.now();
         while (this.taskQueue.length > 0 && this.taskQueue[0].time <= now) {
             const task = this.taskQueue.shift();
-            task.callback();
+            await task.callback();
             if (task.interval !== null) {
                 task.time = now + task.interval;
                 this.taskQueue.push(task);

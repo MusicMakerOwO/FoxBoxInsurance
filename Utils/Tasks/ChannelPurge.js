@@ -23,7 +23,7 @@ const ChannelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHER
 
 const DeleteOldMessages = Database.prepare("DELETE FROM Messages WHERE channel_id = ? ORDER BY id ASC LIMIT ?");
 
-module.exports = function ChannelPurge() {
+module.exports = async function ChannelPurge() {
 
 	const start = process.hrtime.bigint();
 

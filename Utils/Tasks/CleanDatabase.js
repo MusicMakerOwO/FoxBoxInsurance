@@ -12,7 +12,7 @@ const Task = require("../TaskScheduler");
 // - Embeds
 // - EmbedFields
 // - MessageEmojis
-module.exports = function CleanDatabase() {
+module.exports = async function CleanDatabase() {
 
 	const start = process.hrtime.bigint();
 	

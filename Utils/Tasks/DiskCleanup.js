@@ -30,7 +30,7 @@ module.exports = async function DiskCleanup() {
 	// This assumes we have fully de-duped the files and only evicted unused assets
 	for (const file of diskFiles) {
 		if (!assetFiles.has(file)) {
-			fs.unlinkSync(file);
+			await fs.promises.unlink(file);
 			deletedCount++;
 		}
 	}

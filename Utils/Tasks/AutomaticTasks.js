@@ -48,9 +48,9 @@ module.exports.StartTasks = function StartTasks() {
 		const now = Date.now();
 		const timeSinceLastRun = Math.max(0, now - lastRun);
 
-		TaskScheduler.schedule(() => {
+		TaskScheduler.schedule(async () => {
 			try {
-				callback(); // execute the task
+				await callback();
 				Database.prepare("INSERT OR REPLACE INTO Timers (id, last_run) VALUES (?, ?)").run(name, Date.now());
 			} catch (err) {
 				error(err);

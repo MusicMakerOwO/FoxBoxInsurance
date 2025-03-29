@@ -85,7 +85,43 @@ const InsertAssets = Database.prepare(`
 		size = excluded.size
 `);
 
+function LoadFailedDownloads() {
+	const failedAssets = [];
+
+	const cacheFiles = fs.readdirSync(CONSTANTS.DOWNLOAD_CACHE).filter(file => file.endsWith('.json'));
+	for (const file of cacheFiles) {
+		const filePath = `${CONSTANTS.DOWNLOAD_CACHE}/${file}`;
+		try {
+			const contents = fs.readFileSync(filePath, 'utf-8');
+			const data = JSON.parse(contents);
+			if (!Array.isArray(data)) {
+				Log.error(`Invalid cache file format: ${file}`);
+				continue;
+			}
+
+			if (data.length === 0) {
+				fs.unlinkSync(filePath); // delete empty cache file
+				continue;
+			}
+
+			Log.debug(`Retrying failed downloads from cache: ${file}`);
+			failedAssets.push(...data); // add failed downloads back to the queue
+			fs.unlinkSync(filePath); // delete the cache file after re-adding to queue
+		} catch (err) {
+			Log.error(err);
+		}
+	}
+
+	return failedAssets;
+}
+
 async function DownloadAssets() {
+
+	// check the download cache folder for failed downloads
+	const failedAssets = LoadFailedDownloads();
+	for (const asset of failedAssets) {
+		DownloadQueue.push(asset);
+	}
 
 	if (DownloadQueue.length === 0) return;
 
@@ -99,11 +135,24 @@ async function DownloadAssets() {
 
 	let cacheHit = 0;
 
+	const failedDownloads = [];
+	let noInternet = await TestConnection() === false;
+	if (noInternet) {
+		Log.error(`No internet connection, cannot download assets`);
+	}
+
 	const start = Date.now();
 	for (const asset of queue) {
 		// assume duplicate asset, each url *should* be unique unless I am forgetting something 
 		if (RecentURLs.has(asset.url)) {
 			cacheHit++;
+			continue;
+		}
+
+		if (noInternet) {
+			// if we already had a failure, stop trying to download
+			failedDownloads.push(asset);
+			Log.warn(`Skipping download for ${asset.url} due to previous failure`);
 			continue;
 		}
 
@@ -115,7 +164,15 @@ async function DownloadAssets() {
 			Log.error(err);
 			return null;
 		});
-		if (!buffer) continue;
+		if (buffer === null) {
+			const connected = await TestConnection();
+			if (!connected) {
+				noInternet = true;
+				Log.error(`No internet connection, stopping downloads`);
+				failedDownloads.push(asset);
+				continue;
+			}
+		}
 
 		const hash = crypto.createHash('sha1').update(buffer).digest('hex');
 
@@ -142,6 +199,13 @@ async function DownloadAssets() {
 	}
 
 	const end = Date.now();
+	const duration = end - start;
+
+	if (failedDownloads.length > 0) {
+		Log.error(`Failed to download ${failedDownloads.length} assets:`);
+		// write them to disk for later retry
+		fs.writeFileSync(`${CONSTANTS.DOWNLOAD_CACHE}/${Date.now()}.json`, JSON.stringify(failedDownloads, null, 2));
+	}
 
 	Log.debug(`Downloaded ${queue.length} assets in ${end - start}ms - ${cacheHit}/${queue.length} cache hits`);
 
@@ -189,6 +253,34 @@ async function DownloadURL(url) {
 			});
 		});
 	});
+}
+
+let connected = false;
+let lastTest = 0;
+
+async function TestConnection() {
+    if (Date.now() - lastTest < 1000 * 60) return connected;
+    return new Promise( resolve => {
+        const request = https.get({
+            hostname: 'www.google.com',
+            port: 443,
+            path: '/',
+            method: 'HEAD', // only fetches headers, ignore the rest of the webpage
+            timeout: 5000
+        }, function(response) {
+            lastTest = Date.now();
+            connected = response.statusCode === 200;
+            resolve(connected);
+        });
+        function onError() {
+            lastTest = Date.now();
+            connected = false;
+            resolve(false);
+        }
+        request.on('error', onError);
+        request.on('timeout', onError);
+        request.end();
+    });
 }
 
 module.exports.ASSET_TYPE = ASSET_TYPE;

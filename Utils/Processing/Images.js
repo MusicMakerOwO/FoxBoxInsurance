@@ -187,7 +187,6 @@ async function DownloadAssets() {
 	const duration = end - start;
 
 	if (failedDownloads.length > 0) {
-		Log.error(`Failed to download ${failedDownloads.length} assets:`);
 		// write them to disk for later retry
 		fs.writeFileSync(`${CONSTANTS.DOWNLOAD_CACHE}/${Date.now()}.json`, JSON.stringify(failedDownloads, null, 2));
 	}
@@ -267,7 +266,12 @@ async function UploadAsset(name, extension, data) {
 
 async function DownloadURL(url) {
 	return new Promise((resolve, reject) => {
-		https.get(url, (response) => {
+		https.get(url, {
+			timeout: 5000,
+			headers: {
+				'Content-Type': 'application/octet-stream'
+			}
+		},(response) => {
 			if (response.statusCode !== 200) {
 				reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
 				return;
@@ -330,7 +334,6 @@ async function TestConnection() {
 }
 
 module.exports.ASSET_TYPE = ASSET_TYPE;
-module.exports.ASSET_FOLDERS = ASSET_FOLDERS;
 module.exports.DownloadQueue = DownloadQueue;
 module.exports.DownloadAssets = DownloadAssets; // public access
 

@@ -24,20 +24,8 @@ const ASSET_TABLES = {
 	[ASSET_TYPE.ATTACHMENT]: 'Attachments'
 }
 
-const ASSET_FOLDERS = {
-	[ASSET_TYPE.GUILD]: CONSTANTS.GUILD_ICONS_FOLDER,
-	[ASSET_TYPE.USER]: CONSTANTS.USER_ICONS_FOLDER,
-	[ASSET_TYPE.EMOJI]: CONSTANTS.EMOJI_FOLDER,
-	[ASSET_TYPE.STICKER]: CONSTANTS.STICKER_FOLDER,
-	[ASSET_TYPE.ATTACHMENT]: CONSTANTS.ATTACHMENTS_FOLDER
-}
-
 for (const table of Object.values(ASSET_TABLES)) {
 	if (!(table in Database.tables)) throw new Error(`Table ${table} does not exist in the database`);
-}
-
-for (const asset_folder of Object.values(ASSET_FOLDERS)) {
-	if (!fs.existsSync(asset_folder)) fs.mkdirSync(asset_folder, { recursive: true });
 }
 
 const HUNDRED_MEGABYTES = 1024 * 1024 * 100;
@@ -141,6 +129,8 @@ async function DownloadAssets() {
 		Log.error(`No internet connection, cannot download assets`);
 	}
 
+	const uploadQueue = []; // { name, extension, data }[]
+
 	const start = Date.now();
 	for (const asset of queue) {
 		// assume duplicate asset, each url *should* be unique unless I am forgetting something 
@@ -155,8 +145,6 @@ async function DownloadAssets() {
 			Log.warn(`Skipping download for ${asset.url} due to previous failure`);
 			continue;
 		}
-
-		const folder = ASSET_FOLDERS[asset.type];
 		
 		const extension = asset.url.match(REGEX_EXTENSION).pop().slice(1) || 'png';
 
@@ -176,15 +164,11 @@ async function DownloadAssets() {
 
 		const hash = crypto.createHash('sha1').update(buffer).digest('hex');
 
-		// Check if the file already exists - This is the disk de-duplication
-		const filePath = `${folder}/${hash}.${extension}`;
-
-		try {
-			await fs.promises.writeFile(filePath, buffer, { flag: 'wx' });
-		} catch (err) {
-			if (err.code !== 'EEXIST') throw err;
-			// file already exists, do nothing
-		}
+		uploadQueue.push({
+			name: hash,
+			extension: extension,
+			data: buffer
+		});
 
 		InsertAssets.run(
 			asset.type,
@@ -216,7 +200,68 @@ async function DownloadAssets() {
 			if (--urlsToRemove <= 0) break;
 		}
 	}
-	
+
+	// Upload the files to the cdn server
+	// cdn.notdbi.dev
+	// { name, extenstion, data }
+	for (const { name, extension, data } of uploadQueue) {
+		try {
+			await UploadAsset(name, extension, data);
+		} catch (err) {
+			Log.error(err);
+		}
+	}
+
+}
+
+
+async function UploadAsset(name, extension, data) {
+	const header = {
+		'Content-Type': 'application/octet-stream',
+		'key': process.env.ACCESS_KEY,
+		'name': name,
+		'ext': extension
+	}
+
+	return new Promise((resolve, reject) => {
+		const request = https.request('https://cdn.notfbi.dev/upload', {
+			method: 'POST',
+			headers: header
+		}, (response) => {
+
+			let error = '';
+
+			switch (response.statusCode) {
+				case 200:
+					Log.debug(`Uploaded asset: ${name}.${extension}`);
+					resolve();
+					return;
+				case 401:
+					error = 'Invalid access key provided';
+					break;
+				case 409:
+					error = 'Asset already exists';
+					break;
+				case 413:
+					error = 'File too large';
+					break;
+				default:
+					error = `Unknown error (${response.statusCode})`;
+					break;
+			}
+
+			// if we get here, there was an error lol
+			if (error) {
+				reject( new Error(error) );
+			}
+		});
+
+		request.on('error', reject);
+		request.on('timeout', reject);
+
+		request.write(data);
+		request.end();
+	});
 }
 
 async function DownloadURL(url) {

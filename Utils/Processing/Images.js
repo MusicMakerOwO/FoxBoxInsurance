@@ -143,7 +143,7 @@ async function DownloadAssets() {
 		if (noInternet) {
 			// if we already had a failure, stop trying to download
 			failedDownloads.push(asset);
-			Log.warn(`Skipping download for ${asset.url} due to previous failure`);
+			Log.warn(`Skipping download due to previous failure : ${asset.url}`);
 			continue;
 		}
 		

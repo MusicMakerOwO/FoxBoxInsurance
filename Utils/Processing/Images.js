@@ -192,7 +192,7 @@ async function DownloadAssets() {
 		fs.writeFileSync(`${CONSTANTS.DOWNLOAD_CACHE}/${Date.now()}.json`, JSON.stringify(failedDownloads, null, 2));
 	}
 
-	Log.debug(`Downloaded ${queue.length} assets in ${end - start}ms - ${cacheHit}/${queue.length} cache hits`);
+	Log.debug(`Downloaded ${queue.length} assets in ${duration}ms - ${cacheHit}/${queue.length} cache hits`);
 
 	if (RecentURLs.size > MAX_URL_CACHE_SIZE) {
 		let urlsToRemove = RecentURLs.size - MAX_URL_CACHE_SIZE;

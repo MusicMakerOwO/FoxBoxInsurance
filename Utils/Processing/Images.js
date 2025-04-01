@@ -138,6 +138,7 @@ async function DownloadAssets() {
 			cacheHit++;
 			continue;
 		}
+		RecentURLs.add(asset.url);
 
 		if (noInternet) {
 			// if we already had a failure, stop trying to download

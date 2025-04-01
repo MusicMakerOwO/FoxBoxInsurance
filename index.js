@@ -1,3 +1,10 @@
+// must be run with `node --env-file .env index.js`
+if (!process.env.ACCESS_KEY) {
+	console.error('Could not find process.env.ACCESS_KEY in .env');
+	console.error('Please run the server with `node --env-file .env index.js`');
+	process.exit(1);
+}
+
 const config = require('./config.json');
 
 const ConfigTemplate = {
@@ -249,10 +256,7 @@ async function Shutdown() {
 
 	Log.warn('Linking assets...');
 	LinkAssets();
-
-	// Log.warn('Clearing disk space...');
-	// DiskCleanup();
-
+	
 	Log.warn('Optimising database...');
 	Database.pragma('analysis_limit = 8000');
 	Database.exec('ANALYZE'); // Optimise the database and add indecies

@@ -7,13 +7,7 @@ const DB_FILE = `${ROOT_FOLDER}/fbi.sqlite`;
  * If we lose internet we will dump the cache in here and read it back on startup
  */
 const DOWNLOAD_CACHE = `${ROOT_FOLDER}/DownloadCache`;
-
-const ASSETS_FOLDER = `${ROOT_FOLDER}/Assets`;
-const GUILD_ICONS_FOLDER = `${ASSETS_FOLDER}/Guilds`;
-const USER_ICONS_FOLDER = `${ASSETS_FOLDER}/Users`;
-const EMOJI_FOLDER = `${ASSETS_FOLDER}/Emojis`;
-const STICKER_FOLDER = `${ASSETS_FOLDER}/Stickers`;
-const ATTACHMENTS_FOLDER = `${ASSETS_FOLDER}/Attachments`;
+const UPLOAD_CACHE = `${ROOT_FOLDER}/UploadCache`;
 
 const SECONDS = {
 	MINUTE: 60,
@@ -65,13 +59,7 @@ module.exports = {
 	DB_FILE,
 
 	DOWNLOAD_CACHE,
-	
-	ASSETS_FOLDER,
-	GUILD_ICONS_FOLDER,
-	USER_ICONS_FOLDER,
-	EMOJI_FOLDER,
-	STICKER_FOLDER,
-	ATTACHMENTS_FOLDER,
+	UPLOAD_CACHE,
 
 	SECONDS,
 	COLOR,

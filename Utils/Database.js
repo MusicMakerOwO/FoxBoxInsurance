@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const BetterSqlite3 = require('better-sqlite3');
-const { ASSETS_FOLDER, ROOT_FOLDER } = require('./Constants');
+const { ROOT_FOLDER } = require('./Constants');
 const { DB_SETUP_FILE, DB_FILE } = require('./Constants.js');
 
 function ParseQueries(fileContent) {
@@ -58,7 +58,6 @@ const NoComments = FileContent.replace(/\-\-.*\n/g, '');
 
 const MACROS = {
 	ROOT_FOLDER: ROOT_FOLDER,
-	ASSETS_FOLDER: ASSETS_FOLDER,
 	SNOWFLAKE_DATE: `strftime('%Y-%m-%dT%H:%M:%fZ', ((CAST(id AS INTEGER) >> 22) + 1420070400000) / 1000, 'unixepoch')`
 };
 

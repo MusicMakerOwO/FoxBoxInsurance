@@ -14,21 +14,25 @@ CREATE TABLE IF NOT EXISTS Assets (
 	discord_id TEXT NOT NULL, -- Discord ID of whatever this asset represents
 	type INTEGER NOT NULL,
 
-	-- Acoid storing duplicates, this is only a lookup for the storage location : [HASH].[EXTENSION]
-	url TEXT NOT NULL UNIQUE,
-	hash TEXT NOT NULL, -- hashes can be shared, allows deduplication on the storage level
-	extension TEXT NOT NULL,
+	-- The URL to the asset on Discord's servers, may return 404 if they delete it
+	-- For long term retrievale use the cdn server and lookup by hash
+	discord_url TEXT NOT NULL UNIQUE,
 
-	fileName TEXT GENERATED ALWAYS AS (hash || '.' || extension) VIRTUAL, -- The file name of the asset
+	name TEXT NOT NULL, -- Original file name
+	extension TEXT NOT NULL,
+	fileName TEXT GENERATED ALWAYS AS (name || '.' || extension) VIRTUAL, -- The file name of the asset
 
 	width INTEGER,
 	height INTEGER,
 	size INTEGER, -- in bytes
 
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime'))
+	hash TEXT, -- this will be set after uploading to the cdn server
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')),
+	uploaded INTEGER NOT NULL DEFAULT 0 -- 1 if the file is uploaded to the storage
 ) STRICT;
-CREATE INDEX IF NOT EXISTS assets_hash 		 ON Assets (hash);
-CREATE INDEX IF NOT EXISTS assets_url 		 ON Assets (url);
+CREATE INDEX IF NOT EXISTS assets_hash 		 ON Assets (hash) WHERE hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS assets_url 		 ON Assets (discord_url);
+CREATE INDEX IF NOT EXISTS assets_uploaded 	 ON Assets (uploaded) WHERE uploaded = 0;
 CREATE UNIQUE INDEX IF NOT EXISTS assets_discord_id ON Assets (discord_id);
 
 CREATE TABLE IF NOT EXISTS Guilds (

@@ -44,7 +44,7 @@ const CheckIntents = require('./Utils/CheckIntents');
 const FileWatch = require('./Utils/FileWatcher');
 
 const { Client } = require('discord.js');
-const Debounce = require('./Utils/Debounce');
+const Debounce = require('./Utils/Timing/Debounce');
 
 const TimedCache = require('./Utils/Caching/TimedCache');
 const CachePool = require('./Utils/Caching/CachePool');
@@ -54,6 +54,7 @@ const { DownloadAssets } = require('./Utils/Processing/Images');
 const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
 const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
+const UploadFiles = require('./Utils/Tasks/UploadFiles');
 
 const client = new Client({
 	intents: [
@@ -217,12 +218,13 @@ function PresetFile(cache, componentFolder, callback, filePath) {
 
 Log.info(`Logging in...`);
 client.login(client.config.TOKEN);
-client.on('ready', function () {
+client.on('ready', async function () {
 	Log.custom(`Logged in as ${client.user.tag}!`, 0x7946ff);
 
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
 
 	StartTasks();
+	await UploadFiles();
 
 	if (!config.HOT_RELOAD) {
 		Log.warn('Hot reload is disabled in config.json');

@@ -1,8 +1,6 @@
-# Downloaded Files
-Assets/
-
-# Dropped cache
+# Cache Files
 DownloadCache/
+UploadCache/
 
 # Config files
 config.json

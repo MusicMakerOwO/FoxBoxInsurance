@@ -4,10 +4,12 @@ const { warn, error, success } = require("../Logs");
 const TaskScheduler = require("../TaskScheduler");
 const ChannelPurge = require("./ChannelPurge");
 const CleanDatabase = require("./CleanDatabase");
+const UploadFiles = require("./UploadFiles");
 
 const Tasks = {
 	[ TASK.CHANNEL_PURGE  ]: ChannelPurge,
-	[ TASK.CLEAN_DATABASE ]: CleanDatabase
+	[ TASK.CLEAN_DATABASE ]: CleanDatabase,
+	[ TASK.UPLOAD_CACHE   ]: UploadFiles
 }
 
 let i = 0;

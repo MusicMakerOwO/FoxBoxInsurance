@@ -43,13 +43,15 @@ for (const [k, v] of Object.entries(FORMAT)) {
 const TASK = {
 	CLEAN_DATABASE: 'clean_database',
 	CLEAN_DISK: 'clean_disk',
-	CHANNEL_PURGE: 'channel_purge'
+	CHANNEL_PURGE: 'channel_purge',
+	UPLOAD_CACHE: 'upload_cache',
 }
 
 const TASK_INTERVAL = {
 	[TASK.CLEAN_DATABASE]: SECONDS.WEEK * 1000,
 	[TASK.CHANNEL_PURGE]: SECONDS.WEEK * 1000,
 	[TASK.CLEAN_DISK]: SECONDS.MONTH * 1000,
+	[TASK.UPLOAD_CACHE]: SECONDS.HOUR * 1000
 }
 
 module.exports = {

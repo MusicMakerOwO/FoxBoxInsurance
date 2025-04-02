@@ -232,21 +232,49 @@ module.exports = function ProcessMessages (messageCache = sampleCache) {
 
 	// 3. Queue assets for download
 	for (const emoji of EmojiList) {
-		DownloadQueue.push({ type: ASSET_TYPE.EMOJI, id: emoji.id, url: emoji.url, width: emoji.width, height: emoji.height });
+		DownloadQueue.push({
+			type: ASSET_TYPE.EMOJI,
+			id: emoji.id,
+			name: emoji.name,
+			url: emoji.url, 
+			width: emoji.width,
+			height: emoji.height
+		});
 	}
 
 	for (const sticker of StickerList) {
-		DownloadQueue.push({ type: ASSET_TYPE.STICKER, id: sticker.id, url: sticker.url, width: sticker.width, height: sticker.height });
+		DownloadQueue.push({
+			type: ASSET_TYPE.STICKER,
+			id: sticker.id,
+			name: sticker.name,
+			url: sticker.url, 
+			width: sticker.width,
+			height: sticker.height
+		});
 	}
 
 	for (const guild of GuildList) {
 		if (!guild.icon) continue;
-		DownloadQueue.push({ type: ASSET_TYPE.GUILD, id: guild.id, url: guild.icon.url, width: guild.icon.width, height: guild.icon.height });
+		DownloadQueue.push({
+			type: ASSET_TYPE.GUILD,
+			id: guild.id,
+			name: guild.name,
+			url: guild.icon.url,
+			width: guild.icon.width,
+			height: guild.icon.height
+		});
 	}
 
 	for (const user of UserList) {
 		if (!user.icon) continue;
-		DownloadQueue.push({ type: ASSET_TYPE.USER, id: user.id, url: user.icon.url, width: user.icon.width, height: user.icon.height });
+		DownloadQueue.push({
+			type: ASSET_TYPE.USER,
+			id: user.id,
+			name: user.username,
+			url: user.icon.url,
+			width: user.icon.width,
+			height: user.icon.height
+		});
 	}
 
 	// 4. Link assets downloaded previously (not the ones in here)

@@ -15,7 +15,7 @@ module.exports = {
 		// It is unlikely to change guilds, users, emojis, or stickers frequently
 		// With that assumption, we will download 
 		for (const file of simplified.attachments) {
-			DownloadQueue.push({ type: ASSET_TYPE.ATTACHMENT, id: file.id, url: file.url, width: file.width, height: file.height });
+			DownloadQueue.push({ type: ASSET_TYPE.ATTACHMENT, id: file.id, name: file.name, url: file.url, width: file.width, height: file.height });
 		}
 	}
 }

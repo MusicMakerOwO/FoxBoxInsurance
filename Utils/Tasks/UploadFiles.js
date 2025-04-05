@@ -47,6 +47,7 @@ module.exports = async function UploadAssets() {
 		if (!fs.existsSync(filePath)) {
 			// something went wrong, we know the asset exists but we dont have the data
 			// Best we can do is delete the asset and hope like hell it will be downloaded again in the future
+			Logs.error(`File not found: ${filePath}`);
 			Database.prepare(`DELETE FROM Assets WHERE asset_id = ?`).run(asset.asset_id);
 			continue;
 		}
@@ -114,8 +115,8 @@ async function Upload(name, extension, data) {
 			});
 		});
 
-		function OnError() {
-			reject('Failed to upload asset');
+		function OnError(reason) {
+			reject(`Failed to upload asset: ${reason}`);
 			request.destroy();
 		}
 

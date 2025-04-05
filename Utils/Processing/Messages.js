@@ -140,77 +140,99 @@ module.exports = function ProcessMessages (messageCache = sampleCache) {
 
 	try {
 
+		console.time('Guilds');
 		queryCount += BatchInsert(
 			'Guilds',
 			[ 'id', 'name' ],
 			'ON CONFLICT(id) DO UPDATE SET name=excluded.name WHERE excluded.name <> name',
 			GuildList.map(g => [g.id, g.name])
 		);
+		console.timeEnd('Guilds');
 
+		console.time('Channels');
 		queryCount += BatchInsert(
 			'Channels',
 			[ 'id', 'guild_id', 'parent_id', 'name', 'type' ],
 			'ON CONFLICT(id) DO UPDATE SET name=excluded.name WHERE excluded.name <> name',
 			ChannelList.map(c => [c.id, c.guildID, c.parentID, c.name, c.type])
 		);
+		console.timeEnd('Channels');
 
+		console.time('Users');
 		queryCount += BatchInsert(
 			'Users',
 			[ 'id', 'username', 'bot' ],
 			'ON CONFLICT(id) DO UPDATE SET username=excluded.username WHERE excluded.username <> username',
 			UserList.map(u => [u.id, u.username, u.bot])
 		);
+		console.timeEnd('Users');
 
+		console.time('Messages');
 		queryCount += BatchInsert(
 			'Messages',
 			[ 'id', 'guild_id', 'channel_id', 'user_id', 'content', 'sticker_id', 'reply_to' ],
 			'',
 			messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id, m.reply_to])
 		);
+		console.timeEnd('Messages');
 
+		console.time('Emojis');
 		queryCount += BatchInsert(
 			'Emojis',
 			[ 'id', 'name', 'animated' ],
 			'ON CONFLICT(id) DO UPDATE SET name=excluded.name WHERE excluded.name <> name',
 			EmojiList.map(e => [e.id, e.name, e.animated])
 		);
+		console.timeEnd('Emojis');
 
+		console.time('Stickers');
 		queryCount += BatchInsert(
 			'Stickers',
 			[ 'id', 'name' ],
 			'ON CONFLICT(id) DO UPDATE SET name=excluded.name WHERE excluded.name <> name',
 			StickerList.map(s => [s.id, s.name])
 		);
+		console.timeEnd('Stickers');
 
+		console.time('Attachments');
 		queryCount += BatchInsert(
 			'Attachments',
 			[ 'id', 'message_id', 'name' ],
 			'ON CONFLICT(id) DO UPDATE SET name=excluded.name WHERE excluded.name <> name',
 			AttachmentList.map(a => [a.id, a.messageID, a.name])
 		);
+		console.timeEnd('Attachments');
 
+		console.time('Embeds');
 		queryCount += BatchInsert(
 			'Embeds',
 			[ 'id', 'message_id', 'title', 'description', 'url', 'timestamp', 'color', 'footer_text', 'footer_icon', 'thumbnail_url', 'image_url', 'author_name', 'author_url', 'author_icon' ],
 			'',
 			EmbedList.map(e => [e.id, e.messageID, e.title, e.description, e.url, e.timestamp, e.color, e.footer_text, e.footer_icon, e.thumbnail_url, e.image_url, e.author_name, e.author_url, e.author_icon])
 		);
+		console.timeEnd('Embeds');
 
+		console.time('EmbedFields');
 		queryCount += BatchInsert(
 			'EmbedFields',
 			[ 'embed_id', 'name', 'value', 'inline' ],
 			'',
 			FieldList.map(f => [f.embedID, f.name, f.value, f.inline])
 		);
+		console.timeEnd('EmbedFields');
 
+		console.time('MessageEmojis');
 		queryCount += BatchInsert(
 			'MessageEmojis',
 			[ 'message_id', 'emoji_id', 'count' ],
 			'',
 			MessageEmojis.map(m => [m.messageID, m.emojiID, m.count])
 		);
+		console.timeEnd('MessageEmojis');
 
+		console.time('Commit');
 		Database.exec('COMMIT TRANSACTION');
+		console.timeEnd('Commit');
 	} catch (error) {
 		Database.exec('ROLLBACK TRANSACTION');
 		Log.error(error);

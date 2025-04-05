@@ -68,7 +68,7 @@ module.exports = async function UploadAssets() {
 		await fs.promises.unlink(filePath);
 	}
 
-	// CHeck for orphaned files
+	// Check for orphaned files
 	const files = fs.readdirSync(UPLOAD_CACHE);
 	if (files.length > 0) {
 		for (const file of files) {

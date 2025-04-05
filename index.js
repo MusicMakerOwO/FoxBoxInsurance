@@ -5,6 +5,8 @@ if (!process.env.ACCESS_KEY) {
 	process.exit(1);
 }
 
+const preLoadStart = process.hrtime.bigint();
+
 const config = require('./config.json');
 
 const ConfigTemplate = {
@@ -55,6 +57,10 @@ const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
 const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
+
+const preLoadEnd = process.hrtime.bigint();
+const preLoadTime = (preLoadEnd - preLoadStart) / BigInt(1e6); // convert to milliseconds
+Log.custom(`Preload time: ${preLoadTime}ms`, 0x7946ff);
 
 const client = new Client({
 	intents: [

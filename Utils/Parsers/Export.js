@@ -1,7 +1,8 @@
-const { inspect } = require("util");
 const { FORMAT } = require("../Constants");
 const Database = require("../Database");
-const { writeFileSync } = require("fs");
+const { readFileSync } = require("fs");
+
+const missingAsset = readFileSync(`${__dirname}/../../missing.png`);
 
 const DEFAULT_OPTIONS = {
 	guildID: '',

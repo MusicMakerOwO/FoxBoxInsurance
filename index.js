@@ -188,13 +188,10 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 
 	ComponentLoader(`${__dirname}/${componentFolder}`, cache);
 	Log.debug(`Loaded ${cache.size} ${componentFolder.split('/')[1]}`);
-
-	if (!existsSync(filePath)) return;
-
-	const newComponent = require(filePath);
-
+	
 	// Check by reference, not by cache contents
-	if (cache == client.commands) {
+	if (cache == client.commands && existsSync(filePath)) {
+		const newComponent = require(filePath);
 		try {
 			const oldCommandData = oldComponent.data?.toJSON() ?? {};
 			const newCommandData = newComponent.data?.toJSON() ?? {};

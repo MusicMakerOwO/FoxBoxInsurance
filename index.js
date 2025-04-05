@@ -227,7 +227,7 @@ client.on('ready', async function () {
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
 
 	StartTasks();
-	await UploadFiles();
+	UploadFiles();
 
 	if (!config.HOT_RELOAD) {
 		Log.warn('Hot reload is disabled in config.json');

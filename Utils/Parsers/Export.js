@@ -106,7 +106,8 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		... Array.from(Context.Users.values()	).map(x => x.asset_id),
 		... Array.from(Context.Stickers.values()).map(x => x.asset_id),
 		... Array.from(Context.Emojis.values()	).map(x => x.asset_id),
-		... Array.from(Context.Files.values()	).map(x => x.asset_id)
+		// files are unique, it's an array of files, we need to extact the asset_id from each
+		... Array.from(Context.Files.values()	).map(x => x.map(f => f.asset_id)).flat()
 	];
 
 	Context.Assets = BatchCache(AssetIDs, 'id', 'Assets', 'asset_id');

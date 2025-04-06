@@ -239,7 +239,12 @@ function ExportHTML(Context) {
         const lookup = ${JSON.stringify(Lookups)};
         const messages = ${JSON.stringify(Context.Messages)};
 
-		function replaceEmojis(text) {
+		const CDN = 'https://cdn.notfbi.dev/fetch';
+
+		const missingAssetBlob = new Blob([Uint8Array.from(atob("${missingAsset.toString('base64')}"), c => c.charCodeAt(0))], { type: 'image/png' });
+		const missingAsset = URL.createObjectURL(missingAssetBlob);
+
+		function ReplaceEmojis(text) {
 			const emojiRegex = /<a?:\\w+:\\d+>/g;
 
 			const emojis = text.match(emojiRegex);
@@ -253,7 +258,7 @@ function ExportHTML(Context) {
 				const assetData = lookup.assets[emojiData.asset_id];
 				if (!assetData) continue;
 
-				text = text.replace(emojiString, \`<img src="\${assetData.url}" alt="\${name}" title="\${name}" width="24" height="24">\`);
+				text = text.replace(emojiString, \`<img src="\${CDN}/\${assetData.hash}" alt="\${name}" title="\${name}" width="24" height="24">\`);
 			}
 
 			return text;
@@ -270,14 +275,13 @@ function ExportHTML(Context) {
 			for (const pingString of pings) {
 				const id = pingString.match(idRegex)[0];
 				const user = lookup.users[id] || { name: "Unknown" };
-				// text = text.replace(pingString, \`<span style="color: \${user.color}">@\${user.username}</span>\`);
 				text = text.replace(pingString, colors ? \`<span style="color: \${user.color}">@\${user.username}</span>\` : \`@\${user.username}\`);
 			}
 
 			return text;
 		}
 
-        const container = document.getElementById("messages");
+		const container = document.getElementById("messages");
 		const start = Date.now();
 		for (const msg of messages) {
 			const localTime = new Date(msg.created_at).toLocaleString();
@@ -296,7 +300,7 @@ function ExportHTML(Context) {
 				const repliedMessage = messages.find(m => m.id === msg.reply_to); // it's slow but I don't care enough
 				let content = (repliedMessage.content || '') + ''; // break the reference so we don't write to the original object
 				content = content.split(' ').slice(0, 10).join(' '); // truncate to 10 words
-				content = replaceEmojis(content);
+				content = ReplaceEmojis(content);
 				content = PrettyPings(content, false);
 				div.innerHTML = \`<span style="color: #888">@\${lookup.users[repliedMessage.user_id].username}: </span>\${content}<br>\` + div.innerHTML;
 			}
@@ -305,7 +309,7 @@ function ExportHTML(Context) {
 				const p = document.createElement("p");
 				
 				let content = msg.content;
-				content = replaceEmojis(content);
+				content = ReplaceEmojis(content);
 				content = PrettyPings(content);
 
 				p.innerHTML = content;
@@ -313,10 +317,31 @@ function ExportHTML(Context) {
 			}
 			
 			if (sticker) {
+				const asset = lookup.assets[sticker.asset_id];
+				if (!asset) {
+					div.innerHTML += \`<img src="\${missingAsset}" alt="Missing asset" title="Missing asset" height="256">\`;
+				} else {
+					const img = document.createElement("img");
+					img.src = \`\${CDN}/\${asset.hash}\`;
+					img.alt = sticker.name;
+					img.title = sticker.name;
+					img.height = 256;
+					img.width = 256;
+					div.appendChild(img);
+				}
+			}
+
+			for (let i = 0; i < (attachments || []).length; i++) {
+				const attachment = attachments[i];
+				const asset = lookup.assets[attachment.asset_id];
+				if (!asset) {
+					div.innerHTML += \`<img src="\${missingAsset}" alt="Missing asset" title="Missing asset" height="256">\`;
+					continue;
+				}
 				const img = document.createElement("img");
-				img.src = lookup.assets[sticker.asset_id].url;
-				img.alt = sticker.name;
-				img.title = sticker.name;
+				img.src = \`\${CDN}/\${asset.hash}\`;
+				img.alt = asset.name;
+				img.title = asset.name;
 				div.appendChild(img);
 			}
 			

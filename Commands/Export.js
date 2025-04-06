@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, FORMAT } = require('../Utils/Constants');
 const ChannelCanExport = require('../Utils/Checks/ChannelCanExport');
 const Database = require('../Utils/Database');
+const ProcessMessages = require('../Utils/Processing/Messages');
 
 const DEFAULT_OPTIONS = {
 	bots: true,
@@ -44,6 +45,8 @@ module.exports = {
 		
 		await interaction.editReply({ embeds: [MessagesEmbed] });
 		await new Promise(r => setTimeout(r, 1500));
+
+		ProcessMessages(client.messageCache); // save messages
 
 		const channelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?").pluck().get(interaction.channel.id);
 

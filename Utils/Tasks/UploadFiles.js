@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const { UPLOAD_CACHE } = require("../Constants");
 const Logs = require("../Logs");
 const TaskScheduler = require("../TaskScheduler");
+const UploadCDN = require("../UploadCDN");
 
 /*
 CREATE TABLE IF NOT EXISTS Assets (
@@ -56,7 +57,7 @@ module.exports = async function UploadAssets() {
 		// console.log(data.length, HUNDRED_MEGABYTES, data.length > HUNDRED_MEGABYTES);
 
 		try {
-			var hash = await Upload(asset.name, asset.extension, data);
+			var hash = await UploadCDN(asset.name, asset.extension, data);
 		} catch (error) {
 			Logs.error(`Failed to upload ${asset.discord_id}.${asset.extension}: ${error}`);
 			failedFiles.add(`${asset.discord_id}.${asset.extension}`);
@@ -81,49 +82,4 @@ module.exports = async function UploadAssets() {
 	const end = Date.now();
 	const duration = end - start;
 	Logs.success(`Uploaded ${UploadList.length - failedFiles.size}/${UploadList.length} assets in ${duration}ms`);
-}
-
-async function Upload(name, extension, data) {
-	// POST cdn.notfbi.dev/upload
-	return new Promise((resolve, reject) => {
-		const request = https.request({
-			hostname: 'cdn.notfbi.dev',
-			port: 443,
-			path: '/upload',
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/octet-stream',
-				'Content-Length': data.length,
-				'name': name,
-				'ext': extension,
-				'key': process.env.ACCESS_KEY
-			}
-		}, (response) => {
-			const data = [];
-			response.on('data', chunk => data.push(chunk));
-			response.on('end', () => {
-				switch (response.statusCode) {
-					case 200:
-					case 201:
-						// Uploaded successfully, returned a hash to use for retrieval
-						resolve( data.join('') );
-						break;
-					case 401: reject('Invalid key provided'); break;
-					case 413: reject('File is too large'); break;
-					default: reject(`Unknown error (${response.statusCode})`); break;
-				}
-			});
-		});
-
-		function OnError(reason) {
-			reject(`Failed to upload asset: ${reason}`);
-			request.destroy();
-		}
-
-		request.on('error', OnError);
-		request.on('timeout', OnError);
-
-		request.write(data);
-		request.end();
-	});
 }

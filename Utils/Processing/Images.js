@@ -219,49 +219,6 @@ async function DownloadAssets() {
 	}
 }
 
-
-// async function UploadAsset(name, extension, data) {
-// 	const header = {
-// 		'Content-Type': 'application/octet-stream',
-// 		'key': process.env.ACCESS_KEY,
-// 		'name': name,
-// 		'ext': extension
-// 	}
-
-// 	return new Promise((resolve, reject) => {
-// 		const request = https.request('https://cdn.notfbi.dev/upload', {
-// 			method: 'POST',
-// 			headers: header
-// 		}, (response) => {
-
-// 			let error = '';
-
-// 			switch (response.statusCode) {
-// 				case 409:
-// 					// file already exists, nothing to do here
-// 				case 200:
-// 					Log.debug(`Uploaded asset: ${name}.${extension}`);
-// 					resolve();
-// 					return;
-// 				case 401: error = 'Invalid access key provided'; break;
-// 				case 413: error = 'File too large'; break;
-// 				default: error = `Unknown error (${response.statusCode})`; break;
-// 			}
-
-// 			// if we get here, there was an error lol
-// 			if (error) {
-// 				reject( error );
-// 			}
-// 		});
-
-// 		request.on('error', reject);
-// 		request.on('timeout', reject);
-
-// 		request.write(data);
-// 		request.end();
-// 	});
-// }
-
 async function DownloadURL(url) {
 	return new Promise((resolve, reject) => {
 		https.get(url, {

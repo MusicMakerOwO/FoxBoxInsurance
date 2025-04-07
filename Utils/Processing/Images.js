@@ -192,7 +192,7 @@ async function DownloadAssets() {
 			asset.type,
 			asset.id,
 			asset.url,
-			asset.name,
+			Clean(asset.name),
 			extension,
 			asset.width,
 			asset.height,
@@ -217,6 +217,12 @@ async function DownloadAssets() {
 			if (--urlsToRemove <= 0) break;
 		}
 	}
+}
+
+function Clean(input) {
+	if (typeof input !== 'string') throw new TypeError(`Input must be a string : Received ${typeof input}`);
+	// remove all non-ASCII characters
+	return input.replace(/[^\x20-\x7E]/g, '');
 }
 
 async function DownloadURL(url) {

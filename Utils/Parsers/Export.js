@@ -250,8 +250,9 @@ function ExportHTML(Context) {
 			const emojis = text.match(emojiRegex);
 			if (!emojis) return text;
 
+			const emojiDataRegex = /<a?:(\w+):(\d+)>/;
 			for (const emojiString of emojis) {
-				const [name, id] = emojiString.slice(2, -1).split(":");
+				const [_, name, id] = emojiString.match(emojiDataRegex);
 
 				const emojiData = lookup.emojis[id];
 				if (!emojiData) continue;

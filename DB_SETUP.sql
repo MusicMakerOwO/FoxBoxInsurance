@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS Assets (
 	size INTEGER, -- in bytes
 
 	hash TEXT, -- this will be set after uploading to the cdn server
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	uploaded INTEGER NOT NULL DEFAULT 0 -- 1 if the file is uploaded to the storage
 ) STRICT;
 CREATE INDEX IF NOT EXISTS assets_hash 		 ON Assets (hash) WHERE hash IS NOT NULL;

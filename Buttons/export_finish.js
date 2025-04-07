@@ -6,11 +6,19 @@ const { DownloadAssets } = require("../Utils/Processing/Images");
 const LinkAssets = require("../Utils/Processing/LinkAssets");
 
 const ProcessMessages = require("../Utils/Processing/Messages");
+const UploadFiles = require("../Utils/Tasks/UploadFiles");
+const UploadCDN = require("../Utils/UploadCDN");
 
 const LoadingEmbed = {
 	color: COLOR.PRIMARY,
 	description: 'Exporting - This may take a minute...'
 }
+
+const UploadingEmbed = {
+	color: COLOR.PRIMARY,
+	description: 'Create download link...'
+}
+
 
 module.exports = {
 	customID: 'export-finish',
@@ -26,20 +34,31 @@ module.exports = {
 		// We don't want any missing assets or holes in the data
 		ProcessMessages(client.messageCache); // save messages
 		await DownloadAssets(); // download files
+		await UploadFiles(); // upload files to the CDN
 		LinkAssets(); // link tables together
 
 		const file = await Export(exportOptions); // { name: string, data: Buffer }
 
-		const attachment = {
-			attachment: file.data,
-			name: file.name
-		};
+		await interaction.editReply({ embeds: [UploadingEmbed] });
+		
+		const [name, extension] = file.name.split('.');
+		
+		// upload to the cdn server for easy access
+		const lookup = await UploadCDN(name, extension, file.data);
 
 		await interaction.editReply({
-			content: 'Export complete!',
-			embeds: [],
-			files: [attachment]
-		});
+			embeds: [
+				{
+					color: COLOR.PRIMARY,
+					description: `
+Exported ${exportOptions.messageCount} messages from <#${exportOptions.channelID}>
 
+**Download Link**: [Click here to download](https://cdn.notfbi.dev/download/${lookup})
+**File Size**: ${(file.data.length / 1024).toFixed(2)} KB
+
+The download link will expire after 24 hours - You will not be given this link again.`
+				}
+			]
+		});
 	}
 }

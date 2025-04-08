@@ -8,6 +8,7 @@ const ErrorParse = require('../Utils/FindError');
 
 const { FANCY_ERRORS } = require('../config.json');
 const { COLOR } = require('../Utils/Constants');
+const Database = require('../Utils/Database');
 
 module.exports = {
 	name: 'interactionCreate',
@@ -50,7 +51,52 @@ module.exports = {
 	}
 }
 
+const TOS_Embed = {
+	color: COLOR.PRIMARY,
+	description: `
+You are required to accept the Terms of Service before using this bot
+
+By agreeing to the Terms you are agreeing to the following:
+- You will not use this bot for illegal purposes
+- You will not use the data for blackmail, harassment, doxxing, or any other malicious intent
+- You will abide by the [Discord ToS](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines)
+- If you are caught violating these terms you will be banned from using this bot
+
+You can find a fully copy of the terms here : https://www.notfbi.dev/terms`
+}
+
+const TOS_BUTTONS = {
+	type: 1,
+	components: [
+		{
+			type: 2,
+			style: 4,
+			label: 'Decline',
+			custom_id: 'close'
+		},
+		{
+			type: 2,
+			style: 3,
+			label: 'Accept',
+			custom_id: 'tos-accept'
+		}
+	]
+}
+
+const InsertUser = Database.prepare(`
+	INSERT INTO Users (id, username, bot)
+	VALUES (?, ?, ?)
+	ON CONFLICT (id) DO NOTHING
+`);
+
 async function InteractionHandler(client, interaction, type, cache) {
+
+	// add the user to the database if they don't exist
+	InsertUser.run(
+		interaction.user.id,
+		interaction.user.username,
+		interaction.user.bot ? 1 : 0
+	);
 
 	const args = interaction.customId?.split("_") ?? [];
 	const name = args.shift() ?? interaction.commandName;
@@ -62,6 +108,17 @@ async function InteractionHandler(client, interaction, type, cache) {
 			ephemeral: true
 		}).catch(() => { });
 		client.logs.error(`${type} not found: ${name}`);
+		return;
+	}
+
+	const accepted = HasAcceptedTOS(interaction.user.id);
+	if (!accepted && component.bypass !== true) {
+		// cancel the interaction and prompt them to accept the TOS before proceding
+		await interaction.reply({
+			embeds: [TOS_Embed],
+			components: [TOS_BUTTONS],
+			ephemeral: true
+		}).catch(() => { });
 		return;
 	}
 
@@ -160,4 +217,27 @@ async function InteractionHandler(client, interaction, type, cache) {
 			}
 		}
 	}
+}
+
+const maxSize = 1000;
+const RecentUsers = new Set(); // poor mans LRU cache
+function HasAcceptedTOS(userID) {
+	if (RecentUsers.has(userID)) return true;
+
+	// clear the lru if needed, no reason to do it any later in the function
+	if (RecentUsers.size > maxSize) {
+		const toClear = Array.from(RecentUsers).slice(0, maxSize * 0.9);
+		for (const user of toClear) {
+			RecentUsers.delete(user);
+		}
+	}
+	
+	// check the database
+	const accepted = Database.prepare(`SELECT accepted_terms FROM Users WHERE id = ?`).pluck().get(userID);
+	if (accepted) {
+		RecentUsers.add(userID);
+		return true;
+	}
+
+	return false;
 }

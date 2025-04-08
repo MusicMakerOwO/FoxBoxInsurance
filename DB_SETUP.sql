@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS Users (
 	username TEXT NOT NULL,
 	bot INTEGER NOT NULL DEFAULT 0,
 	asset_id INTEGER,
+	accepted_terms INTEGER NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
 ) STRICT;
 CREATE INDEX IF NOT EXISTS users_username ON Users (username);

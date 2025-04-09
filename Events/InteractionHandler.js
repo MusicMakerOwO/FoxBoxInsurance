@@ -51,7 +51,7 @@ module.exports = {
 	}
 }
 
-const TOS_Embed = {
+const USER_TOS_Embed = {
 	color: COLOR.PRIMARY,
 	description: `
 You are required to accept the Terms of Service before using this bot
@@ -65,7 +65,7 @@ By agreeing to the Terms you are agreeing to the following:
 You can find a fully copy of the terms here : https://www.notfbi.dev/terms`
 }
 
-const TOS_BUTTONS = {
+const USER_TOS_BUTTONS = {
 	type: 1,
 	components: [
 		{
@@ -81,6 +81,13 @@ const TOS_BUTTONS = {
 			custom_id: 'tos-accept'
 		}
 	]
+}
+
+const GUILD_TOS_Embed = {
+	color: COLOR.PRIMARY,
+	description: `
+The server owner has not accepted the Terms of Service yet.
+Please notify an admin to finish the setup process.`
 }
 
 const InsertUser = Database.prepare(`
@@ -111,15 +118,23 @@ async function InteractionHandler(client, interaction, type, cache) {
 		return;
 	}
 
-	const accepted = HasAcceptedTOS(interaction.user.id);
-	if (!accepted && component.bypass !== true) {
+	const userAccepted = Database.prepare(`SELECT accepted_terms FROM Users WHERE id = ?`).pluck().get(interaction.user.id);
+	if (userAccepted === 0 && component.bypass !== true) {
 		// cancel the interaction and prompt them to accept the TOS before proceding
 		await interaction.reply({
-			embeds: [TOS_Embed],
-			components: [TOS_BUTTONS],
+			embeds: [USER_TOS_Embed],
+			components: [USER_TOS_BUTTONS],
 			ephemeral: true
 		}).catch(() => { });
 		return;
+	}
+
+	const guildAccepted = Database.prepare(`SELECT accepted_terms FROM Guilds WHERE id = ?`).pluck().get(interaction.guildId);
+	if (guildAccepted === 0 && component.bypass !== true) {
+		// cancel the interaction and prompt them to accept the TOS before proceding
+		await interaction.reply({
+			embeds: [GUILD_TOS_Embed]
+		});
 	}
 
 	if ('defer' in component && component.defer !== null) {
@@ -217,27 +232,4 @@ async function InteractionHandler(client, interaction, type, cache) {
 			}
 		}
 	}
-}
-
-const maxSize = 1000;
-const RecentUsers = new Set(); // poor mans LRU cache
-function HasAcceptedTOS(userID) {
-	if (RecentUsers.has(userID)) return true;
-
-	// clear the lru if needed, no reason to do it any later in the function
-	if (RecentUsers.size > maxSize) {
-		const toClear = Array.from(RecentUsers).slice(0, maxSize * 0.9);
-		for (const user of toClear) {
-			RecentUsers.delete(user);
-		}
-	}
-	
-	// check the database
-	const accepted = Database.prepare(`SELECT accepted_terms FROM Users WHERE id = ?`).pluck().get(userID);
-	if (accepted) {
-		RecentUsers.add(userID);
-		return true;
-	}
-
-	return false;
 }

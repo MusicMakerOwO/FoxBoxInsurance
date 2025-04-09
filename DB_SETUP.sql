@@ -38,6 +38,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS assets_discord_id ON Assets (discord_id);
 CREATE TABLE IF NOT EXISTS Guilds (
 	id TEXT NOT NULL PRIMARY KEY,
 	name TEXT,
+	accepted_terms INTEGER NOT NULL DEFAULT 0, -- 1 if the guild has accepted the terms
 	asset_id INTEGER,
 	-- {{...}} denotes an external macro, see Utils/Database for available macros
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL

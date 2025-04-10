@@ -13,6 +13,7 @@ For any privacy concerns or legal troubles please reach out to me on discord \`@
 }
 
 module.exports = {
+	bypass: true,
 	aliases: ['privacy'],
 	data: new SlashCommandBuilder()
 		.setName('terms')

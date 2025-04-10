@@ -159,3 +159,17 @@ CREATE TABLE IF NOT EXISTS MessageEmojis (
 ) STRICT;
 CREATE INDEX IF NOT EXISTS message_emojis_message_id ON MessageEmojis (message_id);
 CREATE INDEX IF NOT EXISTS message_emojis_emoji_id   ON MessageEmojis (emoji_id);
+
+
+CREATE TABLE IF NOT EXISTS Exports (
+	id TEXT NOT NULL PRIMARY KEY, -- xxxx-xxxx-xxxx-xxxx
+	guild_id TEXT NOT NULL,
+	channel_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+	message_count INTEGER NOT NULL DEFAULT 0,
+	format TEXT NOT NULL,
+	hash TEXT NOT NULL UNIQUE, -- The hash of the file
+	lookup TEXT NOT NULL UNIQUE, -- The file ID on the CDN server
+	created_at TEXT NOT NULL DEFAULT ( strftime('%Y-%m-%dT%H:%M:%fZ', 'now') )
+);
+CREATE INDEX IF NOT EXISTS exports_user_id ON Exports (user_id);

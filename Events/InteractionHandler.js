@@ -36,7 +36,7 @@ module.exports = {
 					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > [${interaction.customId}]`);
 					await BoundHandler('buttons', client.buttons);
 				} else if (interaction.isAnySelectMenu()) {
-					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > <${interaction.customId}>`);
+					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > <${interaction.customId} : ${interaction.values.join(', ')}>`);
 					await BoundHandler('menus', client.menus);
 				}
 				break;

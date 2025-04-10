@@ -299,6 +299,10 @@ function ExportHTML(Context) {
 			
 			if (msg.reply_to) {
 				const repliedMessage = messages.find(m => m.id === msg.reply_to); // it's slow but I don't care enough
+				if (!repliedMessage) {
+					div.innerHTML += \`<span style="color: #888">[Unknown message]</span><br>\`;
+					continue;
+				}
 				let content = (repliedMessage.content || '') + ''; // break the reference so we don't write to the original object
 				content = content.split(' ').slice(0, 10).join(' '); // truncate to 10 words
 				content = ReplaceEmojis(content);

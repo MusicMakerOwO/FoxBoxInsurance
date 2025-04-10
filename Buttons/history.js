@@ -14,14 +14,20 @@ module.exports = {
 		
 		const exportCount = Database.prepare(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`).pluck().get(interaction.user.id);
 
-		page = parseInt(page);
-		if (isNaN(page) || page < 0) page = 0;
+		if (page === 'first') {
+			page = 0;
+		} else if (page === 'last') {
+			page = Math.ceil(exportCount / PAGE_SIZE) - 1;
+		} else {
+			page = parseInt(page);
+			if (isNaN(page) || page < 0) page = 0;
+		}
 
 		const exports = History.all(interaction.user.id, page); // 0-5, 6-10, 11-15, etc.
 
 		const embed = {
 			color: COLOR.PRIMARY,
-			title: 'Export History',
+			title: `Export History (${exportCount} total)`,
 			description: ''
 		};
 
@@ -32,7 +38,7 @@ module.exports = {
 			type: 1,
 			components: [{
 				type: 3,
-				custom_id: 'history',
+				custom_id: 'exportInfo',
 				placeholder: 'Select an export to view',
 				options: []
 			}]
@@ -74,7 +80,7 @@ ${guild} - #${channel}
 				{
 					type: 2,
 					style: 2,
-					custom_id: 'history_previous',
+					custom_id: `history_${page - 1}`,
 					disabled: page === 0,
 					emoji: '◀️'
 				},
@@ -88,15 +94,15 @@ ${guild} - #${channel}
 				{
 					type: 2,
 					style: 2,
-					custom_id: 'history_next',
-					disabled: exports.length < PAGE_SIZE,
+					custom_id: `history_${page + 1}`,
+					disabled: page + 1 >= Math.ceil(exportCount / PAGE_SIZE),
 					emoji: '▶️'
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: 'history_last',
-					disabled: exports.length < PAGE_SIZE,
+					disabled: page + 1 >= Math.ceil(exportCount / PAGE_SIZE),
 					emoji: '⏩'
 				}
 			]

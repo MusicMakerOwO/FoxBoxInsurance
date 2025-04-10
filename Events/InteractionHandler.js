@@ -118,24 +118,25 @@ async function InteractionHandler(client, interaction, type, cache) {
 		return;
 	}
 
+	const guildAccepted = Database.prepare(`SELECT accepted_terms FROM Guilds WHERE id = ?`).pluck().get(interaction.guildId);
 	const userAccepted = Database.prepare(`SELECT accepted_terms FROM Users WHERE id = ?`).pluck().get(interaction.user.id);
-	if (userAccepted === 0 && component.bypass !== true) {
-		// cancel the interaction and prompt them to accept the TOS before proceding
-		await interaction.reply({
-			embeds: [USER_TOS_Embed],
-			components: [USER_TOS_BUTTONS],
-			ephemeral: true
-		}).catch(() => { });
+	if (guildAccepted === 0 && component.bypass !== true) {
+		if (interaction.user.id !== interaction.guild.ownerId) {
+			// warn user that the server owner has not accepted TOS
+			await interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], ephemeral: true }).catch(() => {});
+		} else {
+			// Owner must accept TOS
+			await interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true }).catch(() => {});
+		}
 		return;
 	}
 
-	const guildAccepted = Database.prepare(`SELECT accepted_terms FROM Guilds WHERE id = ?`).pluck().get(interaction.guildId);
-	if (guildAccepted === 0 && component.bypass !== true) {
-		// cancel the interaction and prompt them to accept the TOS before proceding
-		await interaction.reply({
-			embeds: [GUILD_TOS_Embed]
-		});
+	if (userAccepted === 0 && component.bypass !== true) {
+		// Force users to accept TOS
+		await interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true }).catch(() => {});
+		return;
 	}
+
 
 	if ('defer' in component && component.defer !== null) {
 		await interaction.deferReply({ ephemeral: component.defer }).catch(() => {});

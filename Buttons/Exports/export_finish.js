@@ -75,8 +75,7 @@ Exported ${exportOptions.messageCount} messages from <#${exportOptions.channelID
 **File Size**: ${(file.data.length / 1024).toFixed(2)} KB
 **Export ID**: \`${file.id}\`
 
-The download link will expire after 24 hours - You will not be given this link again.
-The export ID above can be used to check if you modified the export in any way - __Be responsible__.`
+The download link will expire after 24 hours - You will not be given this link again!`
 				}
 			]
 		});

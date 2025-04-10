@@ -45,7 +45,7 @@ module.exports = {
 		const [name, extension] = file.name.split('.');
 		
 		// upload to the cdn server for easy access
-		const lookup = await UploadCDN(name, extension, file.data);
+		const lookup = await UploadCDN(name, extension, file.data, 1); // 1 url = 1 download
 
 		const hash = Crypto.createHash('sha1').update(file.data).digest('hex');
 

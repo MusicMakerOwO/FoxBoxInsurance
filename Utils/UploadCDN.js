@@ -1,5 +1,5 @@
 const https = require('https');
-module.exports = async function Upload(name, extension, data) {
+module.exports = async function Upload(name, extension, data, downloadLimit = 0) {
 	// POST cdn.notfbi.dev/upload
 	return new Promise((resolve, reject) => {
 		const request = https.request({
@@ -12,7 +12,8 @@ module.exports = async function Upload(name, extension, data) {
 				'Content-Length': data.length,
 				'name': name,
 				'ext': extension,
-				'key': process.env.ACCESS_KEY
+				'key': process.env.ACCESS_KEY,
+				'download-limit': downloadLimit || null, // 0 -> null -> no limit
 			}
 		}, (response) => {
 			const data = [];

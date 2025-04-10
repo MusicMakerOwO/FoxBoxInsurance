@@ -1,4 +1,4 @@
-const GetExportCache = require("../Utils/Caching/GetExportCache")
+const GetExportCache = require("../../Utils/Caching/GetExportCache")
 
 const modal = {
 	title: 'Export Messages',

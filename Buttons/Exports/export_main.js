@@ -1,6 +1,6 @@
-const GetExportCache = require("../Utils/Caching/GetExportCache");
-const { COLOR, FORMAT } = require("../Utils/Constants");
-const Database = require("../Utils/Database");
+const GetExportCache = require("../../Utils/Caching/GetExportCache");
+const { COLOR, FORMAT } = require("../../Utils/Constants");
+const Database = require("../../Utils/Database");
 
 const optionButtons = {
 	type: 1,

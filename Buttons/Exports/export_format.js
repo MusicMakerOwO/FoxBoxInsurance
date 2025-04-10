@@ -1,5 +1,5 @@
-const GetExportCache = require("../Utils/Caching/GetExportCache");
-const { FORMAT, COLOR } = require("../Utils/Constants");
+const GetExportCache = require("../../Utils/Caching/GetExportCache");
+const { FORMAT, COLOR } = require("../../Utils/Constants");
 
 const FORMAT_EMBED = {
 	color: COLOR.PRIMARY,

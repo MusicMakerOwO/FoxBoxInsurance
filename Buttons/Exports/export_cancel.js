@@ -1,4 +1,4 @@
-const { COLOR } = require("../Utils/Constants");
+const { COLOR } = require("../../Utils/Constants");
 
 const ConfirmEmbed = {
 	color: COLOR.ERROR,

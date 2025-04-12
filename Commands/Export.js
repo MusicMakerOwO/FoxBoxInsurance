@@ -37,7 +37,7 @@ module.exports = {
 		await interaction.reply({ embeds: [LoadingEmbed], ephemeral: true });
 		await new Promise(r => setTimeout(r, 700));
 
-		const canExport = ChannelCanExport(interaction.channel.id);
+		const canExport = interaction.member.permissions.has('Administrator') || !Database.prepare("SELECT block_exports FROM Channels WHERE id = ?").pluck().get(interaction.channel.id);
 		if (!canExport) {
 			await interaction.editReply({ embeds: [NoExport] });
 			return;

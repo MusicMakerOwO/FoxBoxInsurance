@@ -4,6 +4,14 @@ module.exports = class CachePool {
 		this.currentPool = 0;
 	}
 
+	get size() {
+		let total = 0;
+		for (const pool of this.cache) {
+			total += pool.length;
+		}
+		return total;
+	}
+
 	switch () {
 		this.currentPool = (this.currentPool + 1) % this.cache.length;
 	}

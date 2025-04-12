@@ -24,7 +24,8 @@ const COLOR = {
 	TERTIARY: 0x2c2f33,
 	HIGHLIGHT: 0x007799,
 
-	ERROR: 0xff0000
+	ERROR: 0xff0000,
+	SUCCESS: 0x00ff00,
 }
 
 const FORMAT = {

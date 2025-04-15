@@ -72,11 +72,18 @@ module.exports = async function UploadAssets() {
 
 	// Check for orphaned files
 	const files = fs.readdirSync(UPLOAD_CACHE);
-	if (files.length > 0) {
-		for (const file of files) {
-			if (failedFiles.has(file)) continue;
-			Logs.error(`Orphaned file found: ${file}`);
+	for (const file of files) {
+		if (failedFiles.has(file)) continue;
+		// check if it was already uploaded
+		const discordID = file.split('.')[0];
+		const asset = Database.prepare(`SELECT asset_id FROM Assets WHERE discord_id = ? AND uploaded = 1`).get(discordID);
+		if (asset) {
+			// if it was uploaded but not deleted for whatever reason, delete the file
+			Logs.warn(`Oprphaned file not deleted: ${file}`);
+			await fs.promises.unlink(`${UPLOAD_CACHE}/${file}`);
+			continue;
 		}
+		Logs.error(`Orphaned file found: ${file}`);
 	}
 
 	const end = Date.now();

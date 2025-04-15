@@ -1,5 +1,5 @@
 const GetExportCache = require("../../Utils/Caching/GetExportCache");
-const { COLOR } = require("../../Utils/Constants");
+const { COLOR, RandomLoadingEmbed } = require("../../Utils/Constants");
 const Export = require("../../Utils/Parsers/Export");
 const { DownloadAssets } = require("../../Utils/Processing/Images");
 const LinkAssets = require("../../Utils/Processing/LinkAssets");
@@ -10,17 +10,6 @@ const UploadFiles = require("../../Utils/Tasks/UploadFiles");
 const UploadCDN = require("../../Utils/UploadCDN");
 const Database = require("../../Utils/Database");
 
-const LoadingEmbed = {
-	color: COLOR.PRIMARY,
-	description: 'Exporting - This may take a minute...'
-}
-
-const UploadingEmbed = {
-	color: COLOR.PRIMARY,
-	description: 'Create download link...'
-}
-
-
 module.exports = {
 	customID: 'export-finish',
 	execute: async function(interaction, client, args) {
@@ -29,7 +18,7 @@ module.exports = {
 		
 		// this could take a while...
 		await interaction.deferUpdate().catch(() => {});
-		await interaction.editReply({ embeds: [LoadingEmbed], components: [] });
+		await interaction.editReply({ embeds: [RandomLoadingEmbed()], components: [] });
 
 		// flush all the caches first to make sure we have the latest data
 		// We don't want any missing assets or holes in the data
@@ -40,7 +29,7 @@ module.exports = {
 
 		const file = await Export(exportOptions); // { name: string, data: Buffer }
 
-		await interaction.editReply({ embeds: [UploadingEmbed] });
+		await interaction.editReply({ embeds: [RandomLoadingEmbed()] });
 		
 		const [name, extension] = file.name.split('.');
 		

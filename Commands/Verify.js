@@ -1,6 +1,6 @@
 const https = require('https');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { COLOR } = require('../Utils/Constants');
+const { COLOR, RandomLoadingEmbed } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
 
 const FailedEmbed = {
@@ -18,10 +18,6 @@ const ModifiedEmbed = {
 const CleanEmbed = {
 	color: COLOR.SUCCESS,
 	description: 'This export is clean - No modifications detected'
-}
-const LoadingEmbed = {
-	color: COLOR.PRIMARY,
-	description: 'Checking file...'
 }
 
 module.exports = {
@@ -58,7 +54,7 @@ module.exports = {
 			return;
 		}
 
-		await interaction.editReply({ embeds: [LoadingEmbed] });
+		await interaction.editReply({ embeds: [RandomLoadingEmbed()] });
 		await new Promise(resolve => setTimeout(resolve, 2000));
 
 		const hash = require('crypto').createHash('sha1').update(fileData).digest('hex');

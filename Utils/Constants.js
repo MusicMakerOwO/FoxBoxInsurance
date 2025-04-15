@@ -55,6 +55,41 @@ const TASK_INTERVAL = {
 	[TASK.UPLOAD_CACHE]: SECONDS.HOUR * 1000
 }
 
+const LOADING_MESSAGES = [
+	'Hacking the FBI...',
+	'Collecting fingerprints ...',
+	'Searching for clues ...',
+	'Faking a search warrant ...',
+	'Searching the dark web ...',
+	'Optimizing the optimizer ...',
+	'Routing through 17 proxies ...',
+	'Enabling AI ... (please dont panic)',
+	'Installing Linux on a toaster ...',
+	'Downloading internet ...',
+	'Interrogating the database ...',
+	'Solving P vs NP ...',
+	'Scanning for illegal cat pictures ...',
+	'Uploading your secret ... (oops)',
+	'Reading the database a bedtime story. ..', 
+	'Feeding hamsters in the server room ...',
+	'Petting the internet for good luck ...',
+	'Waiting for a discord outage ...',
+	'Asking our lawyers if this is legal ...',
+	'Finding the best memes ...',
+]
+
+function RandomLoadingMessage() {
+	const index = Math.floor(Math.random() * LOADING_MESSAGES.length);
+	return LOADING_MESSAGES[index];
+}
+
+function RandomLoadingEmbed() {
+	return {
+		color: COLOR.PRIMARY,
+		description: RandomLoadingMessage()
+	}
+}
+
 module.exports = {
 	ROOT_FOLDER,
 
@@ -68,5 +103,9 @@ module.exports = {
 	COLOR,
 	FORMAT,
 	TASK,
-	TASK_INTERVAL
+	TASK_INTERVAL,
+	LOADING_MESSAGES,
+
+	RandomLoadingMessage,
+	RandomLoadingEmbed
 }

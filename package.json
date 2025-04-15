@@ -1,7 +1,8 @@
 {
 	"dependencies": {
 		"better-sqlite3": "^11.8.1",
-		"discord.js": "14.16"
+		"discord.js": "14.16",
+		"html-minifier": "^4.0.0"
 	},
 	"scripts": {
 		"start": "node index.js"

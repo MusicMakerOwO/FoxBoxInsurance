@@ -1,11 +1,11 @@
+const preLoadStart = process.hrtime.bigint();
+
 // must be run with `node --env-file .env index.js`
 if (!process.env.ACCESS_KEY) {
 	console.error('Could not find process.env.ACCESS_KEY in .env');
 	console.error('Please run the server with `node --env-file .env index.js`');
 	process.exit(1);
 }
-
-const preLoadStart = process.hrtime.bigint();
 
 const config = require('./config.json');
 
@@ -36,7 +36,7 @@ for (const [key, type] of Object.entries(ConfigTemplate)) {
 	}
 }
 
-const { existsSync, readFileSync, writeFileSync } = require('node:fs');
+const { existsSync, readFileSync, writeFileSync, mkdirSync } = require('node:fs');
 
 const Log = require('./Utils/Logs');
 const ComponentLoader = require('./Utils/ComponentLoader');
@@ -57,6 +57,9 @@ const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
 const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
+
+if (!existsSync(`${__dirname}/UploadCache`)) mkdirSync(`${__dirname}/UploadCache`, { recursive: true });
+if (!existsSync(`${__dirname}/DownloadCache`)) mkdirSync(`${__dirname}/DownloadCache`, { recursive: true });
 
 const preLoadEnd = process.hrtime.bigint();
 const preLoadTime = (preLoadEnd - preLoadStart) / BigInt(1e6); // convert to milliseconds

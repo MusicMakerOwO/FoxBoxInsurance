@@ -44,7 +44,7 @@ module.exports = {
 			format: FORMAT.HTML,
 			messageCount: Math.min(channelMessageCount, 100),
 			options: { ... DEFAULT_OPTIONS }, // we have to clone the object so we don't modify the original
-			lastMessageID: (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING
+			lastMessageID: String( (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING )
 		}
 
 		client.timedCache.set(`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`, exportOptions);

@@ -1,5 +1,3 @@
-const { bypass } = require("./tos_accept");
-
 module.exports = {
 	bypass: true,
 	customID: 'close',

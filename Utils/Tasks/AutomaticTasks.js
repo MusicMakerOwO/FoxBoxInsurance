@@ -1,4 +1,4 @@
-const { TASK, TASK_INTERVAL } = require("../Constants");
+const { SECONDS } = require("../Constants");
 const Database = require("../Database");
 const { warn, error, success } = require("../Logs");
 const TaskScheduler = require("../TaskScheduler");
@@ -60,9 +60,9 @@ module.exports.StartTasks = function StartTasks() {
 		const now = Date.now();
 		const timeSinceLastRun = Math.max(0, now - lastRun);
 
-		TaskScheduler.schedule(async () => {
+		TaskScheduler.schedule(() => {
 			try {
-				await callback();
+				callback();
 				Database.prepare("INSERT OR REPLACE INTO Timers (id, last_run) VALUES (?, ?)").run(name, Date.now());
 			} catch (err) {
 				error(err);

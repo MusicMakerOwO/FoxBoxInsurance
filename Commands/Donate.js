@@ -5,8 +5,8 @@ const embed = {
 	color: COLOR.PRIMARY,
 	description: `
 Thank you for using FBI - We are dedicated to providing free and safe moderation for all. \
-If you would like to support us, please consider donating to our ☕ Ko-fi page. \
-__These donations will only go to server costs.__
+If you'd like to support us, consider donating to our ☕ Ko-fi page. \
+__All donations go directly to server costs.__
 
 **Current server costs** : $12.17/month`
 }

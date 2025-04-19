@@ -9,6 +9,7 @@ const ProcessMessages = require("../../Utils/Processing/Messages");
 const UploadFiles = require("../../Utils/Tasks/UploadFiles");
 const UploadCDN = require("../../Utils/UploadCDN");
 const Database = require("../../Utils/Database");
+const { type } = require("os");
 
 module.exports = {
 	customID: 'export-finish',
@@ -53,7 +54,19 @@ module.exports = {
 			lookup
 		);
 
+		const downloadButton = {
+			type: 1,
+			components: [{
+				type: 2,
+				style: 5,
+				label: 'Download',
+				url: `https://cdn.notfbi.dev/download/${lookup}`,
+				emoji: '📥',
+			}]
+		}
+
 		await interaction.editReply({
+			components: [downloadButton],
 			embeds: [
 				{
 					color: COLOR.PRIMARY,

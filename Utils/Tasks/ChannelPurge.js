@@ -9,7 +9,7 @@
 const Database = require("../Database");
 const Task = require("../TaskScheduler");
 const Log = require("../Logs");
-const { SECONDS, TASK, TASK_INTERVAL } = require("../Constants");
+const { SECONDS } = require("../Constants");
 
 const FindStaleChannels = Database.prepare("SELECT id FROM Channels WHERE last_purge < ?");
 const FindLastMessage = Database.prepare("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY id DESC LIMIT 1");

@@ -1,9 +1,5 @@
-// Need to delete unused data when the message data no longer exists
-
-const { TASK, TASK_INTERVAL } = require("../Constants");
 const Database = require("../Database");
 const { success } = require("../Logs");
-const Task = require("../TaskScheduler");
 
 // Tables to check:
 // - Emojis

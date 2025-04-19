@@ -258,12 +258,13 @@
 						attachmentDiv.innerHTML += `<img src="${missingAsset}" alt="Missing asset" title="Missing asset" height="256">`;
 						continue;
 					}
-					const name = asset.name.length > 30 ? asset.name.slice(0, 30) + '...' : asset.name;
+					const name = asset.name.length > 30 ? asset.name.slice(0, 30) + ' ... ' : asset.name;
+					const fileName = name + '.' + asset.extension;
 					let innerHTML = `
-						<a href="${CDN}/download/${asset.hash}" download="${name}" class="link">${name}</a>
+						<a href="${CDN}/download/${asset.hash}" download="${fileName}" class="link">${fileName}</a>
 						<span style="color: #888">(${~~(asset.size / 1024 * 10) / 10} KB)</span>
 						<br>
-						<a href="${CDN}/download/${asset.hash}" download="${name}">
+						<a href="${CDN}/download/${asset.hash}" download="${fileName}">
 					`;
 					if (EXTENSIONS.PICTURE.includes(asset.extension)) {
 						innerHTML += `<img src="${CDN}/fetch/${asset.hash}" alt="${asset.name}" title="${asset.name}" height="256" onerror="this.onerror=null;this.src='${missingAsset}';">`;
@@ -277,7 +278,7 @@
 							<div class="file-download">
 								<div class="file-icon">📄</div>
 								<div class="file-meta">
-									<span class="file-name" title="${asset.name}">${asset.name}</span>
+									<span class="file-name" title="${fileName}">${fileName}</span>
 									<a class="file-button" href="${downloadURL}" download>Download</a>
 								</div>
 							</div>

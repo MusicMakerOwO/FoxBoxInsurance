@@ -144,11 +144,14 @@ CREATE TABLE IF NOT EXISTS Messages (
 	content TEXT,
 	sticker_id TEXT,
 	reply_to TEXT DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
-	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
+	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL,
+	encrypted INTEGER NOT NULL DEFAULT 0, -- 1 if the message is encrypted
+	tag TEXT DEFAULT NULL -- NULL if no tag, otherwise the tag name
 ) STRICT;
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
 CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);
 CREATE INDEX IF NOT EXISTS messages_user_id    ON Messages (user_id);
+CREATE INDEX IF NOT EXISTS messages_encrypted  ON Messages (encrypted) WHERE encrypted = 0;
 
 -- Quick lookup every emoji used in a message
 CREATE TABLE IF NOT EXISTS MessageEmojis (

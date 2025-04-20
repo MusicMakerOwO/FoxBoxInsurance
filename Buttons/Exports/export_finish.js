@@ -9,7 +9,28 @@ const ProcessMessages = require("../../Utils/Processing/Messages");
 const UploadFiles = require("../../Utils/Tasks/UploadFiles");
 const UploadCDN = require("../../Utils/UploadCDN");
 const Database = require("../../Utils/Database");
-const { type } = require("os");
+
+const loadingMessages = [
+	'Hmm this is taking a while...',
+	'Please wait a moment...',
+	'Almost there...',
+	'Just a little bit longer...'
+]
+
+const converstionMessages = [
+	'Read any good books lately?',
+	'So how\'s the weather?',
+	'If I had legs I\'d be pacing right now',
+	'This is a big one huh? Lots of messages?',
+]
+
+const stallingMessages = [
+	'I hope this isn\'t the part that I crash...',
+	'Okay so funny story - nevermind. Still exporting.',
+	'Uh ... you still there?',
+	'At this point I\'m just talking to myself',
+]
+
 
 module.exports = {
 	customID: 'export-finish',
@@ -28,7 +49,38 @@ module.exports = {
 		await UploadFiles(); // upload files to the CDN
 		LinkAssets(); // link tables together
 
+		let loadingInterval;
+		let finished = false;
+
+		// Start timeout after 10 seconds
+		const loadingTimeout = setTimeout(() => {
+			if (finished) return;
+
+			let index = 0;
+			loadingInterval = setInterval(() => {
+				// pick 2 random messages from each category before moving on
+				let messages = [];
+				if (index < 2) messages = loadingMessages;
+				else if (index < 4) messages = converstionMessages;
+				else messages = stallingMessages;
+
+				const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+				interaction.editReply({
+					embeds: [{ color: COLOR.PRIMARY, description: randomMessage }],
+				});
+
+				index++;
+			}, 5000); // every 5 seconds
+		}, 5000); // 5-second delay
+
 		const file = await Export(exportOptions); // { name: string, data: Buffer }
+
+		await new Promise(resolve => setTimeout(resolve, 30_000)); // wait for a second to let the loading message finish
+
+		// stop the loading interval
+		finished = true;
+		clearTimeout(loadingTimeout);
+		clearInterval(loadingInterval);
 
 		await interaction.editReply({ embeds: [RandomLoadingEmbed()] });
 		

@@ -2,6 +2,10 @@ const { FORMAT } = require("../Constants");
 const Database = require("../Database");
 const { readFileSync } = require("fs");
 const { minify } = require("html-minifier");
+const crypto = require("crypto");
+const { promisify } = require("util");
+
+const scryptAsync = promisify(crypto.scrypt);
 
 const missingAsset = readFileSync(`${__dirname}/../../missing.png`);
 
@@ -93,6 +97,36 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 			LIMIT ?
 		)
 	`).all(options.channelID, String(options.lastMessageID), options.messageCount);
+
+	const keyCache = new Map(); // user_id -> key
+
+	console.log(`Decrypting ${messages.length} messages...`);
+
+	const decryptStart = process.hrtime.bigint();
+	for (let i = 0; i < messages.length; i++) {
+		const message = messages[i];
+		if (message.encrypted === 0) continue;
+		if (message.content === null) continue;
+
+		if (!keyCache.has(message.user_id)) {
+			const key = await scryptAsync(message.user_id, process.env.SALT, 32);
+			keyCache.set(message.user_id, key);
+		}
+		const key = keyCache.get(message.user_id);
+		if (!key) throw new Error(`Failed to get key for user ${message.user_id}`);
+		
+		const iv = crypto.createHash('sha256').update(`${message.id}${message.user_id}`).digest('hex').slice(0, 16);
+		const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+		decipher.setAuthTag(Buffer.from(message.tag, 'base64'));
+		
+		const decrypted = decipher.update(message.content, 'base64', 'utf8') + decipher.final('utf8');
+		
+		message.content = decrypted;
+	}
+	const decryptEnd = process.hrtime.bigint();
+	const decryptTime = Number(decryptEnd - decryptStart) / 1e6;
+	console.log(`Decrypted ${messages.length} messages in ${decryptTime.toFixed(2)}ms (${(decryptTime / messages.length).toFixed(2)}ms per message)`);
+
 	Context.Messages = messages;
 
 	Context.Users 	 = BatchCache(messages, 'user_id', 'Users', 'id');

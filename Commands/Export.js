@@ -27,8 +27,10 @@ module.exports = {
 		await interaction.reply({ embeds: [RandomLoadingEmbed()], ephemeral: true });
 		await new Promise(r => setTimeout(r, 2000));
 
+		const blocked = Database.prepare("SELECT user_id FROM GuildBlocks WHERE guild_id = ? AND user_id = ?").pluck().get(interaction.guild.id, interaction.user.id);
+
 		const canExport = interaction.member.permissions.has('Administrator') || !Database.prepare("SELECT block_exports FROM Channels WHERE id = ?").pluck().get(interaction.channel.id);
-		if (!canExport) {
+		if (blocked || !canExport) {
 			await interaction.editReply({ embeds: [NoExport] });
 			return;
 		}

@@ -46,6 +46,16 @@ CREATE TABLE IF NOT EXISTS Guilds (
 CREATE INDEX IF NOT EXISTS guilds_name ON Guilds (name);
 CREATE INDEX IF NOT EXISTS guilds_asset_null ON Guilds (asset_id) WHERE asset_id IS NULL;
 
+CREATE TABLE IF NOT EXISTS GuildBlocks (
+	guild_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+	moderator_id TEXT, -- NULL if automatic, ie. bot
+	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}}),
+	PRIMARY KEY (guild_id, user_id)
+) STRICT;
+CREATE INDEX IF NOT EXISTS guild_blocks_guild_id ON GuildBlocks (guild_id);
+CREATE INDEX IF NOT EXISTS guild_blocks_user_id  ON GuildBlocks (user_id);
+
 CREATE TABLE IF NOT EXISTS Channels (
 	id TEXT NOT NULL PRIMARY KEY,
 	guild_id TEXT NOT NULL,

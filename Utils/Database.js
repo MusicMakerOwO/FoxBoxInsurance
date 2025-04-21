@@ -58,7 +58,8 @@ const NoComments = FileContent.replace(/\-\-.*\n/g, '');
 
 const MACROS = {
 	ROOT_FOLDER: ROOT_FOLDER,
-	SNOWFLAKE_DATE: `strftime('%Y-%m-%dT%H:%M:%fZ', ((CAST(id AS INTEGER) >> 22) + 1420070400000) / 1000, 'unixepoch')`
+	SNOWFLAKE_DATE: `strftime('%Y-%m-%dT%H:%M:%fZ', ((CAST(id AS INTEGER) >> 22) + 1420070400000) / 1000, 'unixepoch')`,
+	ISO_DATE: `strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`,
 };
 
 const WithMacros = NoComments.replace(/{{(.*?)}}/g, (match, macro) => {

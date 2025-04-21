@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS Assets (
 	size INTEGER, -- in bytes
 
 	hash TEXT, -- this will be set after uploading to the cdn server
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}}), -- The date the asset was created
 	uploaded INTEGER NOT NULL DEFAULT 0 -- 1 if the file is uploaded to the storage
 ) STRICT;
 CREATE INDEX IF NOT EXISTS assets_hash 		 ON Assets (hash) WHERE hash IS NOT NULL;
@@ -173,6 +173,6 @@ CREATE TABLE IF NOT EXISTS Exports (
 	format TEXT NOT NULL,
 	hash TEXT NOT NULL UNIQUE, -- The hash of the file
 	lookup TEXT NOT NULL UNIQUE, -- The file ID on the CDN server
-	created_at TEXT NOT NULL DEFAULT ( strftime('%Y-%m-%dT%H:%M:%fZ', 'now') )
+	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
 );
 CREATE INDEX IF NOT EXISTS exports_user_id ON Exports (user_id);

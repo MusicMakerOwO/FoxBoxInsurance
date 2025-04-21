@@ -15,11 +15,6 @@ const DEFAULT_OPTIONS = {
 	userID: '',
 	format: FORMAT.TEXT,
 	messageCount: 100,
-	options: {
-		bots: true,
-		prettyPings: true,
-		nicknames: false
-	},
 	lastMessageID: ''
 }
 
@@ -205,8 +200,6 @@ function ExportText(Context) {
 
 	for (const message of Context.Messages) {
 		const user = Context.Users.get(message.user_id);
-		if (Context.Options.bots === false && user.bot) continue;
-
 		const sticker = Context.Stickers.get(message.sticker_id);
 		const attachments = Context.Files.get(message.id);
 
@@ -259,8 +252,6 @@ function ExportCSV(Context) {
 
 	for (const message of Context.Messages) {
 		const user = Context.Users.get(message.user_id);
-		if (Context.Options.bots === false && user.bot) continue;
-
 		const sticker = Context.Stickers.get(message.sticker_id);
 		const attachments = Context.Files.get(message.id);
 

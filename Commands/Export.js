@@ -1,14 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, FORMAT, RandomLoadingEmbed } = require('../Utils/Constants');
-const ChannelCanExport = require('../Utils/Checks/ChannelCanExport');
 const Database = require('../Utils/Database');
 const ProcessMessages = require('../Utils/Processing/Messages');
-
-const DEFAULT_OPTIONS = {
-	bots: true,
-	prettyPings: true,
-	nicknames: false
-}
 
 const DISCORD_EPOCH_OFFSET = 1420070400000;
 const DISCORD_ID_FILLING = BigInt( 0b1_1111_11111111_11111111 );
@@ -45,7 +38,6 @@ module.exports = {
 			userID: interaction.user.id,
 			format: FORMAT.HTML,
 			messageCount: Math.min(channelMessageCount, 100),
-			options: { ... DEFAULT_OPTIONS }, // we have to clone the object so we don't modify the original
 			lastMessageID: String( (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING )
 		}
 

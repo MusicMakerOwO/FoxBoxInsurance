@@ -10,7 +10,8 @@ const LinkAssets = require('./LinkAssets');
 const MAX_CHUNK_SIZE = 1000;
 
 function BatchInsert(table, columns, conflict, data = []) {
-	if (!(table in Database.tables)) {
+	if (!Database.tables.has(table)) {
+		// This is a bug in the code, not a user error
 		throw `Table ${table} does not exist in the database!`;
 	}
 
@@ -32,7 +33,7 @@ function BatchInsert(table, columns, conflict, data = []) {
 		const insert = queryStart + Array(chunk.length).fill(placeholders).join(', ') + ' ' + conflict;
 		const params = chunk.flat().map(x => typeof x === 'boolean' ? +x : x ?? null);
 
-		Database.prepare(insert).run(params);
+		Database.prepare(insert, true).run(params);
 	}
 
 	return batches;

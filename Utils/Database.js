@@ -90,14 +90,18 @@ for (let i = 0; i < DBQueries.length; i++) {
 	}
 }
 
-Database.tables = {}; // name -> column_name[]
+Database.tables = new Set( Database.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).pluck().all() );
 
-const tables = Database.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).pluck().all();
-for (let i = 0; i < tables.length; i++) {
-	const tableName = tables[i];
-	// { cid: number, name: string, type: string, notnull: number, dflt_value: any, pk: number }[]
-	const columns = Database.prepare(`PRAGMA table_info(${tableName})`).all();
-	Database.tables[tableName] = columns.map(column => column.name);
+const queryCache = new Map(); // query -> prepared_statement
+
+const originalPrepare = Database.prepare.bind(Database);
+Database.prepare = function (query, force = false) {
+	if (!force && queryCache.has(query)) return queryCache.get(query);
+
+	const preparedStatement = originalPrepare(query);
+	if (!force) queryCache.set(query, preparedStatement);
+
+	return preparedStatement;
 }
 
 module.exports = Database;

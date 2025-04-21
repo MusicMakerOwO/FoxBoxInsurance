@@ -25,7 +25,7 @@ const ASSET_TABLES = {
 }
 
 for (const table of Object.values(ASSET_TABLES)) {
-	if (!(table in Database.tables)) throw new Error(`Table ${table} does not exist in the database`);
+	if (!Database.tables.has(table)) throw new Error(`Table ${table} does not exist in the database`);
 }
 
 const HUNDRED_MEGABYTES = 1024 * 1024 * 100;

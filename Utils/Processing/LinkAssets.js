@@ -11,7 +11,7 @@ const LinkTables = [
 
 for (let i = 0; i < LinkTables.length; i++) {
 	const table = LinkTables[i];
-	if (!(table in Database.tables)) throw new Error(`Table ${table} does not exist in the database`);
+	if (!Database.tables.has(table)) throw new Error(`Table ${table} does not exist in the database`);
 	LinkTables[i] = Database.prepare(`
 		UPDATE ${table} as asset
 		SET asset_id = (
@@ -20,7 +20,7 @@ for (let i = 0; i < LinkTables.length; i++) {
 			WHERE discord_id = asset.id
 		)
 		WHERE asset_id IS NULL	
-	`);
+	`, true);
 }
 
 module.exports = function LinkAssets () {

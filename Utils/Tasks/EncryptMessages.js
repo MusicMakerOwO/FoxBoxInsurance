@@ -12,8 +12,6 @@ module.exports = async function EncryptMessages() {
 		return;
 	}
 
-	const lastMessageID = unencryptedMessages[unencryptedMessages.length - 1].id;
-
 	Log.success(`Encrypting ${unencryptedMessages.length} messages...`);
 
 	const keyCache = new Map(); // user_id -> key
@@ -45,6 +43,6 @@ module.exports = async function EncryptMessages() {
 
 	const end = process.hrtime.bigint();
 	const time = Number(end - start) / 1e6;
-	Log.success(`Encrypted ${count} messages in ${time.toFixed(2)}ms (${(count / (time / 1000)).toFixed(2)} messages/s)`);
+	Log.success(`Encrypted ${unencryptedMessages.length} messages in ${time.toFixed(2)}ms (${(unencryptedMessages.length / (time / 1000)).toFixed(2)} messages/s)`);
 	Log.success(`Generated keys for ${keyCache.size} users`);
 }

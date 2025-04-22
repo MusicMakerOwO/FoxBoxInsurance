@@ -41,6 +41,8 @@ for (const [task, callback] of Object.entries(TaskFunctions)) {
 		delete TaskFunctions[task];
 		continue;
 	}
+
+	TASK_INTERVAL[task] *= 1000; // convert to milliseconds
 }
 
 module.exports.StartTasks = function StartTasks() {

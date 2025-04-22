@@ -12,7 +12,7 @@ module.exports = async function Upload(name, extension, data, downloadLimit = 0)
 				'Content-Length': data.length,
 				'name': name,
 				'ext': extension,
-				'key': process.env.ACCESS_KEY,
+				'key': process.env.CDN_KEY,
 				'download-limit': downloadLimit || null, // 0 -> null -> no limit
 			}
 		}, (response) => {

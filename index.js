@@ -1,8 +1,8 @@
 const preLoadStart = process.hrtime.bigint();
 
 // must be run with `node --env-file .env index.js`
-if (!process.env.ACCESS_KEY) {
-	console.error('Could not find process.env.ACCESS_KEY in .env');
+if (!process.env.CDN_KEY) {
+	console.error('Could not find process.env.CDN_KEY in .env');
 	console.error('Please run the server with `node --env-file .env index.js`');
 	process.exit(1);
 }

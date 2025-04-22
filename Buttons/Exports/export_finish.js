@@ -75,8 +75,6 @@ module.exports = {
 
 		const file = await Export(exportOptions); // { name: string, data: Buffer }
 
-		await new Promise(resolve => setTimeout(resolve, 30_000)); // wait for a second to let the loading message finish
-
 		// stop the loading interval
 		finished = true;
 		clearTimeout(loadingTimeout);

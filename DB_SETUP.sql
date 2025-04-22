@@ -77,7 +77,8 @@ CREATE TABLE IF NOT EXISTS Users (
 	bot INTEGER NOT NULL DEFAULT 0,
 	asset_id INTEGER,
 	accepted_terms INTEGER NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms
-	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
+	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL,
+	key TEXT -- NULL if no key, otherwise the key used to encrypt the user data
 ) STRICT;
 CREATE INDEX IF NOT EXISTS users_username ON Users (username);
 CREATE INDEX IF NOT EXISTS users_asset_null ON Users (asset_id) WHERE asset_id IS NULL;

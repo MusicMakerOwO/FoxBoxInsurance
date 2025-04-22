@@ -2,6 +2,7 @@ const { promisify } = require("util")
 const Database = require("../Database")
 const Log = require("../Logs")
 const crypto = require("crypto")
+const ResolveUserKey = require("../ResolveUserKey")
 
 const scryptAsync = promisify(crypto.scrypt)
 
@@ -25,12 +26,7 @@ module.exports = async function EncryptMessages() {
 			continue;
 		}
 
-		if (!keyCache.has(message.user_id)) {
-			// Generate a key for the user
-			const key = await scryptAsync(message.user_id, process.env.SALT, 32);
-			keyCache.set(message.user_id, key);
-		}
-		const key = keyCache.get(message.user_id);
+		const key = ResolveUserKey(message.user_id);
 
 		const iv = crypto.createHash("sha256").update(`${message.id}${message.user_id}`).digest("hex").slice(0, 16);
 		const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);

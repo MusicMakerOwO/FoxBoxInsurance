@@ -8,6 +8,7 @@ const TASK = {
 	CHANNEL_PURGE: 'channel_purge',
 	UPLOAD_FILES: 'upload_files',
 	ENCRYPT_MESSAGES: 'encrypt_messages',
+	UPLOAD_STATS: 'upload_stats',
 }
 
 const TaskFunctions = {
@@ -15,13 +16,15 @@ const TaskFunctions = {
 	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
 	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
 	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
+	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
 }
 
 const TASK_INTERVAL = {
-	[TASK.CLEAN_DATABASE]: SECONDS.WEEK * 1000,
-	[TASK.CHANNEL_PURGE]: SECONDS.WEEK * 1000,
-	[TASK.UPLOAD_FILES]: SECONDS.HOUR * 1000,
-	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 1000,
+	[TASK.CLEAN_DATABASE]: SECONDS.WEEK,
+	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
+	[TASK.UPLOAD_FILES]: SECONDS.HOUR,
+	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
+	[TASK.UPLOAD_STATS]: SECONDS.HOUR,
 }
 
 let i = 0;

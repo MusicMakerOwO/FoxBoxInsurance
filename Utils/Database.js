@@ -75,9 +75,11 @@ const Database = new BetterSqlite3(DB_FILE);
 Database.pragma('foreign_keys = OFF'); // Faster inserts but data integrity across tables is manual
 Database.pragma('journal_mode = WAL');
 Database.pragma('synchronous = NORMAL'); // Sacrifice some durability for speed
-Database.pragma('cache_size = 50000');  // ~200MB cache
+Database.pragma('cache_size = -16384');  // ~16MB cache
 Database.pragma('temp_store = MEMORY'); // Use memory for temporary tables
-Database.pragma('wal_autocheckpoint = 5000');
+Database.pragma('wal_autocheckpoint = 0');
+Database.pragma('wal_checkpoint = TRUNCATE'); // Use truncate mode for checkpointing
+Database.pragma('locking_mode = EXCLUSIVE'); // Use exclusive locking mode
 Database.pragma('mmap_size = 268435456'); // 256MB memory map
 
 for (let i = 0; i < DBQueries.length; i++) {

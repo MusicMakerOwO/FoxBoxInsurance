@@ -60,6 +60,8 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		Files: new Map(),
 
 		Assets: new Map(),
+		Embeds: new Map(), // message_id -> embed[]
+		EmbedFields: new Map(), // embed_id -> field[]
 
 		Options: options.options,
 		Messages: new Array( options.messageCount ).fill({})
@@ -125,7 +127,6 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		FROM MessageEmojis
 		WHERE message_id IN ( ${'?,'.repeat(messages.length - 1)}? )
 	`).all(...messages.map(m => m.id));
-
 	Context.Emojis 	= BatchCache(EmojiIDs, 'emoji_id', 'Emojis', 'id');
 
 	const AttachmentIDs = Database.prepare(`
@@ -140,6 +141,38 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 			Context.Files.set(file.message_id, [file]);
 		} else {
 			Context.Files.get(file.message_id).push(file);
+		}
+	}
+
+	const EmbedIDs = Database.prepare(`
+		SELECT id
+		FROM Embeds
+		WHERE message_id IN ( ${'?,'.repeat(messages.length - 1)}? )
+	`).all(...messages.map(m => m.id));
+	const Embeds = BatchCache(EmbedIDs, 'id', 'Embeds', 'id');
+	for (const embed of Embeds.values()) {
+		// Map() : message_id -> embed[]
+		if (!Context.Embeds.has(embed.message_id)) {
+			Context.Embeds.set(embed.message_id, [embed]);
+		} else {
+			Context.Embeds.get(embed.message_id).push(embed);
+		}
+	}
+
+	if (EmbedIDs.length > 0) {
+		const EmbedFieldIDs = Database.prepare(`
+			SELECT id
+			FROM EmbedFields
+			WHERE embed_id IN ( ${'?,'.repeat(EmbedIDs.length - 1)}? )
+		`).all(...EmbedIDs.map(m => m.id));
+		const Fields = BatchCache(EmbedFieldIDs, 'id', 'EmbedFields', 'id');
+		for (const field of Fields.values()) {
+			// Map() : embed_id -> field[]
+			if (!Context.EmbedFields.has(field.embed_id)) {
+				Context.EmbedFields.set(field.embed_id, [field]);
+			} else {
+				Context.EmbedFields.get(field.embed_id).push(field);
+			}
 		}
 	}
 
@@ -268,7 +301,9 @@ function ExportHTML(Context) {
 		emojis: Object.fromEntries(Context.Emojis),
 		stickers: Object.fromEntries(Context.Stickers),
 		files: Object.fromEntries(Context.Files),
-		assets: Object.fromEntries(Context.Assets)
+		assets: Object.fromEntries(Context.Assets),
+		embeds: Object.fromEntries(Context.Embeds),
+		fields: Object.fromEntries(Context.EmbedFields)
 	}
 
 	for (const [userID, user] of Object.entries(Lookups.users)) {

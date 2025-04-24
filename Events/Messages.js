@@ -14,6 +14,9 @@ function AcceptedTerms(guildID) {
 module.exports = {
 	name: 'messageCreate',
 	execute: async function(client, message) {
+
+		if (message.flags.has(128)) return; // deferred message
+
 		const accepted = AcceptedTerms(message.guild.id);
 		if (!accepted) return; // server owner must accept TOS before collecting data
 

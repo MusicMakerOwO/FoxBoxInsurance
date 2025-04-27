@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, FORMAT, RandomLoadingEmbed } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
 const ProcessMessages = require('../Utils/Processing/Messages');
+const UserCanExport = require('../Utils/UserCanExport');
 
 const DISCORD_EPOCH_OFFSET = 1420070400000;
 const DISCORD_ID_FILLING = BigInt( 0b1_1111_11111111_11111111 );
@@ -20,10 +21,7 @@ module.exports = {
 		await interaction.reply({ embeds: [RandomLoadingEmbed()], ephemeral: true });
 		await new Promise(r => setTimeout(r, 2000));
 
-		const blocked = Database.prepare("SELECT user_id FROM GuildBlocks WHERE guild_id = ? AND user_id = ?").pluck().get(interaction.guild.id, interaction.user.id);
-
-		const canExport = interaction.member.permissions.has('Administrator') || !Database.prepare("SELECT block_exports FROM Channels WHERE id = ?").pluck().get(interaction.channel.id);
-		if (blocked || !canExport) {
+		if (!UserCanExport(interaction.member, interaction.channel.id)) {
 			await interaction.editReply({ embeds: [NoExport] });
 			return;
 		}

@@ -6,7 +6,7 @@ const { BlacklistedChannels } = require('../../Utils/Checks/ChannelCanExport');
 const Embed = {
 	color: COLOR.PRIMARY,
 	description: `
-**Exports have been disabled**
+**Exports have been disabled** ❌
 Only server admins are allowed to bypass this`
 }
 

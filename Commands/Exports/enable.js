@@ -6,7 +6,7 @@ const { BlacklistedChannels } = require('../../Utils/Checks/ChannelCanExport');
 const Embed = {
 	color: COLOR.PRIMARY,
 	description: `
-**Exports have been enabled**
+**Exports have been enabled** ✅
 Anyone who can see the channel can export messages from it`
 }
 

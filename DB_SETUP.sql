@@ -157,7 +157,8 @@ CREATE TABLE IF NOT EXISTS Messages (
 	reply_to TEXT DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL,
 	encrypted INTEGER NOT NULL DEFAULT 0, -- 1 if the message is encrypted
-	tag TEXT DEFAULT NULL -- NULL if no tag, otherwise the tag name
+	tag TEXT DEFAULT NULL, -- NULL if no tag, otherwise the tag name,
+	length INTEGER -- The length of the original message (unencrypted)
 ) STRICT;
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
 CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);

@@ -57,6 +57,7 @@ const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
 const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
+const EncryptMessages = require('./Utils/Tasks/EncryptMessages');
 
 if (!existsSync(`${__dirname}/UploadCache`)) mkdirSync(`${__dirname}/UploadCache`, { recursive: true });
 if (!existsSync(`${__dirname}/DownloadCache`)) mkdirSync(`${__dirname}/DownloadCache`, { recursive: true });
@@ -266,6 +267,9 @@ async function Shutdown() {
 
 	Log.warn('Linking assets...');
 	LinkAssets();
+
+	Log.warn('Encrypting messages...');
+	await EncryptMessages();
 	
 	Log.warn('Optimising database...');
 	Database.pragma('analysis_limit = 8000');

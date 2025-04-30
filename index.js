@@ -280,9 +280,6 @@ async function Shutdown() {
 	process.exit(0);
 }
 
-function LogError(error) {
-	Log.error(error);
-}
 
 process.on('SIGINT', Shutdown); // ctrl+c
 process.on('SIGTERM', Shutdown); // docker stop
@@ -291,5 +288,5 @@ process.on('SIGTERM', Shutdown); // docker stop
 process.on('SIGTSTP', Shutdown);
 
 // standard uncaught errors
-process.on('uncaughtException', LogError);
-process.on('unhandledRejection', LogError);
+process.on('uncaughtException', Log.error);
+process.on('unhandledRejection', Log.error);

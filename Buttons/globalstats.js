@@ -13,6 +13,10 @@ const BackButton = {
 	}]
 }
 
+function DiscordIDToDate(id = 0n) {
+	return new Date(Number((id >> 22n) + 1420070400000n));
+}
+
 let lastOutput = {};
 let lastRun = 0;
 function CalcuateMessageStats() {
@@ -102,6 +106,25 @@ function CalcuateMessageStats() {
 		WHERE emoji_count IS NOT NULL
 	`).get();
 
+	const timespan = Database.prepare(`
+		WITH selected_messages AS (
+			SELECT id, length
+			FROM Messages
+			ORDER BY id DESC
+			LIMIT ${~~(STAT_SIZE / 10)} -- 1/10 of the messages
+		)
+		SELECT
+			MAX(id) as max_id,
+			MIN(id) as min_id,
+			COUNT(*) as "count"
+		FROM selected_messages
+	`).get();
+
+	const maxDate = DiscordIDToDate(BigInt(timespan.max_id));
+	const minDate = DiscordIDToDate(BigInt(timespan.min_id));
+	const timeDiff = Math.abs(maxDate - minDate);
+	const rate = timespan.count / (timeDiff / 1000 / 60); // messages per minute
+
 	const output = {
 		color: COLOR.PRIMARY,
 		title: '📊 Stats for nerds',
@@ -127,6 +150,7 @@ Files Stats (${FileStats.file_count} files) **
 Only ${(MessageStats.sticker_count / MessageStats.message_count * 100).toFixed(2)}% of messages have a sticker
 Only ${(FileStats.message_count / MessageStats.message_count * 100).toFixed(2)}% of messages have a file
 The average user sent ${(MessageStats.message_count / MessageStats.user_count).toFixed(2)} messages
+On average, ${rate.toFixed(2)} messages are sent per minute
 \`\`\`
 -# \\* Only messages with emojis are counted
 -# \\*\\* Only messages with files are counted

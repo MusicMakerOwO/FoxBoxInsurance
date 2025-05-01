@@ -13,6 +13,7 @@ const NoExport = {
 }
 
 module.exports = {
+	aliases: ['download'],
 	cooldown: 5,
 	data: new SlashCommandBuilder()
 		.setName('export')

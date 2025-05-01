@@ -22,7 +22,7 @@ You must be an administrator`
 };
 
 module.exports = {
-	aliases: ['deny'], // Can use /deny as well
+	aliases: ['deny', 'disableuser'], // Can use /deny as well
 	data: new SlashCommandBuilder()
 		.setName('block')
 		.setDescription('Block a user from using exports')

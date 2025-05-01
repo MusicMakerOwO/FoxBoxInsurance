@@ -10,7 +10,7 @@ You must be an administrator`
 };
 
 module.exports = {
-	aliases: ['allow'],
+	aliases: ['allow', 'enableuser'],
 	data: new SlashCommandBuilder()
 		.setName('unblock')
 		.setDescription('Block a user from using exports')

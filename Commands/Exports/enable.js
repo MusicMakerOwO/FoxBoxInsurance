@@ -19,7 +19,7 @@ Only server admins are allowed to set this up`
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('enableexport')
+		.setName('enablechannel')
 		.setDescription('Enable exports in a designated channel')
 		.addChannelOption(x => x
 			.setName('channel')

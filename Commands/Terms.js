@@ -9,7 +9,7 @@ You can find a copy of the Terms of Service and Priavcy Policy at the respective
 **Privacy Policy** : https://notfbi.dev/privacy
 **Terms of Service** : https://notfbi.dev/terms
 
-For any privacy concerns or legal troubles please reach out to me on discord \`@musicmaker\` or send an email to \`joshua@ringofsaturn.com\``
+For any privacy concerns or legal troubles please reach out to me on discord \`@musicmaker\` or join the support server at https://notfbi.dev/support`
 }
 
 module.exports = {

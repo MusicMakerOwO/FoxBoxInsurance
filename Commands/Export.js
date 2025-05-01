@@ -26,8 +26,6 @@ module.exports = {
 			await interaction.editReply({ embeds: [NoExport] });
 			return;
 		}
-		
-		ProcessMessages(client.messageCache); // save messages
 
 		const channelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?").pluck().get(interaction.channel.id);
 
@@ -36,7 +34,7 @@ module.exports = {
 			channelID: interaction.channel.id,
 			userID: interaction.user.id,
 			format: FORMAT.HTML,
-			messageCount: Math.min(channelMessageCount, 100),
+			messageCount: Math.min(channelMessageCount + client.messageCache.size, 100),
 			lastMessageID: String( (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING )
 		}
 

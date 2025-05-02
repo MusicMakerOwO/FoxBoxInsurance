@@ -58,6 +58,7 @@ const Task = require('./Utils/TaskScheduler');
 const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
 const EncryptMessages = require('./Utils/Tasks/EncryptMessages');
+const PushStats = require('./Utils/Tasks/PushStats');
 
 if (!existsSync(`${__dirname}/UploadCache`)) mkdirSync(`${__dirname}/UploadCache`, { recursive: true });
 if (!existsSync(`${__dirname}/DownloadCache`)) mkdirSync(`${__dirname}/DownloadCache`, { recursive: true });
@@ -72,7 +73,8 @@ const client = new Client({
 		'GuildMembers',
 		'MessageContent',
 		'GuildMessages',
-		'DirectMessages'
+		'DirectMessages',
+		'GuildBans'
 	]
 });
 
@@ -270,6 +272,9 @@ async function Shutdown() {
 
 	Log.warn('Encrypting messages...');
 	await EncryptMessages();
+
+	Log.warn('Pushing stats...');
+	await PushStats();
 	
 	Log.warn('Optimising database...');
 	Database.pragma('analysis_limit = 8000');

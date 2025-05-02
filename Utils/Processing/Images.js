@@ -188,16 +188,21 @@ async function DownloadAssets() {
 		// write to disk for later upload
 		await fs.promises.writeFile(`${CONSTANTS.UPLOAD_CACHE}/${asset.id}.${extension}`, buffer);
 
-		InsertAssets.run(
-			asset.type,
-			asset.id,
-			asset.url,
-			Clean(asset.name),
-			extension,
-			asset.width,
-			asset.height,
-			buffer.length
-		);
+		try {
+			InsertAssets.run(
+				asset.type,
+				asset.id,
+				asset.url,
+				Clean(asset.name),
+				extension,
+				asset.width,
+				asset.height,
+				buffer.length
+			);
+		} catch (err) {
+			Log.error(`Failed to insert asset into database: ${err.message}`);
+			Log.error(asset);
+		}
 	}
 
 	const end = Date.now();

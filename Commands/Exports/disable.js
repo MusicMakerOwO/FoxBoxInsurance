@@ -18,9 +18,14 @@ Only server admins are allowed to set this up`
 }
 
 module.exports = {
+	usage: '/disablechannel <#channel>',
+	examples: [
+		'/disablechannel #general',
+		'/disablechannel 123456789012345678'
+	],
 	data: new SlashCommandBuilder()
 		.setName('disablechannel')
-		.setDescription('Disable exports in a designated channel')
+		.setDescription('Disable exports in a channel - Only server admins can bypass this')
 		.addChannelOption(x => x
 			.setName('channel')
 			.setDescription('The channel to disable exports in')

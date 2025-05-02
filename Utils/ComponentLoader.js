@@ -91,7 +91,7 @@ module.exports = function ComponentLoader(folder, cache) {
 				case 'command':
 					for (let i = 0; i < data.aliases.length; i++) {
 						const alias = data.aliases[i];
-						addComponent(cache, alias, { ...data, data: { ...data.data, name: alias } }, filePaths[i]);
+						addComponent(cache, alias, { ...data, data: { ...data.data, name: alias }, base_command: data.data.name }, filePaths[i]);
 					}
 					// fallthrough to context since they share the same structure
 				case 'context':

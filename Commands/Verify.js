@@ -21,6 +21,10 @@ const CleanEmbed = {
 }
 
 module.exports = {
+	usage: '/verify <file> <export_id>',
+	examples: [
+		'/verify <file> AAAA-BBBB-CCCC-DDDD'
+	],
 	data: new SlashCommandBuilder()
 		.setName('verify')
 		.setDescription('Test if an export has been modified')

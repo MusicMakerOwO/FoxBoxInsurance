@@ -2,18 +2,6 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR } = require('../../Utils/Constants');
 const Database = require('../../Utils/Database');
 
-/*
-CREATE TABLE IF NOT EXISTS GuildBlocks (
-	guild_id TEXT NOT NULL,
-	user_id TEXT NOT NULL,
-	moderator_id TEXT, -- NULL if automatic, ie. bot
-	PRIMARY KEY (guild_id, user_id),
-	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
-) STRICT;
-CREATE INDEX IF NOT EXISTS guild_blocks_guild_id ON GuildBlocks (guild_id);
-CREATE INDEX IF NOT EXISTS guild_blocks_user_id  ON GuildBlocks (user_id);
-*/
-
 const NoPermissionsEmbed = {
 	color: COLOR.ERROR,
 	description: `
@@ -22,13 +10,17 @@ You must be an administrator`
 };
 
 module.exports = {
-	aliases: ['deny', 'disableuser'], // Can use /deny as well
+	usage: '/enableuser <@user>',
+	examples: [
+		'/enableuser @user',
+		'/enableuser 123456789012345678'
+	],
 	data: new SlashCommandBuilder()
-		.setName('block')
-		.setDescription('Block a user from using exports')
+		.setName('enableuser')
+		.setDescription('Allow a user to use exports')
 		.addUserOption( x => x
 			.setName('user')
-			.setDescription('The user to block')
+			.setDescription('The user to unblock')
 			.setRequired(true)
 		),
 	execute: async function(interaction, client) {
@@ -45,18 +37,17 @@ module.exports = {
 		const userId = user.id;
 
 		Database.prepare(`
-			INSERT INTO GuildBlocks (guild_id, user_id, moderator_id)
-			VALUES (?, ?, ?)
-			ON CONFLICT(guild_id, user_id) DO NOTHING
-		`).run(guildId, userId, interaction.user.id);
+			DELETE FROM GuildBlocks
+			WHERE guild_id = ? AND user_id = ?
+		`).run(guildId, userId);
 
 		const embed = {
-			color: COLOR.PRIMARY,
+			color: COLOR.SUCCESS,
 			description: `
-**Status**: ❌ Blocked
-<@${userId}> can no longer export messages in this server`
+**Status**: ✅ Unblocked 
+<@${userId}> can now export messages in this server`
 		}
-
+		
 		await interaction.editReply({ embeds: [embed] }).catch(() => {});
 	}
 }

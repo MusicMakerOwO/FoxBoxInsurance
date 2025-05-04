@@ -188,6 +188,11 @@ async function DownloadAssets() {
 		// write to disk for later upload
 		await fs.promises.writeFile(`${CONSTANTS.UPLOAD_CACHE}/${asset.id}.${extension}`, buffer);
 
+		if (asset.url.startsWith('https://cdn.discordapp.com/embed/avatars/')) {
+			asset.url = `fbi-internal://default/${asset.id}.${extension}`;
+			console.log(`Setting default avatar for ${asset.id} : ${asset.url}`);
+		}
+
 		try {
 			InsertAssets.run(
 				asset.type,

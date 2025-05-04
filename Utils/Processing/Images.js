@@ -47,6 +47,9 @@ DownloadQueue.length = 0;
 const CurrentURLs = new Set(); // List of urls in the queue
 const Push = Array.prototype.push.bind(DownloadQueue);
 DownloadQueue.push = function (asset = BasicAsset) {
+	if (typeof asset !== 'object') throw new TypeError(`Expected object, got ${typeof asset}`);
+	if (asset === null) throw new TypeError(`Expected object, got null`);
+
 	// Dont add the same URL to the queue
 	if (CurrentURLs.has(asset.url)) return;
 	CurrentURLs.add(asset.url);

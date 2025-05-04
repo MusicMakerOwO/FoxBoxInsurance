@@ -115,7 +115,7 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	}
 	const decryptEnd = process.hrtime.bigint();
 	const decryptTime = Number(decryptEnd - decryptStart) / 1e6;
-	console.log(`Decrypted ${messages.length} messages in ${decryptTime.toFixed(2)}ms (${(decryptTime / messages.length).toFixed(2)}ms per message)`);
+	console.log(`Decrypted ${messages.length} messages in ${decryptTime.toFixed(2)}ms (${(messages.length / (decryptTime * 1000)).toFixed(2)} msg/s)`);
 
 	Context.Messages = messages;
 

@@ -26,7 +26,7 @@ module.exports = {
 	execute: async function(interaction, client, args) {
 	
 		interaction.deferUpdate ??= interaction.deferReply;
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => {});
+		await interaction.deferUpdate().catch(() => {});
 		
 		const processUptime = process.uptime(); // seconds
 		const uptime = CalculateUptime(processUptime);
@@ -54,6 +54,6 @@ module.exports = {
 **Support Server** : https://discord.gg/q7bUuVq4vB`
 		}
 
-		await interaction.editReply({ embeds: [embed], components: [statsButton], ephemeral: true }).catch(() => {});
+		await interaction.editReply({ embeds: [embed], components: [statsButton] }).catch(() => {});
 	}
 }

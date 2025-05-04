@@ -19,6 +19,6 @@ module.exports = {
 		.setName('terms')
 		.setDescription('View the TOS and privacy policy'),
 	execute: async function(interaction, client) {
-		await interaction.reply({ embeds: [embed], ephemeral: true });
+		await interaction.reply({ embeds: [embed] }).catch(() => {});
 	}
 }

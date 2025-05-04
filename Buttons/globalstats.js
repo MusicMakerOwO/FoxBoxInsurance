@@ -168,7 +168,7 @@ Next update <t:${Math.floor((Date.now() + SECONDS.MINUTE * 1000 * 30) / 1000)}:R
 module.exports = {
 	customID: 'global-stats',
 	execute: async function(interaction, client, args) {
-		if (!interaction.deferred) await interaction.deferUpdate({ ephemeral: true }).catch(() => {});
+		if (!interaction.deferred) await interaction.deferUpdate().catch(() => {});
 
 		const start = process.hrtime.bigint();
 		const stats = CalcuateMessageStats();
@@ -176,6 +176,6 @@ module.exports = {
 		const elapsed = Number(end - start) / 1e6;
 
 		console.log(`Stats calculated in ${elapsed.toFixed(3)}ms`);
-		await interaction.editReply({ embeds: [stats], components: [BackButton], ephemeral: true }).catch(() => {});
+		await interaction.editReply({ embeds: [stats], components: [BackButton] }).catch(() => {});
 	}
 }

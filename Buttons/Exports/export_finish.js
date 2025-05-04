@@ -44,7 +44,6 @@ module.exports = {
 
 		// flush all the caches first to make sure we have the latest data
 		// We don't want any missing assets or holes in the data
-		ProcessMessages(client.messageCache); // save messages
 		await DownloadAssets(); // download files
 		await UploadFiles(); // upload files to the CDN
 		LinkAssets(); // link tables together

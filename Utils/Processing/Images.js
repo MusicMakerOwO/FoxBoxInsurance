@@ -283,4 +283,4 @@ module.exports.ASSET_TYPE = ASSET_TYPE;
 module.exports.DownloadQueue = DownloadQueue;
 module.exports.DownloadAssets = DownloadAssets; // public access
 
-Task.schedule(DownloadAssets, 5000, 1000 * 60); // every 60 seconds
+Task.schedule(DownloadAssets, 1000 * 30, 1000 * 60); // every 60 seconds

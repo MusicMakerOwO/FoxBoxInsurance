@@ -10,7 +10,9 @@ Last updated: \`2025 May 3rd\`
 \\- This command lol
 \\- Minor bug fixes
 \\- Edge case for default avatars
-\\- Made some commands publically visible`
+\\- Made some commands publically visible
+
+https://github.com/MusicMakerOwO/Virdeon/commits/main/`
 }
 
 module.exports = {

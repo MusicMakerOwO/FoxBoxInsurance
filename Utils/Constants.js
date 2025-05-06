@@ -3,9 +3,7 @@ const ROOT_FOLDER = `${__dirname}/..`;
 const DB_SETUP_FILE = `${ROOT_FOLDER}/DB_SETUP.sql`;
 const DB_FILE = `${ROOT_FOLDER}/fbi.sqlite`;
 
-/**
- * If we lose internet we will dump the cache in here and read it back on startup
- */
+// If we lose internet we will dump the cache in here and read it back on startup
 const DOWNLOAD_CACHE = `${ROOT_FOLDER}/DownloadCache`;
 const UPLOAD_CACHE = `${ROOT_FOLDER}/UploadCache`;
 const FAILED_MESSAGES = `${ROOT_FOLDER}/FailedMessages`;

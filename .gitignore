@@ -1,6 +1,7 @@
 # Cache Files
 DownloadCache/
 UploadCache/
+FailedMessages/
 
 # Config files
 config.json

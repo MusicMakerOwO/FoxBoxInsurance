@@ -75,6 +75,11 @@ module.exports = function ProcessMessages (messageCache = sampleCache) {
 
 	let currentEmbedID = LastEmbedID.pluck().get(); // number
 
+	// clear failed data
+	for (const table in FAILED_DATA) {
+		if (FAILED_DATA[table].length > 0) FAILED_DATA[table] = [];
+	}
+
 	Log.debug(`Processing ${messages.length} messages`);
 
 	// 1. Deduplication - Combine similar features such as guild, channel, user, etc

@@ -3,17 +3,13 @@ const { COLOR } = require('../Utils/Constants');
 
 const embed = {
 	color: COLOR.PRIMARY,
-	title: 'Fox Box Insurance : v2.0.3',
+	title: 'Fox Box Insurance : v2.1.0',
 	description: `
-Last updated: \`2025 May 5th\`
+Last updated: \`2025 May 7th\`
 
-\\- This command lol
-\\- Minor bug fixes
-\\- Edge case for default avatars
-\\- Made some commands publically visible
-\\- Better time handling for automated tasks
+\\- Better error handling for failed messages
 
-https://github.com/MusicMakerOwO/Virdeon/commits/main/`
+https://github.com/MusicMakerOwO/Virdeon/commits/main`
 }
 
 module.exports = {

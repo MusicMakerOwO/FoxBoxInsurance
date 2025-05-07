@@ -8,8 +8,9 @@ const embed = {
 Last updated: \`2025 May 7th\`
 
 \\- Better error handling for failed messages
+\\- Put the wrong link below lmao
 
-https://github.com/MusicMakerOwO/Virdeon/commits/main`
+https://github.com/MusicMakerOwO/FoxBoxInsurance/commits/main`
 }
 
 module.exports = {

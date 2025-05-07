@@ -6,6 +6,8 @@ const { DownloadQueue, ASSET_TYPE } = require('./Images');
 
 const Log = require('../Logs');
 const LinkAssets = require('./LinkAssets');
+const { FAILED_MESSAGES } = require('../Constants');
+const { writeFileSync } = require('node:fs');
 
 const MAX_CHUNK_SIZE = 1000;
 
@@ -331,4 +333,16 @@ module.exports = function ProcessMessages (messageCache = sampleCache) {
 
 	// 4. Link assets downloaded previously (not the ones in here)
 	LinkAssets();
+
+
+	// 5. Log failed data to disk
+	if (Object.values(FAILED_DATA).some(v => v.length > 0)) {
+		const failedData = Object.entries(FAILED_DATA).map(([table, data]) => {
+			return { table, data };
+		});
+		const failedDataString = JSON.stringify(failedData, null, 2);
+		const failedDataPath = `${FAILED_MESSAGES}/${Date.now()}.json`;
+		writeFileSync(failedDataPath, failedDataString);
+		Log.error(`Failed data written to ${failedDataPath}`);
+	}
 }

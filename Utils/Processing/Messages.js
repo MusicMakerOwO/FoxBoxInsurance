@@ -9,6 +9,11 @@ const LinkAssets = require('./LinkAssets');
 
 const MAX_CHUNK_SIZE = 1000;
 
+const FAILED_DATA = {}; // table -> data[]
+for (const table of Database.tables) {
+	FAILED_DATA[table] = [];
+}
+
 function BatchInsert(table, columns, conflict, data = []) {
 	if (!Database.tables.has(table)) {
 		// This is a bug in the code, not a user error
@@ -24,19 +29,38 @@ function BatchInsert(table, columns, conflict, data = []) {
 
 	const queryStart = `INSERT INTO ${table} (${columns.join(',')}) VALUES `;
 
+	let queryCount = 0;
+
 	for (let i = 0; i < batches; i++) {
 		const start = i * maxBatchSize;
 		const end = Math.min(data.length, (i + 1) * maxBatchSize);
 
-		const chunk = data.slice(start, end);
+		const chunk = data.slice(start, end)
 
 		const insert = queryStart + Array(chunk.length).fill(placeholders).join(', ') + ' ' + conflict;
 		const params = chunk.flat().map(x => typeof x === 'boolean' ? +x : x ?? null);
 
-		Database.prepare(insert, true).run(params);
+		try {
+			Database.prepare(insert, true).run(params);
+			queryCount++;
+		} catch (error) {
+			queryCount += chunk.length;
+
+			// insert data one by one
+			const singleInsert = Database.prepare(`${queryStart} ${placeholders} ${conflict}`);
+			for (let j = 0; j < chunk.length; j++) {
+				const params = chunk[j].map(x => typeof x === 'boolean' ? +x : x ?? null);
+				try {
+					singleInsert.run(params);
+				} catch (error) {
+					Log.error(error);
+					FAILED_DATA[table].push({ data: params, error: error });
+				}
+			}
+		}
 	}
 
-	return batches;
+	return queryCount;
 }
 
 const LastEmbedID = Database.prepare(`SELECT MAX(id) + 1 FROM embeds`);

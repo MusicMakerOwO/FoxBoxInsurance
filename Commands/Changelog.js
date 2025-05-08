@@ -35,7 +35,13 @@ const CHANGELOG = {
 		changes: [
 			"Rebuilt the changelog command to show past versions"
 		]
-	}
+	},
+	"v2.1.3": {
+		date: "2025 May 8th",
+		changes: [
+			"Fixed time collissions for automated tasks"
+		]
+	},
 }
 
 const OLDEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => a.localeCompare(b))[0];

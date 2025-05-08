@@ -3,12 +3,11 @@ const { COLOR } = require('../Utils/Constants');
 
 const embed = {
 	color: COLOR.PRIMARY,
-	title: 'Fox Box Insurance : v2.1.0',
+	title: 'Fox Box Insurance : v2.1.1',
 	description: `
-Last updated: \`2025 May 7th\`
+Last updated: \`2025 May 8th\`
 
-\\- Better error handling for failed messages
-\\- Put the wrong link below lmao
+\\- Database optimizations :>
 
 https://github.com/MusicMakerOwO/FoxBoxInsurance/commits/main`
 }

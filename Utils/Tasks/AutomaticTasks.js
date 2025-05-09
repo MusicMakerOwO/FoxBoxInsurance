@@ -30,21 +30,21 @@ const TASK_INTERVAL = {
 }
 
 let i = 0;
-for (const [task, callback] of Object.entries(TaskFunctions)) {
+for (const [name, callback] of Object.entries(TaskFunctions)) {
 	i++;
-	if (task === undefined) {
+	if (name === undefined) {
 		warn(`Task ${i} is undefined, skipping...`);
-		delete TaskFunctions[task];
+		delete TaskFunctions[name];
 		return;
 	}
 
 	if (typeof callback !== 'function') {
-		warn(`Task "${task}" is not a function, skipping...`);
-		delete TaskFunctions[task];
+		warn(`Task "${name}" is not a function, skipping...`);
+		delete TaskFunctions[name];
 		continue;
 	}
 
-	TASK_INTERVAL[task] *= 1000; // convert to milliseconds
+	TASK_INTERVAL[name] *= 1000; // convert to milliseconds
 }
 
 module.exports.StartTasks = function StartTasks() {

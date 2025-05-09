@@ -93,7 +93,6 @@ client.commands = new Map();
 client.buttons = new Map();
 client.menus = new Map();
 client.modals = new Map();
-client.messages = new Map();
 
 // file path : [component type, component cache]
 const COMPONENT_FOLDERS = {
@@ -101,7 +100,6 @@ const COMPONENT_FOLDERS = {
 	'./Buttons' : client.buttons,
 	'./Menus'   : client.menus,
 	'./Modals'  : client.modals,
-	// './Messages': client.messages,
 
 	'./Events'  : null // handled separately
 }
@@ -112,7 +110,6 @@ const PRESET_FILES = {
 	'./Buttons' : './Presets/Button',
 	'./Menus'   : './Presets/Menu',
 	'./Modals'  : './Presets/Modal',
-	// './Messages': './Presets/Message',
 	'./Events'  : './Presets/Event'
 }
 

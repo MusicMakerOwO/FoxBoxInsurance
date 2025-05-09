@@ -1,3 +1,4 @@
+const { SECONDS } = require("../Constants");
 const Database = require("../Database");
 const Log = require("../Logs");
 
@@ -46,6 +47,13 @@ module.exports = async function CleanDatabase() {
 		DELETE FROM EmbedFields
 		WHERE embed_id NOT IN ( SELECT DISTINCT id FROM temp_embeds)
 	`).run().changes;
+
+	// delete interaction logs older than 30 days
+	const isoDate = new Date(Date.now() - SECONDS.DAY * 30 * 1000).toISOString();
+	didDelete |= Database.prepare(`
+		DELETE FROM InteractionLogs
+		WHERE created_at < ?
+	`).run(isoDate).changes;
 
 	Database.exec(`
 		DROP TABLE IF EXISTS temp_messages;

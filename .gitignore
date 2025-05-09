@@ -2,6 +2,7 @@
 DownloadCache/
 UploadCache/
 FailedMessages/
+DatabaseBackups/
 
 # Config files
 config.json

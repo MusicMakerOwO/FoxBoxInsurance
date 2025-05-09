@@ -7,6 +7,7 @@ const DB_FILE = `${ROOT_FOLDER}/fbi.sqlite`;
 const DOWNLOAD_CACHE = `${ROOT_FOLDER}/DownloadCache`;
 const UPLOAD_CACHE = `${ROOT_FOLDER}/UploadCache`;
 const FAILED_MESSAGES = `${ROOT_FOLDER}/FailedMessages`;
+const DATABASE_BACKUPS = `${ROOT_FOLDER}/DatabaseBackups`;
 
 const SECONDS = {
 	MINUTE: 60,
@@ -84,6 +85,7 @@ module.exports = {
 	DOWNLOAD_CACHE,
 	UPLOAD_CACHE,
 	FAILED_MESSAGES,
+	DATABASE_BACKUPS,
 
 	SECONDS,
 	COLOR,

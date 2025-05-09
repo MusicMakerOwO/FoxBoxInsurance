@@ -59,11 +59,12 @@ const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
 const EncryptMessages = require('./Utils/Tasks/EncryptMessages');
 const PushStats = require('./Utils/Tasks/PushStats');
-const { UPLOAD_CACHE, DOWNLOAD_CACHE, FAILED_MESSAGES } = require('./Utils/Constants');
+const { UPLOAD_CACHE, DOWNLOAD_CACHE, FAILED_MESSAGES, DATABASE_BACKUPS } = require('./Utils/Constants');
 
 if (!existsSync(UPLOAD_CACHE)) mkdirSync(UPLOAD_CACHE, { recursive: true });
 if (!existsSync(DOWNLOAD_CACHE)) mkdirSync(DOWNLOAD_CACHE, { recursive: true });
 if (!existsSync(FAILED_MESSAGES)) mkdirSync(FAILED_MESSAGES, { recursive: true });
+if (!existsSync(DATABASE_BACKUPS)) mkdirSync(DATABASE_BACKUPS, { recursive: true });
 
 const preLoadEnd = process.hrtime.bigint();
 const preLoadTime = (preLoadEnd - preLoadStart) / BigInt(1e6); // convert to milliseconds

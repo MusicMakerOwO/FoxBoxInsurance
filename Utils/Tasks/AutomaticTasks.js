@@ -11,6 +11,7 @@ const TASK = {
 	UPLOAD_FILES: 'upload_files',
 	ENCRYPT_MESSAGES: 'encrypt_messages',
 	UPLOAD_STATS: 'upload_stats',
+	BACKUP_DATABASE: 'backup_database',
 }
 
 const TaskFunctions = {
@@ -27,6 +28,7 @@ const TASK_INTERVAL = {
 	[TASK.UPLOAD_FILES]: SECONDS.HOUR,
 	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
 	[TASK.UPLOAD_STATS]: SECONDS.HOUR,
+	[TASK.BACKUP_DATABASE]: SECONDS.DAY,
 }
 
 let i = 0;

@@ -31,8 +31,7 @@ module.exports = {
 	execute: async function(interaction, client) {
 		await interaction.reply({
 			embeds: [embed],
-			components: [button],
-			ephemeral: true
+			components: [button]
 		}).catch(() => {});
 	}
 }

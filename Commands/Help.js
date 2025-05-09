@@ -22,6 +22,7 @@ function ResolveRootCommand(client, commandName) {
 }
 
 module.exports = {
+	bypass: true,
 	usage: '/help <command>',
 	examples: [
 		'/help',

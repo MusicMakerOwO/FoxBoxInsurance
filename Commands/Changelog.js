@@ -48,7 +48,7 @@ const CHANGELOG = {
 		date: "2025 May 9th",
 		changes: [
 			"Added database backups",
-			"Small log updates"
+			"Added logs for internal analytics ( [Privacy Policy](https://www.notfbi.dev/privacy) )",
 		]
 	}
 }

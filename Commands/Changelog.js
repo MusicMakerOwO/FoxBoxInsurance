@@ -43,6 +43,13 @@ const CHANGELOG = {
 			"Updated changelog versions to be more consistent",
 			"Fixed typo in previous changelog"
 		]
+	},
+	"v2.3.0": {
+		date: "2025 May 9th",
+		changes: [
+			"Added database backups",
+			"Small log updates"
+		]
 	}
 }
 

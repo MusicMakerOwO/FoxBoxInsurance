@@ -7,7 +7,7 @@ const CHANGELOG = {
 		changes: [
 			"This command lol",
 			"Minor bug fixes",
-			"Edge case for default aavatars",
+			"Edge case for default avatars",
 			"Made some commands publically visible"
 		]
 	},
@@ -30,18 +30,20 @@ const CHANGELOG = {
 			"Database optimizations :>"
 		]
 	},
-	"v2.1.2": {
+	"v2.2.0": {
 		date: "2025 May 8th",
 		changes: [
 			"Rebuilt the changelog command to show past versions"
 		]
 	},
-	"v2.1.3": {
+	"v2.2.1": {
 		date: "2025 May 8th",
 		changes: [
-			"Fixed time collissions for automated tasks"
+			"Fixed time collissions for automated tasks",
+			"Updated changelog versions to be more consistent",
+			"Fixed typo in previous changelog"
 		]
-	},
+	}
 }
 
 const OLDEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => a.localeCompare(b))[0];

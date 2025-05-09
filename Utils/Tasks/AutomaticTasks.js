@@ -20,6 +20,7 @@ const TaskFunctions = {
 	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
 	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
 	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
+	[ TASK.BACKUP_DATABASE	]: require("./BackupDatabase"),
 }
 
 const TASK_INTERVAL = {

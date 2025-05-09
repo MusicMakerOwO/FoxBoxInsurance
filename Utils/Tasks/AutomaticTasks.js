@@ -32,6 +32,8 @@ const TASK_INTERVAL = {
 	[TASK.BACKUP_DATABASE]: SECONDS.DAY,
 }
 
+let longestName = 0;
+
 let i = 0;
 for (const [name, callback] of Object.entries(TaskFunctions)) {
 	i++;
@@ -39,6 +41,10 @@ for (const [name, callback] of Object.entries(TaskFunctions)) {
 		warn(`Task ${i} is undefined, skipping...`);
 		delete TaskFunctions[name];
 		return;
+	}
+
+	if (name.length > longestName) {
+		longestName = name.length;
 	}
 
 	if (typeof callback !== 'function') {
@@ -86,5 +92,7 @@ module.exports.StartTasks = function StartTasks() {
 		}, delay, interval);
 
 		// success(`Scheduled task "${name}" to run every ${interval / 1000} seconds (delayed by ${delay / 1000 / 60} minutes)`);
+
+		success(`[TASKS] - "${name}"${' '.repeat(longestName - name.length)} : delayed ${(delay / 1000 / 60).toFixed(2)} minutes`);
 	}
 }

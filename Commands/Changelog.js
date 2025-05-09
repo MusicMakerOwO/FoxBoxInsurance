@@ -49,6 +49,7 @@ const CHANGELOG = {
 		changes: [
 			"Added database backups",
 			"Added logs for internal analytics ( [Privacy Policy](https://www.notfbi.dev/privacy#retention) )",
+			"Updated access requirements for some commands",
 		]
 	}
 }

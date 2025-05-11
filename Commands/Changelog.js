@@ -51,6 +51,13 @@ const CHANGELOG = {
 			"Added logs for internal analytics ( [Privacy Policy](https://www.notfbi.dev/privacy#retention) )",
 			"Updated access requirements for some commands",
 		]
+	},
+	"v2.4.0": {
+		date: "2025 May 11th",
+		changes: [
+			"Added a prompt to accept the TOS after inviting",
+			"Bug that bot tries to read DMs (it can't lol)",
+		]
 	}
 }
 

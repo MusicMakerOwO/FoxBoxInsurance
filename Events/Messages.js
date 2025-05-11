@@ -14,6 +14,7 @@ function AcceptedTerms(guildID) {
 module.exports = {
 	name: 'messageCreate',
 	execute: async function(client, message) {
+		if (!message.guild) return; // DM messages are not supported
 
 		if (message.flags.has(128)) return; // deferred message
 

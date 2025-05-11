@@ -98,6 +98,32 @@ async function InteractionHandler(client, interaction, type, cache) {
 	const args = interaction.customId?.split("_") ?? [];
 	const name = args.shift() ?? interaction.commandName;
 
+	const component = cache.get(name);
+	if (!component) {
+		await interaction.reply({
+			content: `There was an error while executing this command!\n\`\`\`Command not found\`\`\``,
+			ephemeral: true
+		}).catch(() => { });
+		client.logs.error(`${type} not found: ${name}`);
+		return;
+	}
+
+	if (component.allow_dm) {
+		try {
+			await component.execute(interaction, client, type === 'commands' ? undefined : args);
+		} catch (error) {
+			client.logs.error(error);
+			await interaction.deferReply({ ephemeral: true }).catch(() => {});
+			await interaction.editReply({
+				content: `There was an error while executing this command!\n\`\`\`${error}\`\`\``,
+				embeds: [],
+				components: [],
+				files: []
+			}).catch(() => {});
+		}
+		return;
+	}
+
 	Database.prepare(`
 		INSERT INTO InteractionLogs (guild_id, channel_id, user_id, type, name)
 		VALUES (?, ?, ?, ?, ?)
@@ -115,16 +141,6 @@ async function InteractionHandler(client, interaction, type, cache) {
 		interaction.user.username,
 		+interaction.user.bot
 	);
-
-	const component = cache.get(name);
-	if (!component) {
-		await interaction.reply({
-			content: `There was an error while executing this command!\n\`\`\`Command not found\`\`\``,
-			ephemeral: true
-		}).catch(() => { });
-		client.logs.error(`${type} not found: ${name}`);
-		return;
-	}
 
 	const guildAccepted = Database.prepare(`SELECT accepted_terms FROM Guilds WHERE id = ?`).pluck().get(interaction.guildId);
 	const userAccepted = Database.prepare(`SELECT accepted_terms FROM Users WHERE id = ?`).pluck().get(interaction.user.id);

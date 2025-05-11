@@ -1,4 +1,5 @@
 module.exports = {
+	allow_dm: true,
 	bypass: true,
 	customID: 'close',
 	execute: async function(interaction, client, args) {

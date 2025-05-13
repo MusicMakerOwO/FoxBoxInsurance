@@ -15,8 +15,6 @@ module.exports = async function EncryptMessages() {
 
 	Log.success(`Encrypting ${unencryptedMessages.length} messages...`);
 
-	const keyCache = new Map(); // user_id -> key
-
 	const UpdateStatement = Database.prepare("UPDATE Messages SET content = ?, tag = ?, encrypted = 1 WHERE id = ?");
 
 	const start = process.hrtime.bigint();
@@ -40,5 +38,4 @@ module.exports = async function EncryptMessages() {
 	const end = process.hrtime.bigint();
 	const time = Number(end - start) / 1e6;
 	Log.success(`Encrypted ${unencryptedMessages.length} messages in ${time.toFixed(2)}ms (${(unencryptedMessages.length / (time / 1000)).toFixed(2)} messages/s)`);
-	Log.success(`Generated keys for ${keyCache.size} users`);
 }

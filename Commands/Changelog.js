@@ -58,6 +58,19 @@ const CHANGELOG = {
 			"Added a prompt to accept the TOS after inviting",
 			"Bug that bot tries to read DMs (it can't lol)",
 		]
+	},
+	"v2.4.1": {
+		date: "2025 May 13th",
+		changes: [
+			"Small bug fixes"
+		]
+	},
+	"v2.4.2": {
+		date: "2025 May 18th",
+		changes: [
+			"Adjusted internal logs to be more readable",
+			"Small database optimizations",
+		]
 	}
 }
 

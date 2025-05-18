@@ -23,9 +23,9 @@ module.exports = async function BackupDatabase() {
 	Database.exec('PRAGMA wal_checkpoint(TRUNCATE)');
 
 	const date = GetDate();
-	const backupFile = `${DATABASE_BACKUPS}/${date}.${EXTENSION}`;
+	const backupFile = `${date}.${EXTENSION}`;
 
-	await Database.backup(backupFile);
+	await Database.backup(`${DATABASE_BACKUPS}/${backupFile}`);
 	const backupEnd = process.hrtime.bigint();
 	const backupDuration = Number(backupEnd - backupStart) / 1e6; // convert to milliseconds
 	Log.success(`Database backup created: ${backupFile} (${backupDuration.toFixed(2)} ms)`);

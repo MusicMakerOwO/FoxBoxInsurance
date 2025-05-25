@@ -1,0 +1,80 @@
+const { COLOR } = require("../../Utils/Constants");
+const { SnapshotStats } = require("../../Utils/SnapshotUtils");
+
+const NoSnapshotEmbed = {
+	color: COLOR.ERROR,
+	title: 'Snapshot Not Found',
+	description: `
+Snapshot not found or already deleted
+Create one using \`/snapshot create\``
+}
+
+module.exports = {
+	customID: 'snapshot-manage',
+	execute: async function(interaction, client, args) {
+		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+
+		const snapshotID = parseInt(args[0]);
+
+		const exists = Database.prepare(`
+			SELECT id
+			FROM Snapshots
+			WHERE id = ?
+			AND guild_id = ?
+			AND deleted = 0
+		`).get(snapshotID, interaction.guild.id);
+		if (!exists) {
+			return interaction.editReply({
+				embeds: [ NoSnapshotEmbed ],
+				components: []
+			});
+		}
+
+		const stats = SnapshotStats(snapshotID);
+		const embed = {
+			color: COLOR.PRIMARY,
+			title: `Snapshot #${snapshotID}`,
+			description: `
+| Channels: ${stats.channels}
+| Roles: ${stats.roles}
+| Bans: ${stats.bans}
+Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
+`,
+		}
+
+		const buttons = {
+			type: 1,
+			components: [
+				{
+					type: 2,
+					style: 2,
+					label: 'View',
+					custom_id: `snapshot-view_${snapshotID}`,
+					disabled: stats.deleted === 1,
+					emoji: '🔍'
+				},
+				{
+					type: 2,
+					style: 4,
+					label: 'Delete',
+					custom_id: `snapshot-delete_${snapshotID}`,
+					disabled: stats.deleted === 1,
+					emoji: '🗑️'
+				},
+				{
+					type: 2,
+					style: 3,
+					label: 'Restore',
+					custom_id: `snapshot-restore_${snapshotID}`,
+					disabled: stats.deleted === 1,
+					emoji: '🔄'
+				}
+			]
+		}
+
+		return interaction.editReply({
+			embeds: [embed],
+			components: [buttons]
+		});
+	}
+}

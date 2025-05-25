@@ -124,6 +124,8 @@ async function InteractionHandler(client, interaction, type, cache) {
 		return;
 	}
 
+	interaction.deferUpdate ??= interaction.deferReply;
+
 	Database.prepare(`
 		INSERT INTO InteractionLogs (guild_id, channel_id, user_id, type, name)
 		VALUES (?, ?, ?, ?, ?)

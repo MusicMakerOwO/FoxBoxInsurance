@@ -25,7 +25,6 @@ module.exports = {
 	customID: 'bot-info',
 	execute: async function(interaction, client, args) {
 	
-		interaction.deferUpdate ??= interaction.deferReply;
 		await interaction.deferUpdate().catch(() => {});
 		
 		const processUptime = process.uptime(); // seconds

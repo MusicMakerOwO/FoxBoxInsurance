@@ -45,7 +45,7 @@ const RegisterCommands = require('./Utils/RegisterCommands');
 const CheckIntents = require('./Utils/CheckIntents');
 const FileWatch = require('./Utils/FileWatcher');
 
-const { Client } = require('discord.js');
+const client = require('./client.js');
 const Debounce = require('./Utils/Timing/Debounce');
 
 const TimedCache = require('./Utils/Caching/TimedCache');
@@ -69,17 +69,6 @@ if (!existsSync(DATABASE_BACKUPS)) mkdirSync(DATABASE_BACKUPS, { recursive: true
 const preLoadEnd = process.hrtime.bigint();
 const preLoadTime = (preLoadEnd - preLoadStart) / BigInt(1e6); // convert to milliseconds
 Log.custom(`Preload time: ${preLoadTime}ms`, 0x7946ff);
-
-const client = new Client({
-	intents: [
-		'Guilds',
-		'GuildMembers',
-		'MessageContent',
-		'GuildMessages',
-		'DirectMessages',
-		'GuildBans'
-	]
-});
 
 client.config = config;
 client.logs = Log;

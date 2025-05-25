@@ -35,10 +35,31 @@ const FORMAT = {
 	HTML: 'html'
 }
 
-// Reverse the format object so we can use the values as keys
-// Allows for human readable format names
+const SNAPSHOT_TYPE = {
+	AUTOMATIC: 0,
+	MANUAL: 1,
+	IMPORT: 2
+}
+
+// Reverse the object so we can use the values as keys
+// Allows for human readable names
 for (const [k, v] of Object.entries(FORMAT)) {
 	FORMAT[v] = k;
+}
+for (const [k, v] of Object.entries(SNAPSHOT_TYPE)) {
+	SNAPSHOT_TYPE[v] = k;
+}
+
+const SNAPSHOT_TYPE_EMOJI = {
+	[ SNAPSHOT_TYPE.MANUAL ]: '🔧',
+	[ SNAPSHOT_TYPE.AUTOMATIC ]: '⏰',
+	[ SNAPSHOT_TYPE.IMPORT ]: '📥'
+}
+
+const STATUS_EMOJI = {
+	LOADING: '<a:loading:1375384157152084088>',
+	ERROR: '❌',
+	SUCCESS: '✅'
 }
 
 const LOADING_MESSAGES = [
@@ -91,6 +112,10 @@ module.exports = {
 	COLOR,
 	FORMAT,
 	LOADING_MESSAGES,
+
+	SNAPSHOT_TYPE,
+	SNAPSHOT_TYPE_EMOJI,
+	STATUS_EMOJI,
 
 	RandomLoadingMessage,
 	RandomLoadingEmbed

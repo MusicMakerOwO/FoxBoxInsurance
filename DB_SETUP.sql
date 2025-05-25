@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS Guilds (
 	name TEXT,
 	accepted_terms INTEGER NOT NULL DEFAULT 0, -- 1 if the guild has accepted the terms
 	asset_id INTEGER,
+	snapshots_enabled INTEGER NOT NULL DEFAULT 1, -- 1 if the guild has snapshots enabled
 	-- {{...}} denotes an external macro, see Utils/Database for available macros
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
 ) STRICT;
@@ -82,16 +83,6 @@ CREATE TABLE IF NOT EXISTS Users (
 ) STRICT;
 CREATE INDEX IF NOT EXISTS users_username ON Users (username);
 CREATE INDEX IF NOT EXISTS users_asset_null ON Users (asset_id) WHERE asset_id IS NULL;
-
--- CREATE TABLE IF NOT EXISTS Members (
--- 	user_id TEXT NOT NULL,
--- 	guild_id TEXT NOT NULL,
--- 	joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
--- 	left_at TEXT,
--- 	PRIMARY KEY (user_id, guild_id)
--- );
--- CREATE INDEX IF NOT EXISTS members_guild_id ON Members (guild_id);
--- CREATE INDEX IF NOT EXISTS members_user_id  ON Members (user_id);
 
 CREATE TABLE IF NOT EXISTS Emojis (
 	id TEXT NOT NULL PRIMARY KEY,
@@ -199,3 +190,99 @@ CREATE TABLE IF NOT EXISTS InteractionLogs (
 	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
 );
 CREATE INDEX IF NOT EXISTS interaction_logs_created_at ON InteractionLogs (created_at ASC);
+
+
+
+
+-- DROP TABLE Snapshots;
+-- DROP TABLE SnapshotRoles;
+-- DROP TABLE SnapshotChannels;
+-- DROP TABLE SnapshotPermissions;
+-- DROP TABLE SnapshotBans;
+
+CREATE TABLE IF NOT EXISTS Snapshots (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	guild_id TEXT NOT NULL,
+
+	type INTEGER NOT NULL, -- import, automatic, manual, etc.
+
+	-- Deleted just means don't show it in the UI
+	-- Need to keep the data for data integrity lol
+	deleted INTEGER NOT NULL DEFAULT 0,
+
+	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
+) STRICT;
+CREATE INDEX IF NOT EXISTS shapshots_guild_id ON Snapshots (guild_id);
+
+CREATE TABLE IF NOT EXISTS SnapshotRoles (
+	snapshot_id INTEGER NOT NULL,
+	deleted INTEGER NOT NULL DEFAULT 0, -- 1 if the role was deleted
+
+	id TEXT NOT NULL, -- The ID of the role
+	name TEXT NOT NULL,
+	color INTEGER NOT NULL,
+	hoist INTEGER NOT NULL, -- 1 if the role is hoisted
+	position INTEGER NOT NULL,
+	permissions TEXT NOT NULL,
+
+	hash TEXT NOT NULL, -- The hash of the role
+
+	PRIMARY KEY (snapshot_id, id)
+) STRICT;
+CREATE INDEX IF NOT EXISTS snapshot_roles_id ON SnapshotRoles (snapshot_id);
+CREATE INDEX IF NOT EXISTS snapshot_roleID ON SnapshotRoles (id);
+
+
+CREATE TABLE IF NOT EXISTS SnapshotChannels (
+	snapshot_id INTEGER NOT NULL,
+	deleted INTEGER NOT NULL DEFAULT 0, -- 1 if the channel was deleted
+
+	id TEXT NOT NULL,
+	type INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	position INTEGER NOT NULL,
+	topic TEXT,
+	nsfw INTEGER NOT NULL, -- 1 if the channel is NSFW
+
+	parent_id TEXT, -- NULL if no parent
+
+	hash TEXT NOT NULL, -- The hash of the channel
+
+	PRIMARY KEY (snapshot_id, id)
+) STRICT;
+CREATE INDEX IF NOT EXISTS snapshot_channels_id ON SnapshotChannels (snapshot_id);
+CREATE INDEX IF NOT EXISTS snapshot_channelID ON SnapshotChannels (id);
+
+CREATE TABLE IF NOT EXISTS SnapshotPermissions (
+	snapshot_id INTEGER NOT NULL,
+	deleted INTEGER NOT NULL DEFAULT 0, -- 1 if the permission was deleted
+
+	channel_id TEXT NOT NULL,
+	role_id TEXT NOT NULL,
+	id TEXT GENERATED ALWAYS AS (channel_id || '-' || role_id) VIRTUAL, -- The ID of the permission
+
+	-- The permissions of the role in the channel
+	allow INTEGER NOT NULL,
+	deny INTEGER NOT NULL,
+
+	hash TEXT NOT NULL, -- The hash of the permission
+
+	PRIMARY KEY (snapshot_id, channel_id, role_id)
+) STRICT;
+CREATE INDEX IF NOT EXISTS snapshot_permissions_id ON SnapshotPermissions (snapshot_id);
+CREATE INDEX IF NOT EXISTS snapshot_permissions_channelID ON SnapshotPermissions (channel_id);
+CREATE INDEX IF NOT EXISTS snapshot_permissions_roleID ON SnapshotPermissions (role_id);
+
+CREATE TABLE IF NOT EXISTS SnapshotBans (
+	snapshot_id INTEGER NOT NULL,
+	deleted INTEGER NOT NULL DEFAULT 0, -- 1 if the user was deleted
+
+	user_id TEXT NOT NULL,
+	reason TEXT,
+
+	hash TEXT NOT NULL, -- The hash of the ban
+
+	PRIMARY KEY (snapshot_id, user_id)
+) STRICT;
+CREATE INDEX IF NOT EXISTS snapshot_bans_id ON SnapshotBans (snapshot_id);
+CREATE INDEX IF NOT EXISTS snapshot_bans_userID ON SnapshotBans (user_id);

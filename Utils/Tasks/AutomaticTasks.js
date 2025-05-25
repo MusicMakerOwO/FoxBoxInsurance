@@ -12,24 +12,27 @@ const TASK = {
 	ENCRYPT_MESSAGES: 'encrypt_messages',
 	UPLOAD_STATS: 'upload_stats',
 	BACKUP_DATABASE: 'backup_database',
+	SERVER_SNAPSHOT: 'server_snapshot',
 }
 
 const TaskFunctions = {
-	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
-	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
+	[ TASK.SERVER_SNAPSHOT	]: require("./SnapshotServers"),
 	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
-	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
 	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
+	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
+	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
 	[ TASK.BACKUP_DATABASE	]: require("./BackupDatabase"),
+	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
 }
 
 const TASK_INTERVAL = {
-	[TASK.CLEAN_DATABASE]: SECONDS.DAY,
-	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
+	[TASK.SERVER_SNAPSHOT]: SECONDS.HOUR,
 	[TASK.UPLOAD_FILES]: SECONDS.HOUR,
-	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
 	[TASK.UPLOAD_STATS]: SECONDS.HOUR,
+	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
+	[TASK.CLEAN_DATABASE]: SECONDS.DAY,
 	[TASK.BACKUP_DATABASE]: SECONDS.DAY,
+	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
 }
 
 let longestName = 0;

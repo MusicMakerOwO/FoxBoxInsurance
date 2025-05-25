@@ -1,12 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const Database = require('../../Utils/Database');
-const { COLOR } = require('../../Utils/Constants');
+const { COLOR, STATUS_EMOJI } = require('../../Utils/Constants');
 const { BlacklistedChannels } = require('../../Utils/Checks/ChannelCanExport');
 
 const Embed = {
 	color: COLOR.PRIMARY,
 	description: `
-**Exports have been disabled** ❌
+**Exports have been disabled** ${STATUS_EMOJI.ERROR}
 Only server admins are allowed to bypass this`
 }
 

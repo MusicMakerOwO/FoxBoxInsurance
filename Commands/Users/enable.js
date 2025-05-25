@@ -44,7 +44,7 @@ module.exports = {
 		const embed = {
 			color: COLOR.SUCCESS,
 			description: `
-**Status**: ✅ Unblocked 
+**Status**: ${STATUS_EMOJI.SUCCESS} Unblocked 
 <@${userId}> can now export messages in this server`
 		}
 		

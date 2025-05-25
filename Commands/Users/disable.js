@@ -27,6 +27,7 @@ module.exports = {
 		'/disableuser @user',
 		'/disableuser 123456789012345678'
 	],
+	aliases: ['blockuser'],
 	data: new SlashCommandBuilder()
 		.setName('disableuser')
 		.setDescription('Block a user from using exports')

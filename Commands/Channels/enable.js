@@ -23,6 +23,7 @@ module.exports = {
 		'/enablechannel #general',
 		'/enablechannel 123456789012345678'
 	],
+	aliases: ['unblockchannel'],
 	data: new SlashCommandBuilder()
 		.setName('enablechannel')
 		.setDescription('Enable exports in a channel - Only server admins can bypass this')

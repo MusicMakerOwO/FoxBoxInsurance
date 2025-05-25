@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { COLOR } = require('../../Utils/Constants');
+const { COLOR, STATUS_EMOJI } = require('../../Utils/Constants');
 const Database = require('../../Utils/Database');
 
 const NoPermissionsEmbed = {
@@ -15,6 +15,7 @@ module.exports = {
 		'/enableuser @user',
 		'/enableuser 123456789012345678'
 	],
+	aliases: ['unblockuser'],
 	data: new SlashCommandBuilder()
 		.setName('enableuser')
 		.setDescription('Allow a user to use exports')

@@ -223,6 +223,16 @@ client.on('ready', async function () {
 
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
 
+	const savedGuilds = new Set( Database.prepare('SELECT id FROM Guilds').pluck().all() );
+	for (const guild of client.guilds.cache.values()) {
+		if (savedGuilds.has(guild.id)) continue; // already saved
+		Database.prepare(`
+			INSERT INTO Guilds (id, name)
+			VALUES (?, ?)
+			ON CONFLICT(id) DO UPDATE SET name = excluded.name
+		`).run(guild.id, guild.name);
+	}
+
 	StartTasks();
 	UploadFiles();
 

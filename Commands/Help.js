@@ -112,8 +112,7 @@ module.exports = {
 
 		const lines = [];
 		lines.push('```');
-		lines.push('/help\n');
-		lines.push('Available commands:');
+		lines.push(`Available commands (${client.commands.size} total)`);
 		const commandList = Array.from(client.commands.keys()).sort((a, b) => a.localeCompare(b));
 		for (const commandName of commandList) {
 			lines.push(`  /${commandName}`);

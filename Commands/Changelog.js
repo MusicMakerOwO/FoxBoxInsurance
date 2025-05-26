@@ -71,7 +71,13 @@ const CHANGELOG = {
 			"Adjusted internal logs to be more readable",
 			"Small database optimizations",
 		]
-	}
+	},
+	"v2.4.3": {
+		date: "2025 May 26th",
+		changes: [
+			"Adjusted internal configs for (slightly) better performance"
+		]
+	},
 }
 
 const OLDEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => a.localeCompare(b))[0];

@@ -280,11 +280,11 @@ function FetchSnapshot(snapshot_id) {
 	return result;
 }
 
-const cache = new TimedCache(1000 * 60 * 60); // 1 hour
+const banCache = new TimedCache(1000 * 60 * 60); // 1 hour
 
 async function FetchAllBans(guild) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
-	if (cache.has(guild.id)) return cache.get(guild.id);
+	if (banCache.has(guild.id)) return banCache.get(guild.id);
 
 	const MAX_BANS = 1000;
 	const bans = new Map();
@@ -311,7 +311,7 @@ async function FetchAllBans(guild) {
 		if (fetchedBans.size < MAX_BANS) break;
 	}
 
-	cache.set(guild.id, bans);
+	banCache.set(guild.id, bans);
 	return bans;
 }
 
@@ -564,6 +564,11 @@ async function CreateSnapshot(guild, type = 0) {
 }
 
 module.exports = {
+	SimplifyChannel,
+	SimplifyRole,
+	SimplifyPermission,
+	SimplifyBan,
+
 	CreateSnapshot,
 	FetchSnapshot,
 	SnapshotStats,

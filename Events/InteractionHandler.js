@@ -22,24 +22,24 @@ module.exports = {
 					const commandArgs = interaction.options._hoistedOptions || [];
 					const args = `${subcommandGroup} ${subcommand} ${commandArgs.map(arg => arg.value).join(" ")}`.trim();
 					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > /${interaction.commandName} ${args}`);
-					await InteractionHandler(client, interaction, 'commands', client.commands);
+					InteractionHandler(client, interaction, 'commands', client.commands);
 				} else {
 					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > :${interaction.commandName}:`);
-					await InteractionHandler(client, interaction, 'context', client.context);
+					InteractionHandler(client, interaction, 'context', client.context);
 				}
 				break;
 			case 3: // Message Components
 				if (interaction.isButton()) {
 					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > [${interaction.customId}]`);
-					await InteractionHandler(client, interaction, 'buttons', client.buttons);
+					InteractionHandler(client, interaction, 'buttons', client.buttons);
 				} else if (interaction.isAnySelectMenu()) {
 					client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > <${interaction.customId} : ${interaction.values.join(', ')}>`);
-					await InteractionHandler(client, interaction, 'menus', client.menus);
+					InteractionHandler(client, interaction, 'menus', client.menus);
 				}
 				break;
 			case 5: // Modal submit
 				client.logs.info(`${interaction.user.tag} (${interaction.user.id}) > {${interaction.customId}}`);
-				await InteractionHandler(client, interaction, 'modals', client.modals);
+				InteractionHandler(client, interaction, 'modals', client.modals);
 				break;
 			default:
 				client.logs.warn(`Unknown interaction type: ${interaction.type} - Unsure how to handle this...`);

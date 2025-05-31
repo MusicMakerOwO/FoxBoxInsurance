@@ -317,7 +317,7 @@ const CHANGE_TYPE = {
 	DELETE: 2
 }
 
-const allowedChannelTypes = new Set([ 0, 2, 4, 5, 10, 13, 15, 16 ]);
+const ALLOWED_CHANNEL_TYPES = new Set([ 0, 2, 4, 5, 10, 13, 15, 16 ]);
 
 async function CreateSnapshot(guild, type = 0) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
@@ -364,7 +364,7 @@ async function CreateSnapshot(guild, type = 0) {
 		}
 
 		for (const channel of guildChannels) {
-			if (!allowedChannelTypes.has(channel.type)) continue; // skip non-guild channels
+			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue; // skip non-guild channels
 			AddItem(channel, channels, SimplifyChannel);
 
 			if (channel.permissionOverwrites) {
@@ -411,7 +411,7 @@ async function CreateSnapshot(guild, type = 0) {
 		}
 
 		for (const channel of guildChannels) {
-			if (!allowedChannelTypes.has(channel.type)) continue; // skip non-guild channels
+			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue; // skip non-guild channels
 			const simpleChannel = SimplifyChannel(channel);
 			const hash = HashObject(simpleChannel);
 			processedChannels.add(channel.id);
@@ -572,5 +572,6 @@ module.exports = {
 	FetchAllBans,
 
 	SNAPSHOT_TYPE,
-	CHANGE_TYPE
+	CHANGE_TYPE,
+	ALLOWED_CHANNEL_TYPES
 };

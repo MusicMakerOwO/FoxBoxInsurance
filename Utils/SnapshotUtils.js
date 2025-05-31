@@ -103,15 +103,12 @@ function SnapshotStats(snapshotID) {
 	`).pluck().get(snapshotID);
 	if (!guildID) throw new Error('Snapshot not found');
 
-	console.log(guildID);
-
 	const snapshotIDs = Database.prepare(`
 		SELECT id
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
 	`).pluck().all(guildID);
-	console.log(snapshotIDs);
 	if (!snapshotIDs.includes(snapshotID)) throw new Error('Snapshot not found');
 
 	const targetIndex = snapshotIDs.indexOf(snapshotID);
@@ -180,8 +177,6 @@ function SnapshotStats(snapshotID) {
 	};
 
 	statCache.set(snapshotID, stats);
-	console.log(stateCache);
-	console.log(statCache);
 	return stats;
 }
 

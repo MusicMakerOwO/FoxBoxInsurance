@@ -1,4 +1,5 @@
 const { COLOR } = require("../../Utils/Constants");
+const Database = require("../../Utils/Database");
 const { SnapshotStats } = require("../../Utils/SnapshotUtils");
 
 const NoSnapshotEmbed = {
@@ -9,10 +10,23 @@ Snapshot not found or already deleted
 Create one using \`/snapshot create\``
 }
 
+const noPermissionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'You must be a server administrator for this'
+}
+
 module.exports = {
 	customID: 'snapshot-manage',
 	execute: async function(interaction, client, args) {
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+
+		if (!interaction.member.permissions.has('Administrator')) {
+			return interaction.editReply({
+				embeds: [noPermissionEmbed],
+				components: []
+			});
+		}
 
 		const snapshotID = parseInt(args[0]);
 

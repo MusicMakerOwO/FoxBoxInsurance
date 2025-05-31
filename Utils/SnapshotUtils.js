@@ -17,6 +17,10 @@ function HashObject(obj) {
 	return crypto.createHash('sha1').update(flatString).digest('hex');
 }
 
+function PermKey(channelID, roleID) {
+	return `${channelID}-${roleID}`;
+}
+
 function SimplifyChannel(channel) {
 	if (channel instanceof GuildChannel) return {
 		id: channel.id,
@@ -61,7 +65,7 @@ function SimplifyRole(role) {
 
 function SimplifyPermission(channelID, permission) {
 	if (permission instanceof PermissionOverwrites) return {
-		id: channelID + '-' + permission.id,
+		id: PermKey(channelID, permission.id),
 		channel_id: channelID,
 		role_id: permission.id,
 		allow: permission.allow.bitfield,
@@ -69,7 +73,7 @@ function SimplifyPermission(channelID, permission) {
 	}
 
 	return {
-		id: channelID + '-' + permission.role_id,
+		id: PermKey(channelID, permission.role_id),
 		channel_id: channelID,
 		role_id: permission.role_id,
 		allow: permission.allow,
@@ -234,7 +238,7 @@ function FetchSnapshot(snapshot_id) {
 			SELECT *
 			FROM SnapshotPermissions
 			WHERE snapshot_id = ?
-		`).all(snapshotID);
+		`).safeIntegers().all(snapshotID);
 		for (const permission of snapshotPermissions) {
 			if (permission.deleted) {
 				permissions.delete(permission.id);
@@ -436,7 +440,7 @@ async function CreateSnapshot(guild, type = 0) {
 					if (permission.allow.bitfield === 0n && permission.deny.bitfield === 0n) continue; // default permissions, save storage lol
 					const simplePermission = SimplifyPermission(channel.id, permission);
 					const hash = HashObject(simplePermission);
-					processedPerms.add(`${simplePermission.channel_id}-${simplePermission.role_id}`);
+					processedPerms.add(simplePermission.id);
 					if (snapshotData.permissions.has(simplePermission.id)) {
 						if (snapshotData.permissions.get(simplePermission.id).hash !== hash) {
 							permissions.push({
@@ -569,6 +573,7 @@ module.exports = {
 	SnapshotStats,
 
 	HashObject,
+	PermKey,
 	FetchAllBans,
 
 	SNAPSHOT_TYPE,

@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const { Events } = require('discord.js');
+const { Events, RESTEvents } = require('discord.js');
 const ReadFolder = require('./ReadFolder');
 const Logs = require('./Logs');
 
@@ -37,15 +37,22 @@ module.exports = function (client, folderPath) {
 
 			if (Events[data.name]) data.name = Events[data.name];
 
-			if (CHECK_EVENT_NAMES && !IGNORED_EVENTS.includes(data.name) && !Object.values(Events).includes(data.name)) {
+			if (CHECK_EVENT_NAMES) 
+				if (!IGNORED_EVENTS.includes(data.name) && !Object.values(Events).includes(data.name) && !Object.values(RESTEvents).includes(data.name)) {
 				Logs.warn(`Possibly invalid event name "${data.name}" - Unless it is a custom event this will never be called!`);
 			}
+
+			const isRestEvent = Object.values(RESTEvents).includes(data.name);
 			
 			if (typeof data.execute !== 'function') throw `Event is missing an execute function!`;
 
 			const callback = data.execute.bind(null, client);
-			if (data.once) client.once(data.name, callback);
-			else client.on(data.name, callback);
+			if (!isRestEvent) {
+				if (data.once) client.once(data.name, callback);
+				else client.on(data.name, callback);
+			} else {
+				client.rest.on(data.name, callback);
+			}
 		} catch (error) {
 			Logs.error(`Failed to load event ${path}`);
 			Logs.error(error);

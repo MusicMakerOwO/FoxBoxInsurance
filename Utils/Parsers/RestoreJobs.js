@@ -12,10 +12,8 @@ const API_TYPES = {
 	CHANNEL_CREATE: 'channel-create',
 	CHANNEL_UPDATE: 'channel-update',
 	CHANNEL_DELETE: 'channel-delete',
-	PERMISSION_CREATE: 'permission-create',
-	PERMISSION_UPDATE: 'permission-update',
-	PERMISSION_DELETE: 'permission-delete',
 	BAN_CREATE: 'ban-create',
+	BAN_UPDATE: 'ban-update',
 	BAN_DELETE: 'ban-delete'
 }
 

@@ -131,7 +131,6 @@ module.exports = {
 		}
 
 		for (const role of GuildRoles) {
-			if (role.managed) continue; // Skip managed roles (like bot roles)
 			const simpleRole = SimplifyRole(role);
 			simplifiedCache.roles.set(simpleRole.id, simpleRole);
 			if (!SnapshotData.roles.has(simpleRole.id)) {

@@ -66,15 +66,15 @@ Are you sure you want to delete this snapshot?
 			components: [
 				{
 					type: 2,
-					style: 3,
-					label: 'Take me back!',
-					custom_id: `snapshot-manage_${snapshotID}`
-				},
-				{
-					type: 2,
 					style: 4,
 					label: 'Confirm',
 					custom_id: `snapshot-delete_${snapshotID}_confirm`,
+				},
+				{
+					type: 2,
+					style: 3,
+					label: 'Take me back!',
+					custom_id: `snapshot-manage_${snapshotID}`
 				},
 			]
 		}

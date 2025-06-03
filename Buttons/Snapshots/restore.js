@@ -251,8 +251,6 @@ module.exports = {
 			});
 		}
 
-		console.log( inspect(modifications, { depth: 5, colors: true }) );
-
 		const executionEnd = Date.now();
 		const executionTime = (executionEnd - executionStart) / 1000; // in seconds
 
@@ -266,8 +264,6 @@ module.exports = {
 			... SortChannels( Array.from( modifications.channels.values() ), 'data' ),
 			... Array.from( modifications.bans.values() ) // order does not matter lol
 		]
-
-		console.log( executionPlan );
 
 		const botMember = interaction.guild.members.cache.get(client.user.id) ?? await interaction.guild.members.fetch(client.user.id).catch(() => null);
 		if (!botMember) {

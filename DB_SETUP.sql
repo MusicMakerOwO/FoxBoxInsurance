@@ -224,6 +224,7 @@ CREATE TABLE IF NOT EXISTS SnapshotRoles (
 	hoist INTEGER NOT NULL, -- 1 if the role is hoisted
 	position INTEGER NOT NULL,
 	permissions TEXT NOT NULL,
+	managed INTEGER NOT NULL DEFAULT 0, -- 1 if the role is managed by an integration
 
 	hash TEXT NOT NULL, -- The hash of the role
 

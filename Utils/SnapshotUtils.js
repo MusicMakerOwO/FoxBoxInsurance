@@ -49,8 +49,9 @@ function SimplifyRole(role) {
 		name: role.name,
 		color: role.color,
 		hoist: +role.hoist,
-		position: role.position,
-		permissions: String(role.permissions.bitfield)
+		position: role.rawPosition,
+		permissions: String(role.permissions.bitfield),
+		managed: +role.managed
 	}
 
 	return {
@@ -59,7 +60,8 @@ function SimplifyRole(role) {
 		color: role.color,
 		hoist: +role.hoist,
 		position: role.position,
-		permissions: role.permissions
+		permissions: role.permissions,
+		managed: +role.managed
 	}
 }
 
@@ -327,7 +329,7 @@ async function CreateSnapshot(guild, type = 0) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
 	if (!Object.values(SNAPSHOT_TYPE).includes(type)) throw new Error('Invalid snapshot type, must be within SNAPSHOT_TYPE enum');
 
-	const botMember = guild.members.cache.get(guild.client.user.id) ?? await guild.members.fetch(guild.client.user.id).catch(() => null);
+	const botMember = guild.members.cache.get(client.user.id) ?? await guild.members.fetch(client.user.id).catch(() => null);
 	if (!botMember) {
 		Log.error(`[SNAPSHOT] Bot is not a member of the guild ${guild.name} (${guild.id})`);
 		return null;
@@ -335,6 +337,12 @@ async function CreateSnapshot(guild, type = 0) {
 
 	if (!botMember.permissions.has('BanMembers') || !botMember.permissions.has('ManageRoles') || !botMember.permissions.has('ManageChannels')) {
 		Log.error(`[SNAPSHOT] Bot does not have required permissions in guild ${guild.name} (${guild.id})`);
+		return null;
+	}
+
+	const botRole = guild.roles.cache.find(role => role.tags.botId === client.user.id);
+	if (!botRole) {
+		Log.error(`[SNAPSHOT] Bot role not found in guild ${guild.name} (${guild.id})`);
 		return null;
 	}
 
@@ -348,6 +356,18 @@ async function CreateSnapshot(guild, type = 0) {
 	const guildRoles = Array.from(guild.roles.cache.values());
 	const guildChannels = Array.from(guild.channels.cache.values());
 	const guildBans = Array.from((await FetchAllBans(guild)).values());
+
+	if (botRole.rawPosition !== 0) {
+		// bot role is not at the top, move everything above it down
+		for (const role of guildRoles) {
+			if (role.id === botRole.id) {
+				role.rawPosition = 0;
+				continue;
+			} else if (role.rawPosition < botRole.rawPosition) {
+				role.rawPosition += 1;
+			}
+		}
+	}
 
 	const latestSnapshotID = Database.prepare(`
 		SELECT MAX(id)
@@ -374,7 +394,6 @@ async function CreateSnapshot(guild, type = 0) {
 
 		// first snapshot, no checks needed
 		for (const role of guildRoles) {
-			if (role.managed) continue; // skip roles from bots
 			AddItem(role, roles, SimplifyRole);
 		}
 
@@ -404,7 +423,6 @@ async function CreateSnapshot(guild, type = 0) {
 		const processedBans = new Set();
 
 		for (const role of guildRoles) {
-			if (role.managed) continue; // skip roles from bots
 			const simpleRole = SimplifyRole(role);
 			const hash = HashObject(simpleRole);
 			processedRoles.add(role.id);
@@ -493,6 +511,7 @@ async function CreateSnapshot(guild, type = 0) {
 		}
 
 		for (const role of snapshotData.roles.keys()) {
+			if (role.managed) continue; // cant delete a bot role lol
 			if (!processedRoles.has(role)) {
 				roles.push({
 					change_type: CHANGE_TYPE.DELETE,
@@ -537,9 +556,9 @@ async function CreateSnapshot(guild, type = 0) {
 
 		for (const role of roles) {
 			Database.prepare(`
-				INSERT INTO SnapshotRoles (snapshot_id, id, name, color, hoist, position, permissions, hash, deleted)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`).run(snapshotID, role.id, role.name, role.color, role.hoist, role.position, role.permissions, role.hash, role.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
+				INSERT INTO SnapshotRoles (snapshot_id, id, name, color, hoist, position, permissions, managed, hash, deleted)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`).run(snapshotID, role.id, role.name, role.color, role.hoist, role.position, role.permissions, role.managed ? 1 : 0, role.hash, role.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
 		}
 		for (const channel of channels) {
 			Database.prepare(`

@@ -4,6 +4,7 @@ const Database = require('./Database');
 const TimedCache = require('./Caching/TimedCache');
 const Log = require('./Logs');
 const { SNAPSHOT_TYPE } = require('./Constants');
+const client = require('../client.js');
 
 function HashObject(obj) {
 	if (Object.values(obj).some(v => typeof v === 'object' && v !== null)) {

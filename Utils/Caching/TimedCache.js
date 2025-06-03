@@ -9,7 +9,14 @@ module.exports = class TimedCache {
 	}
 
 	has(key) {
-		return this.cache.has(key);
+		const entry = this.cache.get(key);
+		if (!entry) return false;
+		if (entry.expires < Date.now()) {
+			this.cache.delete(key);
+			if (this.onExpire) this.onExpire(key, entry.value);
+			return false;
+		}
+		return true;
 	}
 
 	set(key, value) {

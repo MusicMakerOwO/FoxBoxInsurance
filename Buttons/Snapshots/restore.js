@@ -280,7 +280,7 @@ module.exports = {
 			snapshotID: snapshotID,
 			guildID: interaction.guild.id,
 			ownerID: interaction.user.id,
-			botRoleID: botMember.roles.highest.id,
+			botRoleID: interaction.guild.roles.cache.find(role => role.tags.botId === client.user.id).id,
 			actions: executionPlan
 		}
 

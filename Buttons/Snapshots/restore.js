@@ -1,7 +1,9 @@
 const { COLOR, STATUS_EMOJI } = require("../../Utils/Constants");
 const { FetchSnapshot, FetchAllBans, SimplifyChannel, ALLOWED_CHANNEL_TYPES, SimplifyRole, SimplifyBan, HashObject, SimplifyPermission, PermKey } = require("../../Utils/SnapshotUtils");
 const { API_TYPES } = require("../../Utils/Parsers/RestoreJobs");
-const { inspect } = require("node:util");
+const Log = require("../../Utils/Logs");
+const SortRoles = require("../../Utils/Sort/SortRoles");
+const SortChannels = require("../../Utils/Sort/SortChannels");
 
 const LOADING_STEPS = [
 	'Loading snapshot data ...', // fetch snapshot
@@ -26,6 +28,25 @@ function LoadingEmbed(snapshotID, step, times = []) {
 	return embed;
 }
 
+function ConvertTimeToText(seconds) {
+    if (seconds < 1) return '0 seconds';
+    
+    const days = ~~(seconds / SECONDS.DAY);
+    seconds %= SECONDS.DAY;
+    const hours = ~~(seconds / SECONDS.HOUR);
+    seconds %= SECONDS.HOUR;
+    const minutes = ~~(seconds / SECONDS.MINUTE);
+    seconds %= SECONDS.MINUTE;
+    
+    let output = '';
+    if (days) output += `${days} day${days > 1 ? 's' : ''} `;
+    if (hours) output += `${hours} hour${hours > 1 ? 's' : ''} `;
+    if (minutes) output += `${minutes} minute${minutes > 1 ? 's' : ''} `;
+    if (seconds) output += `${Math.floor(seconds * 1000) / 1000} second${seconds !== 1 ? 's' : ''} `;
+    
+    return output;
+}
+
 const NoChangesEmbed = {
 	color: COLOR.SUCCESS,
 	title: '🎉 No Changes Detected',
@@ -36,6 +57,11 @@ const ownerEmbed = {
 	color: COLOR.ERROR,
 	title: 'Missing Permissions',
 	description: 'Only the server owner can use this command'
+}
+
+const MissingMemberEmbed = {
+	color: COLOR.ERROR,
+	description: 'Something went wrong ... \nPlease try again later or contact support 💔'
 }
 
 module.exports = {
@@ -235,6 +261,158 @@ module.exports = {
 			components: []
 		});
 
+		const executionPlan = [
+			... SortRoles( Array.from( modifications.roles.values() ), 'data' ),
+			... SortChannels( Array.from( modifications.channels.values() ), 'data' ),
+			... Array.from( modifications.bans.values() ) // order does not matter lol
+		]
+
+		console.log( executionPlan );
+
+		const botMember = interaction.guild.members.cache.get(client.user.id) ?? await interaction.guild.members.fetch(client.user.id).catch(() => null);
+		if (!botMember) {
+			Log.error(`Failed to fetch bot member in ${interaction.guild.name} (${interaction.guild.id})`);
+			return interaction.editReply({
+				embeds: [ MissingMemberEmbed ],
+				components: []
+			});
+		}
+
+		await new Promise(resolve => setTimeout(resolve, 1000)); // simulate some delay, purely cosmetic :P
+
+		const restoreJob = {
+			snapshotID: snapshotID,
+			guildID: interaction.guild.id,
+			ownerID: interaction.user.id,
+			botRoleID: botMember.roles.highest.id,
+			actions: executionPlan
+		}
+
+		client.timedCache.set(`restore-job-${interaction.guild.id}`, restoreJob);
+
+		const executionStats = {
+			channels: {
+				created: 0,
+				updated: 0,
+				deleted: 0
+			},
+			roles: {
+				created: 0,
+				updated: 0,
+				deleted: 0
+			},
+			bans: {
+				created: 0,
+				deleted: 0
+			}
+		}
+
+		for (let i = 0; i < executionPlan.length; i++) {
+			const action = executionPlan[i];
+			switch (action.type) {
+				case API_TYPES.CHANNEL_CREATE: executionStats.channels.created++; break;
+				case API_TYPES.CHANNEL_UPDATE: executionStats.channels.updated++; break;
+				case API_TYPES.CHANNEL_DELETE: executionStats.channels.deleted++; break;
+
+				case API_TYPES.ROLE_CREATE: executionStats.roles.created++; break;
+				case API_TYPES.ROLE_UPDATE: executionStats.roles.updated++; break;
+				case API_TYPES.ROLE_DELETE: executionStats.roles.deleted++; break;
+
+				case API_TYPES.BAN_CREATE: executionStats.bans.created++; break;
+				case API_TYPES.BAN_DELETE: executionStats.bans.deleted++; break;
+
+				default:
+					Log.warn(`Unknown action type: ${action.type} in restore job for ${interaction.guild.name} (${interaction.guild.id})`);
+					continue; // Skip unknown actions
+			}
+		}
+
+
+		const embed = {
+			color: COLOR.PRIMARY,
+			description: `
+**You are about to restore __snapshot #${snapshotID}__ in __${interaction.guild.name}__**
+This cannot be undone and will overwrite the current server state.
+Channels will be deleted, roles will be removed, and bans will be applied as per the snapshot data.
+
+`
+		}
+
+		if (executionStats.channels.created > 0 ||
+			executionStats.channels.updated > 0 ||
+			executionStats.channels.deleted > 0
+		) {
+			embed.description += '__**💬 Channels**__'
+			if (executionStats.channels.created > 0) {
+				embed.description += `\n\\- **${executionStats.channels.created}** channel(s) will be created`;
+			}
+			if (executionStats.channels.updated > 0) {
+				embed.description += `\n\\- **${executionStats.channels.updated}** channel(s) will be updated`;
+			}
+			if (executionStats.channels.deleted > 0) {
+				embed.description += `\n\\- **${executionStats.channels.deleted}** channel(s) will be deleted`;
+			}
+		}
+
+		embed.description += '\n\n';
+		
+		if (executionStats.roles.created > 0 ||
+			executionStats.roles.updated > 0 ||
+			executionStats.roles.deleted > 0
+		) {
+			embed.description += '__**🎭 Roles**__'
+			if (executionStats.roles.created > 0) {
+				embed.description += `\n\\- **${executionStats.roles.created}** role(s) will be created`;
+			}
+			if (executionStats.roles.updated > 0) {
+				embed.description += `\n\\- **${executionStats.roles.updated}** role(s) will be updated`;
+			}
+			if (executionStats.roles.deleted > 0) {
+				embed.description += `\n\\- **${executionStats.roles.deleted}** role(s) will be deleted`;
+			}
+		}
+		
+		embed.description += '\n\n';
+
+		if (executionStats.bans.created > 0 ||
+			executionStats.bans.deleted > 0
+		) {
+			embed.description += '__**🚫 Bans**__'
+			if (executionStats.bans.created > 0) {
+				embed.description += `\n\\- **${executionStats.bans.created}** user(s) will be banned`;
+			}
+			if (executionStats.bans.deleted > 0) {
+				embed.description += `\n\\- **${executionStats.bans.deleted}** ban(s) will be removed`;
+			}
+		}
+
+		embed.description += `\n
+Are you sure you want to proceed?
+This may take a while and WILL disrupt the server!
+**Estimated time to complete:** \`${ConvertTimeToText( executionPlan.length * 2 )}\``
+
+		const confirmationButtons = {
+			type: 1,
+			components: [
+				{
+					type: 2,
+					style: 4,
+					label: 'Restore',
+					custom_id: `restore-confirm_${snapshotID}` // one more confirmation
+				},
+				{
+					type: 2,
+					style: 3,
+					label: 'Nevermind',
+					custom_id: 'close'
+				}
+			]
+		}
+
+		interaction.editReply({
+			embeds: [ embed ],
+			components: [ confirmationButtons ]
+		});
 
 	}
 }

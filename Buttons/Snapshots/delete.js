@@ -9,7 +9,7 @@ const ownerEmbed = {
 }
 
 const successEmbed = {
-	color: COLOR.INFO,
+	color: COLOR.PRIMARY,
 	description: '🗑️ The snapshot has been deleted'
 }
 

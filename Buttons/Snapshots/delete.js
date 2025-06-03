@@ -1,5 +1,6 @@
 const { COLOR } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
+const { SnapshotStats } = require("../../Utils/SnapshotUtils");
 
 const ownerEmbed = {
 	color: COLOR.ERROR,

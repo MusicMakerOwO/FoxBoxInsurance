@@ -126,7 +126,7 @@ module.exports = {
 			simplifiedCache.channels.set(simpleChannel.id, simpleChannel);
 			if (!ALLOWED_CHANNEL_TYPES.has(simpleChannel.type)) continue; // Skip unsupported channel types
 			if (!SnapshotData.channels.has(simpleChannel.id)) {
-				modifications.channels.set(simpleChannel.id, { type: API_TYPES.CHANNEL_DELETE });
+				modifications.channels.set(simpleChannel.id, { type: API_TYPES.CHANNEL_DELETE, data: simpleChannel });
 			}
 		}
 
@@ -135,7 +135,7 @@ module.exports = {
 			const simpleRole = SimplifyRole(role);
 			simplifiedCache.roles.set(simpleRole.id, simpleRole);
 			if (!SnapshotData.roles.has(simpleRole.id)) {
-				modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_DELETE });
+				modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_DELETE, data: simpleRole });
 			}
 		}
 		
@@ -143,7 +143,7 @@ module.exports = {
 			const simpleBan = SimplifyBan(ban);
 			simplifiedCache.bans.set(simpleBan.user_id, simpleBan);
 			if (!SnapshotData.bans.has(simpleBan.user_id)) {
-				modifications.bans.set(simpleBan.user_id, { type: API_TYPES.BAN_DELETE });
+				modifications.bans.set(simpleBan.user_id, { type: API_TYPES.BAN_DELETE, data: simpleBan });
 			}
 		}
 

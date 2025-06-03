@@ -30,6 +30,7 @@ function CreateJob(data) {
 	const ID = JOB_ID_COUNTER++;
 	const job = {
 		id: ID,
+		snapshotID: data.snapshotID ?? null,
 		guildID: data.guildID ?? null,
 		ownerID: data.ownerID ?? null,
 		botRoleID: data.botRoleID ?? null,

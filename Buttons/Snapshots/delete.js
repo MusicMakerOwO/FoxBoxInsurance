@@ -34,11 +34,16 @@ module.exports = {
 				WHERE id = ?
 				AND guild_id = ?
 			`).run(snapshotID, interaction.guild.id);
-			return interaction.update({
+			await interaction.editReply({
 				embeds: [ successEmbed ],
 				components: [],
 				ephemeral: true
-			}).catch(() => { });
+			})
+
+			await new Promise(resolve => setTimeout(resolve, 2000));
+
+			const listButton = client.buttons.get('snapshot-list');
+			return listButton.execute(interaction, client, []);
 		}
 
 		const stats = SnapshotStats(snapshotID);

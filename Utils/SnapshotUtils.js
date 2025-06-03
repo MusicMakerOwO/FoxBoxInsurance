@@ -327,6 +327,17 @@ async function CreateSnapshot(guild, type = 0) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
 	if (!Object.values(SNAPSHOT_TYPE).includes(type)) throw new Error('Invalid snapshot type, must be within SNAPSHOT_TYPE enum');
 
+	const botMember = guild.members.cache.get(guild.client.user.id) ?? await guild.members.fetch(guild.client.user.id).catch(() => null);
+	if (!botMember) {
+		Log.error(`[SNAPSHOT] Bot is not a member of the guild ${guild.name} (${guild.id})`);
+		return null;
+	}
+
+	if (!botMember.permissions.has('BanMembers') || !botMember.permissions.has('ManageRoles') || !botMember.permissions.has('ManageChannels')) {
+		Log.error(`[SNAPSHOT] Bot does not have required permissions in guild ${guild.name} (${guild.id})`);
+		return null;
+	}
+
 	const start = process.hrtime.bigint();
 
 	const channels = []; // { change_type, ... data }[];

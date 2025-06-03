@@ -148,23 +148,33 @@ module.exports = {
 
 		// Determine creations
 		for (const [id, channel] of SnapshotData.channels) {
-			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue; // Skip unsupported channel types
-			if (simplifiedCache.channels.has(id)) continue; // Channel already exists
-			
-			const overwrites = [];
-			for (const overwrite of SnapshotData.permissions.values()) {
-				const [channel_id, role_id] = overwrite.id.split('-');
-				if (channel_id !== id) continue; // Only process overwrites for this channel
-				overwrites.push({
-					id: role_id,
-					type: 0, // 0 for role overwrites
-					allow: String(overwrite.allow),
-					deny: String(overwrite.deny)
-				});
-			}
-			if (overwrites.length > 0) channel.permission_overwrites = overwrites;
+			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue;
+			if (simplifiedCache.channels.has(id)) continue;
 
-			modifications.channels.set(id, { type: API_TYPES.CHANNEL_CREATE, data: channel });
+			modifications.channels.set(id, { type: API_TYPES.CHANNEL_CREATE, data: SimplifyChannel(channel) });
+		}
+
+		for (const overwrite of SnapshotData.permissions.values()) {
+			const [channel_id, role_id] = overwrite.id.split('-');
+			if (!modifications.channels.has(channel_id)) continue;
+			
+			const targetChannel = modifications.channels.get(channel_id);
+			if (targetChannel.type !== API_TYPES.CHANNEL_CREATE) continue;
+
+			const perm = {
+				id: role_id,
+				type: 0, // 0 for role overwrites
+				allow: String(overwrite.allow),
+				deny: String(overwrite.deny)
+			}
+
+			if (targetChannel.data.permission_overwrites === undefined) {
+				targetChannel.data.permission_overwrites = [ perm ];
+			} else {
+				targetChannel.data.permission_overwrites.push(perm);
+			}
+
+			modifications.channels.set(channel_id, targetChannel);
 		}
 
 		for (const [id, role] of SnapshotData.roles) {

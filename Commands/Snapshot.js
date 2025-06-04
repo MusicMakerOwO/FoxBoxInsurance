@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { COLOR, STATUS_EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE } = require('../Utils/Constants');
+const { COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
 const { CreateSnapshot } = require('../Utils/SnapshotUtils');
 
@@ -58,7 +58,7 @@ module.exports = {
 			}
 
 			const enabled = subcommand === 'enable' ? 1 : 0;
-			const emoji = subcommand === 'enable' ? STATUS_EMOJI.SUCCESS : STATUS_EMOJI.ERROR;
+			const emoji = subcommand === 'enable' ? EMOJI.SUCCESS : EMOJI.ERROR;
 			const guildId = interaction.guild.id;
 
 			Database.prepare('UPDATE Guilds SET snapshots_enabled = ? WHERE id = ?').run(enabled, guildId);

@@ -1,6 +1,7 @@
-const { ChannelType } = require("discord.js");
 const { COLOR } = require("../../../Utils/Constants");
 const { FetchSnapshot } = require("../../../Utils/SnapshotUtils");
+const SortChannels = require("../../../Utils/Sort/SortChannels");
+const RemoveFormatting = require("../../../Utils/RemoveFormatting");
 
 const channelCache = new Map(); // snapshot_id -> string[]
 
@@ -12,28 +13,14 @@ module.exports = {
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
 
-		const embed = {
-			color: COLOR.PRIMARY,
-			title: `Snapshot #${snapshotID} (Channels)`,
-			description: '',
-			footer: {
-				text: `Total Channels: ${channels.length}`
-			}
-		}
-
 		if (!channelCache.has(snapshotID)) {
 			const snapshotData = FetchSnapshot(snapshotID);
 
 			const channels = Array.from( snapshotData.channels.values() );
 
-			const sorted = channels.sort((a, b) => {
-				// categories first, then positions
-				if (a.type === ChannelType.GuildCategory && b.type !== ChannelType.GuildCategory) return -1;
-				if (b.type === ChannelType.GuildCategory && a.type !== ChannelType.GuildCategory) return 1;
-				return a.position - b.position;
-			});
+			const sorted = SortChannels(channels);
 
-			cache.set(snapshotID, sorted.map(channel => {
+			channelCache.set(snapshotID, sorted.map(channel => {
 				return {
 					id: channel.id,
 					name: channel.name,
@@ -45,12 +32,21 @@ module.exports = {
 		
 		const channels = channelCache.get(snapshotID);
 
+		const embed = {
+			color: COLOR.PRIMARY,
+			title: `Snapshot #${snapshotID} (Channels)`,
+			description: '',
+			footer: {
+				text: `Total Channels: ${channels.length}`
+			}
+		}
+
 		if (channels.length === 0) {
 			embed.description = 'No channels found in this snapshot :(';
 		} else {
-			embed.description = channels.map(channel => {
-				return `#${channel.name} (${channel.id})`
-			}).join('\n');
+			embed.description = channels.map(channel =>
+				RemoveFormatting(`#${channel.name} (${channel.id})`)
+			).join('\n');
 		}
 
 		const buttons = {

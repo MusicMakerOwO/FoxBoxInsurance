@@ -1,4 +1,4 @@
-const { COLOR, STATUS_EMOJI } = require("../../../Utils/Constants");
+const { COLOR, EMOJI } = require("../../../Utils/Constants");
 const Permissions = require("../../../Utils/Permissions");
 
 const RolePositionError = {
@@ -31,7 +31,7 @@ const MissingMemberError = {
 const CheckingPermsEmbed = {
 	color: COLOR.PRIMARY,
 	title: 'Checking Permissions',
-	description: `${STATUS_EMOJI.LOADING} Please wait while I check my permissions in this server...`
+	description: `${EMOJI.LOADING} Please wait while I check my permissions in this server...`
 }
 
 const RestoreExpiredEmbed = {
@@ -42,7 +42,7 @@ const RestoreExpiredEmbed = {
 
 const LoadingEmbed = {
 	color: COLOR.PRIMARY,
-	description: `${STATUS_EMOJI.LOADING} Loading ...`
+	description: `${EMOJI.LOADING} Loading ...`
 }
 
 const PUBLIC_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages;

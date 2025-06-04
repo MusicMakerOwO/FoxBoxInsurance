@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { COLOR, STATUS_EMOJI } = require('../../Utils/Constants');
+const { COLOR, EMOJI } = require('../../Utils/Constants');
 const Database = require('../../Utils/Database');
 
 const NoPermissionsEmbed = {
@@ -45,7 +45,7 @@ module.exports = {
 		const embed = {
 			color: COLOR.SUCCESS,
 			description: `
-**Status**: ${STATUS_EMOJI.SUCCESS} Unblocked 
+**Status**: ${EMOJI.SUCCESS} Unblocked 
 <@${userId}> can now export messages in this server`
 		}
 		

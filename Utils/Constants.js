@@ -56,7 +56,8 @@ const SNAPSHOT_TYPE_EMOJI = {
 	[ SNAPSHOT_TYPE.IMPORT ]: '📥'
 }
 
-const STATUS_EMOJI = {
+const EMOJI = {
+	BOT: '<:bot:1379521311684165653>',
 	LOADING: '<a:loading:1375384157152084088>',
 	ERROR: '❌',
 	SUCCESS: '✅'
@@ -115,7 +116,7 @@ module.exports = {
 
 	SNAPSHOT_TYPE,
 	SNAPSHOT_TYPE_EMOJI,
-	STATUS_EMOJI,
+	EMOJI,
 
 	RandomLoadingMessage,
 	RandomLoadingEmbed

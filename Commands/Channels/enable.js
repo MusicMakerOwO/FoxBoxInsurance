@@ -1,12 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const Database = require('../../Utils/Database');
-const { COLOR, STATUS_EMOJI } = require('../../Utils/Constants');
+const { COLOR, EMOJI } = require('../../Utils/Constants');
 const { BlacklistedChannels } = require('../../Utils/Checks/ChannelCanExport');
 
 const Embed = {
 	color: COLOR.PRIMARY,
 	description: `
-**Exports have been enabled** ${STATUS_EMOJI.SUCCESS}
+**Exports have been enabled** ${EMOJI.SUCCESS}
 Anyone who can see the channel can export messages from it`
 }
 

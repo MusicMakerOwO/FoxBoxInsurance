@@ -1,4 +1,4 @@
-const { COLOR, STATUS_EMOJI, SECONDS } = require("../../Utils/Constants");
+const { COLOR, EMOJI, SECONDS } = require("../../Utils/Constants");
 const { FetchSnapshot, FetchAllBans, SimplifyChannel, ALLOWED_CHANNEL_TYPES, SimplifyRole, SimplifyBan, HashObject, SimplifyPermission, PermKey } = require("../../Utils/SnapshotUtils");
 const { API_TYPES } = require("../../Utils/Parsers/RestoreJobs");
 const Log = require("../../Utils/Logs");
@@ -20,9 +20,9 @@ function LoadingEmbed(snapshotID, step, times = []) {
 	};
 	for (let i = 0; i < LOADING_STEPS.length; i++) {
 		if (i < step) {
-			embed.description += `${STATUS_EMOJI.SUCCESS} ${LOADING_STEPS[i]} (${Math.max(times[i], 0.01)}s)\n`;
+			embed.description += `${EMOJI.SUCCESS} ${LOADING_STEPS[i]} (${Math.max(times[i], 0.01)}s)\n`;
 		} else {
-			embed.description += `${STATUS_EMOJI.LOADING} ${LOADING_STEPS[i]}\n`;
+			embed.description += `${EMOJI.LOADING} ${LOADING_STEPS[i]}\n`;
 		}
 	}
 	return embed;

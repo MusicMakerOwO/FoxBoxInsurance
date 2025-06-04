@@ -338,7 +338,7 @@ async function CreateSnapshot(guild, type = 0) {
 
 	if (!botMember.permissions.has('BanMembers') || !botMember.permissions.has('ManageRoles') || !botMember.permissions.has('ManageChannels')) {
 		Log.error(`[SNAPSHOT] Bot does not have required permissions in guild ${guild.name} (${guild.id})`);
-		return null;
+		// return null;
 	}
 
 	const botRole = guild.roles.cache.find(role => role.tags.botId === client.user.id);
@@ -349,6 +349,12 @@ async function CreateSnapshot(guild, type = 0) {
 
 	const start = process.hrtime.bigint();
 
+	try {
+		var currentBans = await FetchAllBans(guild);
+	} catch (error) {
+		var currentBans = new Map();
+	}
+
 	const channels = []; // { change_type, ... data }[];
 	const roles = [];
 	const permissions = [];
@@ -356,16 +362,15 @@ async function CreateSnapshot(guild, type = 0) {
 
 	const guildRoles = Array.from(guild.roles.cache.values());
 	const guildChannels = Array.from(guild.channels.cache.values());
-	const guildBans = Array.from((await FetchAllBans(guild)).values());
+	const guildBans = Array.from( currentBans.values() );
 
-	if (botRole.rawPosition !== 0) {
+	const highestRole = guild.roles.highest;
+	if (botRole.rawPosition < highestRole.rawPosition) {
 		// bot role is not at the top, move everything above it down
 		for (const role of guildRoles) {
 			if (role.id === botRole.id) {
-				role.rawPosition = 0;
+				role.rawPosition = highestRole.rawPosition + 1; // move bot role to the top
 				continue;
-			} else if (role.rawPosition < botRole.rawPosition) {
-				role.rawPosition += 1;
 			}
 		}
 	}

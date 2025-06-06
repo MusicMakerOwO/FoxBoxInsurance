@@ -385,6 +385,8 @@ Channels will be deleted, roles will be removed, and bans will be applied as per
 			}
 		}
 
+		embed.description = embed.description.trim();
+
 		embed.description += `\n
 Are you sure you want to proceed?
 This may take a while and WILL disrupt the server!

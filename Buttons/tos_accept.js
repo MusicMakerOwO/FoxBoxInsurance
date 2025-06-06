@@ -1,6 +1,5 @@
 const { COLOR } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
-const { allow_dm } = require("./close");
 
 const USER_EMBED = {
 	color: COLOR.PRIMARY,

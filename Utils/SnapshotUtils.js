@@ -598,6 +598,31 @@ async function CreateSnapshot(guild, type = 0) {
 	return snapshotID;
 }
 
+
+async function UpdateHashes(snapshotID) {
+	const snapshotData = FetchSnapshot(snapshotID, { cache: false });
+	if (!snapshotData) return;
+
+	const Update = (lookup, table, id, simplify) => {
+		for (const item of lookup.values()) {
+			const simpleItem = simplify(item);
+			const hash = HashObject(simpleItem);
+			if (item.hash !== hash) {
+				Database.prepare(`
+					UPDATE ${table}
+					SET hash = ?
+					WHERE snapshot_id = ? AND ${id} = ?
+				`).run(hash, snapshotID, simpleItem.id);
+			}
+		}
+	}
+
+	Update(snapshotData.roles, 'SnapshotRoles', 'id', SimplifyRole);
+	Update(snapshotData.channels, 'SnapshotChannels', 'id', SimplifyChannel);
+	Update(snapshotData.permissions, 'SnapshotPermissions', 'id', (permission) => SimplifyPermission(permission.channel_id, permission));
+	Update(snapshotData.bans, 'SnapshotBans', 'user_id', SimplifyBan);
+}
+
 module.exports = {
 	SimplifyChannel,
 	SimplifyRole,
@@ -607,6 +632,7 @@ module.exports = {
 	CreateSnapshot,
 	FetchSnapshot,
 	SnapshotStats,
+	UpdateHashes,
 
 	HashObject,
 	PermKey,
@@ -614,5 +640,7 @@ module.exports = {
 
 	SNAPSHOT_TYPE,
 	CHANGE_TYPE,
-	ALLOWED_CHANNEL_TYPES
+	ALLOWED_CHANNEL_TYPES,
+
+	snapshotCache
 };

@@ -189,8 +189,8 @@ function SnapshotStats(snapshotID) {
 
 
 const snapshotCache = new TimedCache(1000 * 60 * 60); // 1 hour
-function FetchSnapshot(snapshot_id) {
-	if (snapshotCache.has(snapshot_id)) return snapshotCache.get(snapshot_id);
+function FetchSnapshot(snapshot_id, { cache = true } = {}) {
+	if (cache && snapshotCache.has(snapshot_id)) return snapshotCache.get(snapshot_id);
 
 	const guildID = Database.prepare('SELECT guild_id FROM snapshots WHERE id = ?').pluck().get(snapshot_id);
 	if (!guildID) throw new Error('Snapshot not found');
@@ -278,7 +278,7 @@ function FetchSnapshot(snapshot_id) {
 		bans: bans
 	}
 
-	snapshotCache.set(snapshot_id, result);
+	if (cache) snapshotCache.set(snapshot_id, result);
 	return result;
 }
 

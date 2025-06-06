@@ -1,4 +1,4 @@
-const { COLOR, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI, EMOJI } = require("../../Utils/Constants");
+const { COLOR, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI, EMOJI, SECONDS } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
 const { SnapshotStats } = require("../../Utils/SnapshotUtils");
 
@@ -69,7 +69,7 @@ Created at ${dateString}\n\n`;
 		}
 
 		const guildHour = BigInt(interaction.guild.id) % 24n;
-		embed.description += `**Snapshots occur once per day at <t:${Number(guildHour) * 3600}:t>**`;
+		embed.description += `**Snapshots occur once per day at <t:${Number(guildHour) * 3600 + SECONDS.HOUR}:t>**`;
 
 
 		const dropdown = {

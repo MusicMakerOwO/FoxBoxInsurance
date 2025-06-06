@@ -1,5 +1,9 @@
 const { COLOR, EMOJI } = require("../../../Utils/Constants");
+const Database = require("../../../Utils/Database");
+const { CreateJob, GetJob, STATUS } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
+const ProgressBar = require("../../../Utils/ProgressBar");
+const { UpdateHashes, snapshotCache } = require("../../../Utils/SnapshotUtils");
 
 const RolePositionError = {
 	color: COLOR.ERROR,
@@ -101,7 +105,7 @@ module.exports = {
 				components: [retryButton]
 			});
 		}
-		const botRole = interaction.guild.roles.cache.find(role => role.tags.botId === client.user.id);
+		const botRole = interaction.guild.roles.cache.find(role => role.tags?.botId === client.user.id);
 		if (botRole.position < interaction.guild.roles.highest.position) {
 			return interaction.editReply({
 				embeds: [RolePositionError],
@@ -137,7 +141,114 @@ module.exports = {
 			components: []
 		});
 
-		// Create the restore job
-		console.log(RestoreJob);
+		interaction.editReply({
+			embeds: [{
+				color: COLOR.PRIMARY,
+				title: 'Restore Started',
+				description: `You will receive updates in <#${updateChannel.id}>`
+			}],
+			components: [{
+				type: 1,
+				components: [{
+					type: 2,
+					style: 5, // Link button
+					url: `https://discord.com/channels/${interaction.guild.id}/${updateChannel.id}`,
+					label: 'View Updates',
+					emoji: '📢'
+				}]
+			}]
+		});
+
+		const jobID = CreateJob(RestoreJob);
+
+		updateMessage.edit({
+			content: `<@${interaction.user.id}>`,
+			embeds: [{
+				color: COLOR.PRIMARY,
+				description: `
+${EMOJI.LOADING} Working on it ... \`\`\`
+Progress : ${ProgressBar(0)}
+Status : ${STATUS.RUNNING}
+\`\`\``
+			}],
+			components: [{
+				type: 1,
+				components: [{
+					type: 2,
+					style: 2, // Secondary button
+					label: 'Cancel',
+					custom_id: `restore-cancel_${jobID}`,
+					emoji: '❌'
+				}]
+			}]
+		});
+
+		const interval = setInterval( async () => {
+			const job = GetJob(jobID);
+
+			if (job.status === STATUS.COMPLETED) {
+				console.log(job);
+				updateMessage.edit({
+					content: '',
+					embeds: [{
+						color: COLOR.SUCCESS,
+						title: 'Restore Completed',
+						description: `The restore job has completed successfully!`
+					}],
+					components: []
+				});
+				clearInterval(interval);
+
+				// update the ids in the snapshots
+				for (const [oldID, newID] of job.channel_lookups) {
+					Database.prepare(`
+						UPDATE SnapshotChannels
+						SET id = ?
+						WHERE snapshot_id = ?
+						AND id = ?
+					`).run(newID, snapshotID, oldID);
+				}
+
+				UpdateHashes(snapshotID);
+
+				snapshotCache.delete(snapshotID); // Clear the cache for this snapshot
+
+				return;
+			}
+
+			if (job.status === STATUS.FAILED) {
+				updateMessage.edit({
+					content: '',
+					embeds: [{
+						color: COLOR.ERROR,
+						title: 'Restore Failed',
+						description: `
+The restore job has failed with the following errors:
+\`\`\`
+${job.errors.join('\n')}
+\`\`\` Please try again later or contact support 💔`
+					}],
+					components: []
+				});
+				clearInterval(interval);
+				return;
+			}
+
+			const bar = ProgressBar(job.progress);
+
+			updateMessage.edit({
+				content:'',
+				embeds: [{
+					color: COLOR.PRIMARY,
+					description: `
+${EMOJI.LOADING} Working on it ... \`\`\`
+Progress : ${bar}
+Status : ${job.status}
+\`\`\``
+				}],
+				components: []
+			});
+		}, 1000);
+
 	}
 }

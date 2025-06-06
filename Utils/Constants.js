@@ -94,7 +94,7 @@ function RandomLoadingMessage() {
 function RandomLoadingEmbed() {
 	return {
 		color: COLOR.PRIMARY,
-		description: RandomLoadingMessage()
+		description: EMOJI.LOADING + ' ' + RandomLoadingMessage()
 	}
 }
 

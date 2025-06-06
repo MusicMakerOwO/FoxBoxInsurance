@@ -204,13 +204,6 @@ module.exports = {
 			modifications.roles.set(role.id, { type: API_TYPES.ROLE_UPDATE, data: snapshotRole });
 		}
 
-		for (const ban of simplifiedCache.bans.values()) {
-			const snapshotBan = SnapshotData.bans.get(ban.user_id);
-			if (!snapshotBan) continue; // Ban does not exist in snapshot
-			if ( HashObject(ban) === snapshotBan.hash ) continue; // No changes detected
-			modifications.bans.set(ban.user_id, { type: API_TYPES.BAN_UPDATE, data: snapshotBan });
-		}
-
 		for (const channel of GuildChannels) {
 			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue; // Skip unsupported channel types
 			if (!SnapshotData.channels.has(channel.id)) continue; // Channel does not exist in snapshot

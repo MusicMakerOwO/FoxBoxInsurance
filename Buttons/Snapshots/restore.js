@@ -123,6 +123,7 @@ module.exports = {
 		// Determine deletions first
 		for (const channel of GuildChannels) {
 			const simpleChannel = SimplifyChannel(channel);
+			if (channel.type === 0 && channel.name === 'restore-updates') continue; // Skip the restore updates channel
 			simplifiedCache.channels.set(simpleChannel.id, simpleChannel);
 			if (!ALLOWED_CHANNEL_TYPES.has(simpleChannel.type)) continue; // Skip unsupported channel types
 			if (!SnapshotData.channels.has(simpleChannel.id)) {

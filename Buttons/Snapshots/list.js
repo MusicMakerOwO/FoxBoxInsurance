@@ -1,4 +1,4 @@
-const { COLOR, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI } = require("../../Utils/Constants");
+const { COLOR, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI, EMOJI } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
 const { SnapshotStats } = require("../../Utils/SnapshotUtils");
 
@@ -55,7 +55,7 @@ module.exports = {
 			const stats = SnapshotStats(snapshot.id);
 
 			embed.description += `
-📦 **Snapshot #${snapshot.id}** - \`${type}\` ${SNAPSHOT_TYPE_EMOJI[snapshot.type] ?? ''}
+${EMOJI.SNAPSHOT} **Snapshot #${snapshot.id}** - \`${type}\` ${SNAPSHOT_TYPE_EMOJI[snapshot.type] ?? ''}
 | Channels: ${stats.channels}
 | Roles: ${stats.roles}
 | Bans: ${stats.bans}

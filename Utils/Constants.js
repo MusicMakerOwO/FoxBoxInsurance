@@ -60,7 +60,17 @@ const EMOJI = {
 	BOT: '<:bot:1379521311684165653>',
 	LOADING: '<a:loading:1375384157152084088>',
 	ERROR: '❌',
-	SUCCESS: '✅'
+	SUCCESS: '✅',
+	INFO: 'ℹ️',
+	WARNING: '🚩',
+
+	SNAPSHOT: '📦',
+	EXPORT: '📤',
+
+	FIRST_PAGE: '⏪',
+	PREVIOUS_PAGE: '◀️',
+	NEXT_PAGE: '▶️',
+	LAST_PAGE: '⏩'
 }
 
 const LOADING_MESSAGES = [

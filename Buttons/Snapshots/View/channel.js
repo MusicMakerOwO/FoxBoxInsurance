@@ -1,4 +1,4 @@
-const { COLOR } = require("../../../Utils/Constants");
+const { COLOR, EMOJI } = require("../../../Utils/Constants");
 const { FetchSnapshot } = require("../../../Utils/SnapshotUtils");
 const SortChannels = require("../../../Utils/Sort/SortChannels");
 const RemoveFormatting = require("../../../Utils/RemoveFormatting");
@@ -59,14 +59,14 @@ module.exports = {
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-channels_${snapshotID}_0_`,
-					emoji: '⏪',
+					emoji: EMOJI.FIRST_PAGE,
 					disabled: page === 0
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-channels_${snapshotID}_${page - 1}`,
-					emoji: '◀️',
+					emoji: EMOJI.PREVIOUS_PAGE,
 					disabled: page === 0
 				},
 				{
@@ -80,14 +80,14 @@ module.exports = {
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-channels_${snapshotID}_${page + 1}`,
-					emoji: '▶️',
+					emoji: EMOJI.NEXT_PAGE,
 					disabled: (page + 1) * PAGE_SIZE >= channels.length
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-channels_${snapshotID}_${~~(channels.length / PAGE_SIZE)}_`,
-					emoji: '⏩',
+					emoji: EMOJI.LAST_PAGE,
 					disabled: (page + 1) * PAGE_SIZE >= channels.length
 				}
 			]

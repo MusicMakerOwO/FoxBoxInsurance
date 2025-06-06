@@ -1,4 +1,4 @@
-const { COLOR } = require("../Utils/Constants");
+const { COLOR, EMOJI } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
 
 const PAGE_SIZE = 5;
@@ -48,7 +48,7 @@ module.exports = {
 			dropdown.components[0].options.push({
 				label: `Export ID: ${exportData.id}`,
 				value: exportData.id,
-				emoji: '📦'
+				emoji: EMOJI.EXPORT
 			});
 			if (!guilds.has(exportData.guild_id)) {
 				const guild = Database.prepare(`SELECT name FROM Guilds WHERE id = ?`).pluck().get(exportData.guild_id);
@@ -75,14 +75,14 @@ ${guild} - #${channel}
 					style: 2,
 					custom_id: 'history_first',
 					disabled: page === 0,
-					emoji: '⏪'
+					emoji: EMOJI.FIRST_PAGE
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: `history_${page - 1}`,
 					disabled: page === 0,
-					emoji: '◀️'
+					emoji: EMOJI.PREVIOUS_PAGE
 				},
 				{
 					type: 2,
@@ -96,14 +96,14 @@ ${guild} - #${channel}
 					style: 2,
 					custom_id: `history_${page + 1}`,
 					disabled: page + 1 >= Math.ceil(exportCount / PAGE_SIZE),
-					emoji: '▶️'
+					emoji: EMOJI.NEXT_PAGE
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: 'history_last',
 					disabled: page + 1 >= Math.ceil(exportCount / PAGE_SIZE),
-					emoji: '⏩'
+					emoji: EMOJI.LAST_PAGE
 				}
 			]
 		}

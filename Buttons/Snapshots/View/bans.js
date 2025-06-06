@@ -63,14 +63,14 @@ module.exports = {
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-bans_${snapshotID}_0_`,
-					emoji: '⏪',
+					emoji: EMOJI.FIRST_PAGE,
 					disabled: page === 0
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-bans_${snapshotID}_${page - 1}`,
-					emoji: '◀️',
+					emoji: EMOJI.PREVIOUS_PAGE,
 					disabled: page === 0
 				},
 				{
@@ -84,14 +84,14 @@ module.exports = {
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-bans_${snapshotID}_${page + 1}`,
-					emoji: '▶️',
+					emoji: EMOJI.NEXT_PAGE,
 					disabled: (page + 1) * PAGE_SIZE >= bans.length
 				},
 				{
 					type: 2,
 					style: 2,
 					custom_id: `snapshot-view-bans_${snapshotID}_${~~(bans.length / PAGE_SIZE)}_`,
-					emoji: '⏩',
+					emoji: EMOJI.LAST_PAGE,
 					disabled: (page + 1) * PAGE_SIZE >= bans.length
 				}
 			]

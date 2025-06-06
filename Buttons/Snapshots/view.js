@@ -18,7 +18,7 @@ module.exports = {
 					style: 2,
 					custom_id: `snapshot-view-channels_${snapshotID}`,
 					label: 'Channels',
-					emoji: '📦'
+					emoji: '💬'
 				},
 				{
 					type: 2,

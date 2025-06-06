@@ -5,7 +5,7 @@ const Log = require('../Logs.js');
 const Database = require('../Database.js');
 
 module.exports = async function SnapshotServers() {
-	const currentHour = new Date().getHours();
+	const currentHour = new Date().getUTCHours();
 
 	const snapshotQueue = [];
 

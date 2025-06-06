@@ -5,11 +5,16 @@ const RemoveFormatting = require("../../../Utils/RemoveFormatting");
 
 const roleCache = new Map(); // snapshot_id -> role[]
 
+const PAGE_SIZE = 25;
+
 module.exports = {
 	customID: 'snapshot-view-roles',
 	execute: async function(interaction, client, args) {
 		const snapshotID = parseInt(args[0]);
-		if (isNaN(snapshotID) || snapshotID <= 0) throw new Error('Invalid snapshot ID provided.');0
+		if (isNaN(snapshotID) || snapshotID <= 0) throw new Error('Invalid snapshot ID provided.');
+
+		const page = parseInt(args[1]) || 0;
+		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
 
@@ -37,26 +42,72 @@ module.exports = {
 		if (roles.length === 0) {
 			embed.description = 'No roles found in this snapshot :(';
 		} else {
-			embed.description = roles.map(role => 
-				RemoveFormatting(`${role.managed ? EMOJI.BOT : ''} @${role.name} (${role.id})`)
-			).join('\n');
+			const selectedRoles = roles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+			if (selectedRoles.length === 0) {
+				embed.description = 'No more roles to display on this page.';
+			} else {
+				embed.description = selectedRoles.map(role => 
+					`${role.managed ? EMOJI.BOT : ''} @${RemoveFormatting(role.name)}`
+				).join('\n');
+			}
 		}
 
-		const buttons = {
+		const navButtons = {
 			type: 1,
 			components: [
 				{
 					type: 2,
 					style: 2,
-					custom_id: `snapshot-manage_${snapshotID}`,
-					emoji: '◀️'
+					custom_id: `snapshot-view-roles_${snapshotID}_0_`,
+					emoji: '⏪',
+					disabled: page === 0
+				},
+				{
+					type: 2,
+					style: 2,
+					custom_id: `snapshot-view-roles_${snapshotID}_${page - 1}`,
+					emoji: '◀️',
+					disabled: page === 0
+				},
+				{
+					type: 2,
+					style: 2,
+					custom_id: 'null',
+					label: `Page ${page + 1} / ${Math.ceil(roles.length / PAGE_SIZE)}`,
+					disabled: true
+				},
+				{
+					type: 2,
+					style: 2,
+					custom_id: `snapshot-view-roles_${snapshotID}_${page + 1}`,
+					emoji: '▶️',
+					disabled: (page + 1) * PAGE_SIZE >= roles.length
+				},
+				{
+					type: 2,
+					style: 2,
+					custom_id: `snapshot-view-roles_${snapshotID}_${~~(roles.length / PAGE_SIZE)}_`,
+					emoji: '⏩',
+					disabled: (page + 1) * PAGE_SIZE >= roles.length
 				}
 			]
 		}
 
-		interaction.editReply({
+		const backButton = {
+			type: 1,
+			components: [
+				{
+					type: 2,
+					style: 4,
+					custom_id: `snapshot-manage_${snapshotID}`,
+					label: 'Back'
+				}
+			]
+		}
+
+		return interaction.editReply({
 			embeds: [embed],
-			components: [buttons]
+			components: roles.length > PAGE_SIZE ? [navButtons, backButton] : [backButton]
 		});
 	}
 }

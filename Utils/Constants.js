@@ -87,7 +87,7 @@ const LOADING_MESSAGES = [
 	'Interrogating the database ...',
 	'Solving P vs NP ...',
 	'Scanning for illegal cat pictures ...',
-	'Uploading your secret ... (oops)',
+	'Uploading your secrets ... (oops)',
 	'Reading the database a bedtime story. ..', 
 	'Feeding hamsters in the server room ...',
 	'Petting the internet for good luck ...',

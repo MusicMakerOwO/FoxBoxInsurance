@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const Database = require('./Database');
 const TimedCache = require('./Caching/TimedCache');
 const Log = require('./Logs');
-const { SNAPSHOT_TYPE } = require('./Constants');
+const { SNAPSHOT_TYPE, SECONDS } = require('./Constants');
 const client = require('../client.js');
 
 function HashObject(obj) {
@@ -282,8 +282,7 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 	return result;
 }
 
-const banCache = new TimedCache(1000 * 60 * 60); // 1 hour
-
+const banCache = new TimedCache(SECONDS.HOUR * 1000); // guild_id -> Map<userID, GuildBan>
 async function FetchAllBans(guild) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
 	if (banCache.has(guild.id)) return banCache.get(guild.id);
@@ -324,7 +323,7 @@ const CHANGE_TYPE = {
 	DELETE: 2
 }
 
-const ALLOWED_CHANNEL_TYPES = new Set([ 0, 2, 4, 5, 10, 13, 15, 16 ]);
+const ALLOWED_CHANNEL_TYPES = new Set([0, 2, 4, 5, 10, 13, 15, 16]);
 
 async function CreateSnapshot(guild, type = 0) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
@@ -347,8 +346,7 @@ async function CreateSnapshot(guild, type = 0) {
 		return null;
 	}
 
-	const start = process.hrtime.bigint();
-
+	const fetchStart = process.hrtime.bigint();
 	try {
 		var currentBans = await FetchAllBans(guild);
 	} catch (error) {
@@ -362,7 +360,11 @@ async function CreateSnapshot(guild, type = 0) {
 
 	const guildRoles = Array.from(guild.roles.cache.values());
 	const guildChannels = Array.from(guild.channels.cache.values());
-	const guildBans = Array.from( currentBans.values() );
+	const guildBans = Array.from(currentBans.values());
+
+	const fetchEnd = process.hrtime.bigint();
+
+	const diffStart = process.hrtime.bigint();
 
 	const highestRole = guild.roles.highest;
 	if (botRole.rawPosition < highestRole.rawPosition) {
@@ -553,8 +555,12 @@ async function CreateSnapshot(guild, type = 0) {
 			}
 		}
 	}
+	const diffEnd = process.hrtime.bigint();
 
-	Database.transaction(() => {
+	let dbStart, dbEnd;
+
+	Database.transaction(async () => {
+		dbStart = process.hrtime.bigint();
 		const snapshotID = Database.prepare(`
 			INSERT INTO Snapshots (guild_id, type)
 			VALUES (?, ?)
@@ -584,16 +590,20 @@ async function CreateSnapshot(guild, type = 0) {
 				VALUES (?, ?, ?, ?, ?)
 			`).run(snapshotID, ban.user_id, ban.reason, ban.hash, ban.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
 		}
+		dbEnd = process.hrtime.bigint();
 	})();
 
-	const end = process.hrtime.bigint();
-	const duration = Number(end - start) / 1e6;
+	const banDuration = Number(fetchEnd - fetchStart) / 1e6;
+	const diffDuration = Number(diffEnd - diffStart) / 1e6;
+	const dbDuration = Number(dbEnd - dbStart) / 1e6;
+
 	const snapshotID = Database.prepare(`
 		SELECT MAX(id)
 		FROM Snapshots
 		WHERE guild_id = ?
 	`).pluck().get(guild.id) ?? 0;
-	Log.custom(`Snapshot #${snapshotID} created for ${guild.name} (${guild.id}) in ${~~duration}ms`, 0x7946ff);
+	Log.custom(`Snapshot #${snapshotID} created for ${guild.name} (${guild.id})`, 0x7946ff);
+	Log.custom(`Fetching : ${banDuration.toFixed(2)}ms, Diffing : ${diffDuration.toFixed(2)}ms, DB : ${dbDuration.toFixed(2)}ms`, 0x7946ff);
 
 	return snapshotID;
 }

@@ -49,6 +49,18 @@ const LoadingEmbed = {
 	description: `${EMOJI.LOADING} Loading ...`
 }
 
+const RestoreCompletedEmbed = {
+	color: COLOR.SUCCESS,
+	title: 'Restore Completed',
+	description: 'The restore job has completed successfully!'
+}
+
+const RestoreAbortedEmbed = {
+	color: COLOR.ERROR,
+	title: 'Restore Aborted',
+	description: 'The restore job was aborted by the owner.'
+}
+
 const PUBLIC_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages;
 const PUBLIC_PERMS_DENY = Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
 const PRIVATE_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages | Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
@@ -186,18 +198,31 @@ Status : ${STATUS.RUNNING}
 		const interval = setInterval( async () => {
 			const job = GetJob(jobID);
 
+			if (job.status === STATUS.RUNNING) {
+				const bar = ProgressBar(job.progress);
+
+				updateMessage.edit({
+					content:'',
+					embeds: [{
+						color: COLOR.PRIMARY,
+						description: `
+	${EMOJI.LOADING} Working on it ... \`\`\`
+	Progress : ${bar}
+	Status : ${job.status}
+	\`\`\``
+					}]
+				});
+				return;
+			}
+
+			clearInterval(interval);
+
 			if (job.status === STATUS.COMPLETED) {
-				console.log(job);
 				updateMessage.edit({
 					content: '',
-					embeds: [{
-						color: COLOR.SUCCESS,
-						title: 'Restore Completed',
-						description: `The restore job has completed successfully!`
-					}],
+					embeds: [ RestoreCompletedEmbed ],
 					components: []
 				});
-				clearInterval(interval);
 
 				// update the ids in the snapshots
 				for (const [oldID, newID] of job.channel_lookups) {
@@ -230,24 +255,17 @@ ${job.errors.join('\n')}
 					}],
 					components: []
 				});
-				clearInterval(interval);
 				return;
 			}
 
-			const bar = ProgressBar(job.progress);
-
-			updateMessage.edit({
-				content:'',
-				embeds: [{
-					color: COLOR.PRIMARY,
-					description: `
-${EMOJI.LOADING} Working on it ... \`\`\`
-Progress : ${bar}
-Status : ${job.status}
-\`\`\``
-				}],
-				components: []
-			});
+			if (job.status === STATUS.ABORTED) {
+				updateMessage.edit({
+					content: '',
+					embeds: [ RestoreAbortedEmbed ],
+					components: []
+				});
+				return;
+			}
 		}, 1000);
 
 	}

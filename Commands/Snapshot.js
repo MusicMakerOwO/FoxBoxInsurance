@@ -39,6 +39,10 @@ module.exports = {
 			.setDescription('Manage a snapshot (alias for list)')
 		)
 		.addSubcommand(x => x
+			.setName('restore')
+			.setDescription('Restore a snapshot (alias for list)')
+		)
+		.addSubcommand(x => x
 			.setName('disable')
 			.setDescription('Disable server snapshots')
 		)
@@ -76,7 +80,7 @@ module.exports = {
 			return interaction.reply({ embeds: [disabledEmbed], ephemeral: true });
 		}
 
-		if (subcommand === 'list' || subcommand === 'manage') {
+		if (subcommand === 'list' || subcommand === 'manage' || subcommand === 'restore') {
 			const button = client.buttons.get('snapshot-list');
 			return button.execute(interaction, client, []);
 		}

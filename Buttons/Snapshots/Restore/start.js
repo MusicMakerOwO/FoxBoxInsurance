@@ -1,6 +1,6 @@
 const { COLOR, EMOJI } = require("../../../Utils/Constants");
 const Database = require("../../../Utils/Database");
-const { CreateJob, GetJob, STATUS } = require("../../../Utils/Parsers/RestoreJobs");
+const { CreateJob, GetJob, STATUS, isGuildRestoring } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
 const ProgressBar = require("../../../Utils/ProgressBar");
 const { UpdateHashes, snapshotCache } = require("../../../Utils/SnapshotUtils");
@@ -61,6 +61,12 @@ const RestoreAbortedEmbed = {
 	description: 'The restore job was aborted by the owner.'
 }
 
+const AlreadyRunningEmbed = {
+	color: COLOR.ERROR,
+	title: 'Restore Already Running',
+	description: 'A restore job is already running in this server. Please cancel or wait for it to complete before starting a new one.'
+}
+
 const PUBLIC_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages;
 const PUBLIC_PERMS_DENY = Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
 const PRIVATE_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages | Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
@@ -76,6 +82,13 @@ module.exports = {
 		if (!RestoreJob) {
 			return interaction.editReply({
 				embeds: [RestoreExpiredEmbed],
+				components: []
+			});
+		}
+
+		if (isGuildRestoring(interaction.guild.id)) {
+			return interaction.editReply({
+				embeds: [AlreadyRunningEmbed],
 				components: []
 			});
 		}

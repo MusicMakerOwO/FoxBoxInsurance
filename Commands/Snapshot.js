@@ -1,7 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE } = require('../Utils/Constants');
+const { COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE, SECONDS } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
 const { CreateSnapshot } = require('../Utils/SnapshotUtils');
+const { isGuildRestoring } = require('../Utils/Parsers/RestoreJobs');
+const https = require('node:https');
+const crypto = require('node:crypto');
 
 const noPermissionEmbed = {
 	color: COLOR.ERROR,
@@ -75,17 +78,53 @@ module.exports = {
 			return interaction.reply({ embeds: [embed], ephemeral: true });
 		}
 
-		const enabled = Database.prepare('SELECT snapshots_enabled FROM Guilds WHERE id = ?').get(interaction.guild.id);
-		if (!enabled || enabled.snapshots_enabled === 0) {
+		const enabled = Database.prepare('SELECT snapshots_enabled FROM Guilds WHERE id = ?').pluck().get(interaction.guild.id);
+		if (!enabled) {
 			return interaction.reply({ embeds: [disabledEmbed], ephemeral: true });
 		}
 
 		if (subcommand === 'list' || subcommand === 'manage' || subcommand === 'restore') {
+
+			if (isGuildRestoring(interaction.guild.id)) {
+				// give a warning and ask for confirmation
+				return interaction.reply({
+					embeds: [{
+						color: COLOR.ERROR,
+						title: 'Restore in Progress',
+						description: `
+Managing snapshots while a restore is in progress can be dangerous!
+Please proceed with caution and only if you know what you're doing ...`
+					}],
+					components: [{
+						type: 1,
+						components: [{
+							type: 2,
+							style: 4, // Danger button
+							label: 'I understand the risks',
+							custom_id: 'snapshot-list',
+							emoji: '⚠️'
+						}]
+					}],
+					ephemeral: true
+				}).catch(console.error);
+			}
+
 			const button = client.buttons.get('snapshot-list');
 			return button.execute(interaction, client, []);
 		}
 
 		if (subcommand === 'create') {
+			if (isGuildRestoring(interaction.guild.id)) {
+				return interaction.reply({
+					embeds: [{
+						color: COLOR.ERROR,
+						title: 'Restore in Progress',
+						description: 'You cannot create a snapshot while a restore is in progress.'
+					}],
+					ephemeral: true
+				});
+			}
+
 			await interaction.reply({ embeds: [ RandomLoadingEmbed() ], ephemeral: true });
 
 			const start = process.hrtime.bigint();

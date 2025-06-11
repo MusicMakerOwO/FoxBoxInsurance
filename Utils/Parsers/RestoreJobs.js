@@ -7,6 +7,8 @@ const https = require('node:https');
 // Delete after 60 minutes of inactivity
 const JOBS = new TimedMap(SECONDS.HOUR * 1000);
 
+const ACTIVE_RESTORE_GUILDS = new Set(); // guildID[] - to prevent multiple restore jobs running in the same guild at the same time
+
 const API_TYPES = {
 	ROLE_CREATE: 'role-create',
 	ROLE_UPDATE: 'role-update',
@@ -50,6 +52,11 @@ let JOB_LIST = [];
 
 let JOB_ID_COUNTER = 0;
 function CreateJob(data) {
+
+	if (ACTIVE_RESTORE_GUILDS.has(data.guildID)) {
+		throw new Error(`A restore job is already running for guild ${data.guildID}`);
+	}
+
 	const ID = JOB_ID_COUNTER++;
 	const job = {
 		id: ID,
@@ -86,6 +93,7 @@ function CreateJob(data) {
 			return Math.min(1, this.cursor / this.actions.length);
 		}
 	});
+	ACTIVE_RESTORE_GUILDS.add(data.guildID);
 	JOBS.set(ID, job);
 	JOB_LIST.push(job);
 	if (!restoreRunning) {
@@ -93,6 +101,11 @@ function CreateJob(data) {
 		RestoreJob();
 	}
 	return ID;
+}
+
+function isGuildRestoring(guildID) {
+	if (typeof guildID !== 'string') throw new Error('Guild ID must be a string');
+	return ACTIVE_RESTORE_GUILDS.has(guildID);
 }
 
 function GetJob(jobID) {
@@ -279,6 +292,7 @@ module.exports = {
 	CreateJob,
 	GetJob,
 	CancelJob,
+	isGuildRestoring,
 	
 	JOBS,
 	rateLimitUntil

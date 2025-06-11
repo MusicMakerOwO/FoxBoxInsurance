@@ -63,7 +63,6 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					style: 2,
 					label: 'View',
 					custom_id: `snapshot-view_${snapshotID}`,
-					disabled: stats.deleted === 1,
 					emoji: '🔍'
 				},
 				{
@@ -71,7 +70,6 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					style: 2,
 					label: 'Download',
 					custom_id: `snapshot-export_${snapshotID}`,
-					disabled: stats.deleted === 1,
 					emoji: '📥'
 				},
 				{
@@ -79,7 +77,6 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					style: 2,
 					label: 'Pin',
 					custom_id: `snapshot-pin_${snapshotID}`,
-					disabled: stats.deleted === 1,
 					emoji: '📌'
 				},
 			]
@@ -93,7 +90,6 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					style: 3,
 					label: 'Restore',
 					custom_id: `snapshot-restore_${snapshotID}`,
-					disabled: stats.deleted === 1,
 					emoji: '🔄'
 				},
 				{
@@ -101,7 +97,6 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					style: 4,
 					label: 'Delete',
 					custom_id: `snapshot-delete_${snapshotID}`,
-					disabled: stats.deleted === 1,
 					emoji: EMOJI.DELETE
 				},
 			]

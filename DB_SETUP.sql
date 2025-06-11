@@ -205,6 +205,7 @@ CREATE TABLE IF NOT EXISTS Snapshots (
 	guild_id TEXT NOT NULL,
 
 	type INTEGER NOT NULL, -- import, automatic, manual, etc.
+	pinned INTEGER NOT NULL DEFAULT 0, -- 1 if the snapshot is pinned
 
 	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
 ) STRICT;

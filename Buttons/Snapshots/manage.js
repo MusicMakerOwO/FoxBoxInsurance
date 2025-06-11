@@ -1,4 +1,4 @@
-const { COLOR } = require("../../Utils/Constants");
+const { COLOR, EMOJI } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
 const { SnapshotStats } = require("../../Utils/SnapshotUtils");
 
@@ -35,7 +35,6 @@ module.exports = {
 			FROM Snapshots
 			WHERE id = ?
 			AND guild_id = ?
-			AND deleted = 0
 		`).get(snapshotID, interaction.guild.id);
 		if (!exists) {
 			return interaction.editReply({
@@ -56,7 +55,7 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 `,
 		}
 
-		const buttons = {
+		const viewButtons = {
 			type: 1,
 			components: [
 				{
@@ -69,12 +68,26 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 				},
 				{
 					type: 2,
-					style: 4,
-					label: 'Delete',
-					custom_id: `snapshot-delete_${snapshotID}`,
+					style: 2,
+					label: 'Download',
+					custom_id: `snapshot-export_${snapshotID}`,
 					disabled: stats.deleted === 1,
-					emoji: '🗑️'
+					emoji: '📥'
 				},
+				{
+					type: 2,
+					style: 2,
+					label: 'Pin',
+					custom_id: `snapshot-pin_${snapshotID}`,
+					disabled: stats.deleted === 1,
+					emoji: '📌'
+				},
+			]
+		}
+
+		const manageButtons = {
+			type: 1,
+			components: [
 				{
 					type: 2,
 					style: 3,
@@ -82,13 +95,21 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					custom_id: `snapshot-restore_${snapshotID}`,
 					disabled: stats.deleted === 1,
 					emoji: '🔄'
-				}
+				},
+				{
+					type: 2,
+					style: 4,
+					label: 'Delete',
+					custom_id: `snapshot-delete_${snapshotID}`,
+					disabled: stats.deleted === 1,
+					emoji: EMOJI.DELETE
+				},
 			]
 		}
 
 		return interaction.editReply({
 			embeds: [embed],
-			components: [buttons]
+			components: [viewButtons, manageButtons]
 		});
 	}
 }

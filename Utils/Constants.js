@@ -70,7 +70,10 @@ const EMOJI = {
 	FIRST_PAGE: '⏪',
 	PREVIOUS_PAGE: '◀️',
 	NEXT_PAGE: '▶️',
-	LAST_PAGE: '⏩'
+	LAST_PAGE: '⏩',
+
+	DELETE: '🗑️',
+	EDIT: '✏️',
 }
 
 const LOADING_MESSAGES = [

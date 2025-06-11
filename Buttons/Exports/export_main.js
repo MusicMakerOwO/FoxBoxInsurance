@@ -1,5 +1,5 @@
 const GetExportCache = require("../../Utils/Caching/GetExportCache");
-const { COLOR, FORMAT } = require("../../Utils/Constants");
+const { COLOR, FORMAT, EMOJI } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
 
 const optionButtons = {
@@ -80,7 +80,7 @@ Messages: ${exportOptions.messageCount}`
 					style: 4,
 					label: 'Cancel',
 					custom_id: 'export-cancel',
-					emoji: '🗑️'
+					emoji: EMOJI.DELETE
 				}
 			]
 		};

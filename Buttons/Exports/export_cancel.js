@@ -1,4 +1,4 @@
-const { COLOR } = require("../../Utils/Constants");
+const { COLOR, EMOJI } = require("../../Utils/Constants");
 
 const ConfirmEmbed = {
 	color: COLOR.ERROR,
@@ -13,7 +13,7 @@ const ConfirmButtons = {
 			style: 4,
 			label: 'Delete',
 			custom_id: 'export-cancel_confirm',
-			emoji: '🗑️'
+			emoji: EMOJI.DELETE
 		},
 		{
 			type: 2,

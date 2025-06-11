@@ -1,4 +1,4 @@
-const { COLOR } = require("../../Utils/Constants");
+const { COLOR, EMOJI } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
 const { SnapshotStats, DeleteSnapshot } = require("../../Utils/SnapshotUtils");
 
@@ -10,7 +10,7 @@ const ownerEmbed = {
 
 const successEmbed = {
 	color: COLOR.PRIMARY,
-	description: '🗑️ The snapshot has been deleted'
+	description: `${EMOJI.DELETE} The snapshot has been deleted`
 }
 
 // snapshot-delete_0

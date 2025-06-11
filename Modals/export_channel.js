@@ -1,10 +1,10 @@
 const { ChannelType } = require("discord.js");
 const GetExportCache = require("../Utils/Caching/GetExportCache");
-const TimedCache = require("../Utils/Caching/TimedCache");
 const ClosestMatch = require("../Utils/ClosestMatch");
 const { COLOR } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
 const UserCanExport = require("../Utils/UserCanExport");
+const TTLCache = require("../Utils/Caching/TTLCache");
 
 const REGEX_ID = /^\d{17,}$/;
 
@@ -39,7 +39,7 @@ const ALLOWED_CHANNEL_TYPES = [
 	ChannelType.GuildMedia
 ];
 
-const channelCache = new TimedCache(1000 * 60 * 5); // guildID -> { channelName : channelID }
+const channelCache = new TTLCache(); // guildID -> { channelName : channelID }
 
 module.exports = {
 	customID: 'export-channel',
@@ -97,7 +97,7 @@ module.exports = {
 					channelList.set(name, Array.from(ids));
 				}
 
-				channelCache.set(interaction.guild.id, channelList);
+				channelCache.set(interaction.guild.id, channelList, SECONDS.HOUR * 1000); // cache for 1 hour
 			}
 
 			const channelList = channelCache.get(interaction.guild.id);
@@ -158,7 +158,10 @@ module.exports = {
 		exportOptions.messageCount = Math.min(channelMessageCount, 100);
 		exportOptions.lastMessageID = String( (BigInt(Date.now() - 1420070400000) << 22n) | BigInt(0b1_1111_11111111_11111111) );
 		
-		client.timedCache.set(`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`, exportOptions);
+		client.ttlcache.set(
+			`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`,
+			exportOptions
+		);
 
 		const main = client.buttons.get('export-main');
 		await main.execute(interaction, client, []);

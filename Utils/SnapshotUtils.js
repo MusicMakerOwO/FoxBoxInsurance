@@ -1,10 +1,10 @@
 const { Guild, GuildChannel, Role, GuildBan, PermissionOverwrites } = require('discord.js');
 const crypto = require('crypto');
 const Database = require('./Database');
-const TimedCache = require('./Caching/TimedCache');
 const Log = require('./Logs');
 const { SNAPSHOT_TYPE, SECONDS } = require('./Constants');
 const client = require('../client.js');
+const TTLCache = require('./Caching/TTLCache.js');
 
 function HashObject(obj) {
 	if (Object.values(obj).some(v => typeof v === 'object' && v !== null)) {
@@ -97,8 +97,8 @@ function SimplifyBan(ban) {
 }
 
 
-const statCache = new TimedCache(1000 * 60 * 60); // 1 hour
-const stateCache = new TimedCache(1000 * 60 * 60); // cache full sets per snapshot too
+const statCache = new TTLCache();
+const stateCache = new TTLCache();
 
 function SnapshotStats(snapshotID) {
 	if (statCache.has(snapshotID)) return statCache.get(snapshotID);
@@ -166,7 +166,7 @@ function SnapshotStats(snapshotID) {
 			roles: new Set(baseState.roles),
 			permissions: new Set(baseState.permissions),
 			bans: new Set(baseState.bans),
-		});
+		}, SECONDS.HOUR * 1000); // cache for 1 hour
 	}
 
 	const metadata = Database.prepare(`
@@ -183,12 +183,12 @@ function SnapshotStats(snapshotID) {
 		bans: baseState.bans.size
 	};
 
-	statCache.set(snapshotID, stats);
+	statCache.set(snapshotID, stats, SECONDS.HOUR * 1000); // cache for 1 hour
 	return stats;
 }
 
 
-const snapshotCache = new TimedCache(1000 * 60 * 60); // 1 hour
+const snapshotCache = new TTLCache(); // 1 hour
 function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 	if (cache && snapshotCache.has(snapshot_id)) return snapshotCache.get(snapshot_id);
 
@@ -278,11 +278,11 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 		bans: bans
 	}
 
-	if (cache) snapshotCache.set(snapshot_id, result);
+	if (cache) snapshotCache.set(snapshot_id, result, SECONDS.HOUR * 1000); // cache for 1 hour
 	return result;
 }
 
-const banCache = new TimedCache(SECONDS.HOUR * 1000); // guild_id -> Map<userID, GuildBan>
+const banCache = new TTLCache(); // guild_id -> Map<userID, GuildBan>
 async function FetchAllBans(guild) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
 	if (banCache.has(guild.id)) return banCache.get(guild.id);
@@ -312,7 +312,7 @@ async function FetchAllBans(guild) {
 		if (fetchedBans.size < MAX_BANS) break;
 	}
 
-	banCache.set(guild.id, bans);
+	banCache.set(guild.id, bans, SECONDS.HOUR * 1000); // cache for 1 hour
 	return bans;
 }
 

@@ -1,11 +1,11 @@
 const client = require('../../client.js');
-const TimedMap = require('../Caching/TimedCache.js');
+const TTLCache = require('../Caching/TTLCache.js');
 const { SECONDS } = require('../Constants');
 const https = require('node:https');
 
 // jobID -> { status: 'pending' | 'in-progress' | 'completed' | 'failed', progress: 0-100, errors: string[] }
 // Delete after 60 minutes of inactivity
-const JOBS = new TimedMap(SECONDS.HOUR * 1000);
+const JOBS = new TTLCache();
 
 const ACTIVE_RESTORE_GUILDS = new Set(); // guildID[] - to prevent multiple restore jobs running in the same guild at the same time
 
@@ -94,7 +94,7 @@ function CreateJob(data) {
 		}
 	});
 	ACTIVE_RESTORE_GUILDS.add(data.guildID);
-	JOBS.set(ID, job);
+	JOBS.set(ID, job, SECONDS.HOUR * 1000); // Store job for 1 hour
 	JOB_LIST.push(job);
 	if (!restoreRunning) {
 		restoreRunning = true;
@@ -167,7 +167,7 @@ async function RestoreJob() {
 		} catch (err) {
 			job.status = STATUS.FAILED;
 			job.errors.push(err.message);
-			JOBS.set(job.id, job);
+			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
 		}
 	}
 
@@ -216,7 +216,7 @@ function executeAction(job, action) {
 
 			const index = JOB_LIST.findIndex(j => j.id === job.id);
 			if (index !== -1) JOB_LIST[index] = job; // Update the job in the list
-			JOBS.set(job.id, job); // Update the job in the cache
+			JOBS.set(job.id, job, SECONDS.HOUR * 1000); // Update the job in the cache
 
 			resolve();
 			return;

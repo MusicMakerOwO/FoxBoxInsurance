@@ -132,6 +132,6 @@ The download link will expire after 24 hours - You will not be given this link a
 		});
 
 		// clear the export cache
-		client.timedCache.delete(`export_${exportOptions.guildID}_${exportOptions.channelID}_${exportOptions.userID}`);
+		client.ttlcache.delete(`export_${exportOptions.guildID}_${exportOptions.channelID}_${exportOptions.userID}`);
 	}
 }

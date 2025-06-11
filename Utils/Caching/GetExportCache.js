@@ -7,7 +7,7 @@ const NoDataEmbed = {
 
 module.exports = async function GetExportCache(client, interaction) {
 	const cacheKey = `export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`;
-	const exportOptions = client.timedCache.get(cacheKey);
+	const exportOptions = client.ttlcache.get(cacheKey);
 	if (!exportOptions) {
 		if (!interaction.deferred && !interaction.replied) {
 			await interaction.deferUpdate({ ephemeral: true });

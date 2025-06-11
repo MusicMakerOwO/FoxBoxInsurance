@@ -72,7 +72,10 @@ module.exports = {
 
 		if (selection) {
 			exportOptions.format = selection;
-			client.timedCache.set(`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`, exportOptions);
+			client.ttlcache.set(
+				`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`,
+				exportOptions
+			);
 		}
 
 		const buttons = {

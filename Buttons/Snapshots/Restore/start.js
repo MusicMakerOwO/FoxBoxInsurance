@@ -78,7 +78,7 @@ module.exports = {
 		
 		await interaction.deferUpdate();
 
-		const RestoreJob = client.timedCache.get(`restore-job-${interaction.guild.id}`);
+		const RestoreJob = client.ttlcache.get(`restore-job-${interaction.guild.id}`);
 		if (!RestoreJob) {
 			return interaction.editReply({
 				embeds: [RestoreExpiredEmbed],

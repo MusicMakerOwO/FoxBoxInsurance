@@ -287,7 +287,7 @@ module.exports = {
 			actions: executionPlan
 		}
 
-		client.timedCache.set(`restore-job-${interaction.guild.id}`, restoreJob);
+		client.ttlcache.set(`restore-job-${interaction.guild.id}`, restoreJob);
 
 		const executionStats = {
 			channels: {

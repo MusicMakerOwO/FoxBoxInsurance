@@ -40,7 +40,10 @@ module.exports = {
 			lastMessageID: String( (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING )
 		}
 
-		client.timedCache.set(`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`, exportOptions);
+		client.ttlcache.set(
+			`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`,
+			exportOptions
+		);
 
 		const main = client.buttons.get('export-main');
 		await main.execute(interaction, client, []);

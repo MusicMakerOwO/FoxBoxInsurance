@@ -48,7 +48,6 @@ const FileWatch = require('./Utils/FileWatcher');
 const client = require('./client.js');
 const Debounce = require('./Utils/Timing/Debounce');
 
-const TimedCache = require('./Utils/Caching/TimedCache');
 const CachePool = require('./Utils/Caching/CachePool');
 const Database = require('./Utils/Database');
 const ProcessMessages = require('./Utils/Processing/Messages');
@@ -60,6 +59,7 @@ const UploadFiles = require('./Utils/Tasks/UploadFiles');
 const EncryptMessages = require('./Utils/Tasks/EncryptMessages');
 const PushStats = require('./Utils/Tasks/PushStats');
 const { UPLOAD_CACHE, DOWNLOAD_CACHE, FAILED_MESSAGES, DATABASE_BACKUPS } = require('./Utils/Constants');
+const TTLCache = require('./Utils/Caching/TTLCache.js');
 
 if (!existsSync(UPLOAD_CACHE)) mkdirSync(UPLOAD_CACHE, { recursive: true });
 if (!existsSync(DOWNLOAD_CACHE)) mkdirSync(DOWNLOAD_CACHE, { recursive: true });
@@ -73,7 +73,7 @@ Log.custom(`Preload time: ${preLoadTime}ms`, 0x7946ff);
 client.config = config;
 client.logs = Log;
 client.cooldowns = new Map(); // guildID::userID -> timestamp
-client.timedCache = new TimedCache(1000 * 60 * 5); // 5 minutes ttl
+client.ttlcache = new TTLCache();
 client.messageCache = new CachePool(3); // 3 caches combined in one, great for race conditions
 
 // These are all empty but need to be defined for the ComponentLoader
@@ -255,7 +255,7 @@ async function Shutdown() {
 
 	Log.warn('Shutting down...');
 	client.destroy();
-	client.timedCache.destroy();
+	client.ttlcache.destroy();
 
 	Log.warn('Stopping tasks...');
 	Task.destroy();

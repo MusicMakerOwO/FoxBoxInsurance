@@ -650,6 +650,36 @@ async function UpdateHashes(snapshotID) {
 	Update(snapshotData.bans, 'SnapshotBans', 'user_id', SimplifyBan);
 }
 
+const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';
+function GenerateExportID(attempts = 5) {
+	if (attempts <= 0) throw new Error('Failed to generate snapshot ID');
+	// XXXX-XXXX-XXXX-XXXX
+	const id = [];
+	for (let i = 0; i < 4; i++) {
+		for (let j = 0; j < 4; j++) {
+			id.push( chars[Math.floor(Math.random() * chars.length)] );
+		}
+		if (i !== 3) id.push('-');
+	}
+	const idString = id.join('');
+	const exists = Database.prepare('SELECT * FROM SnapshotExports WHERE id = ?').get(idString);
+	return exists ? GenerateExportID(attempts - 1) : idString;
+}
+
+function ExportSnapshot(snapshotID) {
+	const snapshotData = FetchSnapshot(snapshotID);
+	if (!snapshotData) return null;
+
+	return {
+		id: GenerateExportID(),
+		version: 1,
+		channels: Array.from(snapshotData.channels.values()),
+		roles: Array.from(snapshotData.roles.values()),
+		permissions: Array.from(snapshotData.permissions.values()),
+		bans: Array.from(snapshotData.bans.values())
+	};
+}
+
 module.exports = {
 	SimplifyChannel,
 	SimplifyRole,
@@ -660,6 +690,7 @@ module.exports = {
 	FetchSnapshot,
 	SnapshotStats,
 	UpdateHashes,
+	ExportSnapshot,
 
 	HashObject,
 	PermKey,

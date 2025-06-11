@@ -293,3 +293,18 @@ CREATE TABLE IF NOT EXISTS SnapshotBans (
 ) STRICT;
 CREATE INDEX IF NOT EXISTS snapshot_bans_id ON SnapshotBans (snapshot_id);
 CREATE INDEX IF NOT EXISTS snapshot_bans_userID ON SnapshotBans (user_id);
+
+CREATE TABLE IF NOT EXISTS SnapshotExports (
+	id TEXT NOT NULL PRIMARY KEY, -- xxxx-xxxx-xxxx-xxxx
+
+	snapshot_id INTEGER NOT NULL,
+	guild_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+
+	hash TEXT NOT NULL, -- The hash of the file
+	algorithm TEXT NOT NULL, -- The algorithm used to encrypt the file
+	revoked INTEGER NOT NULL DEFAULT 0, -- 1 if the export is revoked
+
+	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
+);
+CREATE INDEX IF NOT EXISTS snapshot_exports_user_id ON SnapshotExports (user_id);

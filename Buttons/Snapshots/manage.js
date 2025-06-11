@@ -87,6 +87,12 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 			components: [
 				{
 					type: 2,
+					style: 2,
+					custom_id: `snapshot-list`,
+					emoji: EMOJI.PREVIOUS_PAGE
+				},
+				{
+					type: 2,
 					style: 3,
 					label: 'Restore',
 					custom_id: `snapshot-restore_${snapshotID}`,

@@ -63,21 +63,21 @@ Created at <t:${Math.floor(new Date(stats.created_at).getTime() / 1000)}:d>
 					style: 2,
 					label: 'View',
 					custom_id: `snapshot-view_${snapshotID}`,
-					emoji: '🔍'
+					emoji: EMOJI.SEARCH
 				},
 				{
 					type: 2,
 					style: 2,
 					label: 'Download',
 					custom_id: `snapshot-export_${snapshotID}`,
-					emoji: '📥'
+					emoji: EMOJI.EXPORT
 				},
 				{
 					type: 2,
 					style: 2,
 					label: 'Pin',
 					custom_id: `snapshot-pin_${snapshotID}`,
-					emoji: '📌'
+					emoji: EMOJI.PIN
 				},
 			]
 		}

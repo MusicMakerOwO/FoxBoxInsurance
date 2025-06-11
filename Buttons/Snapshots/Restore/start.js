@@ -241,7 +241,7 @@ Status : ${STATUS.RUNNING}
 				for (const [oldID, newID] of job.channel_lookups) {
 					Database.prepare(`
 						UPDATE SnapshotChannels
-						SET id = ?
+						SET id = ?, needsUpdate = 1
 						WHERE snapshot_id = ?
 						AND id = ?
 					`).run(newID, snapshotID, oldID);

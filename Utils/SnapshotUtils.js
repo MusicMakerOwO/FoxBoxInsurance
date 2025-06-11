@@ -608,6 +608,92 @@ async function CreateSnapshot(guild, type = 0) {
 	return snapshotID;
 }
 
+function DeleteSnapshot(snapshotID) {
+	const guildID = Database.prepare(`
+		SELECT guild_id
+		FROM Snapshots
+		WHERE id = ?
+	`).pluck().get(snapshotID);
+	if (!guildID) throw new Error('Snapshot not found');
+
+	const availableSnapshots = Database.prepare(`
+		SELECT id
+		FROM Snapshots
+		WHERE guild_id = ?
+		ORDER BY id ASC
+	`).pluck().all(guildID) ?? [];
+	if (!availableSnapshots.includes(snapshotID)) throw new Error('Snapshot not found');
+
+	const tables = [
+		{
+			name: 'SnapshotRoles',
+			idColumn: 'id'
+		},
+		{
+			name: 'SnapshotChannels',
+			idColumn: 'id'
+		},
+		{
+			name: 'SnapshotPermissions',
+			idColumn: 'id'
+		},
+		{
+			name: 'SnapshotBans',
+			idColumn: 'user_id'
+		}
+	]
+
+	if (availableSnapshots[availableSnapshots.length - 1] === snapshotID) {
+		// if this is the latest snapshot, delete the data immediately
+		Database.prepare(`
+			DELETE FROM Snapshots
+			WHERE id = ?
+		`).run(snapshotID);
+		for (const table of tables) {
+			Database.prepare(`
+				DELETE FROM ${table.name}
+				WHERE snapshot_id = ?
+			`).run(snapshotID);
+		}
+	} else {
+
+		// merge data forward with next snapshot
+
+		const nextSnapshotID = availableSnapshots[availableSnapshots.indexOf(snapshotID) + 1];
+
+		for (const table of tables) {
+			if (!Database.tables.has(table.name)) {
+				throw new Error(`Table "${table.name}" does not exist in the database`);
+			}
+			Database.prepare(`
+				DELETE FROM ${table.name}
+				WHERE snapshot_id = ?
+				AND EXISTS (
+					SELECT 1
+					FROM ${table.name} AS next
+					WHERE next.snapshot_id = ?
+					AND next.${table.idColumn} = ${table.name}.${table.idColumn}
+				)
+			`).run(snapshotID, nextSnapshotID);
+			Database.prepare(`
+				UPDATE ${table.name}
+				SET snapshot_id = ?
+				WHERE snapshot_id = ?
+				AND NOT EXISTS (
+					SELECT 1
+					FROM ${table.name} AS next
+					WHERE next.snapshot_id = ?
+					AND next.${table.idColumn} = ${table.name}.${table.idColumn}
+				)
+			`).run(nextSnapshotID, snapshotID, nextSnapshotID);
+			Database.prepare(`
+				DELETE FROM ${table.name}
+				WHERE snapshot_id = ?
+			`).run(snapshotID);
+		}
+	}
+}
+
 
 async function UpdateHashes(snapshotID) {
 	const snapshotData = FetchSnapshot(snapshotID, { cache: false });
@@ -687,6 +773,7 @@ module.exports = {
 	SimplifyBan,
 
 	CreateSnapshot,
+	DeleteSnapshot,
 	FetchSnapshot,
 	SnapshotStats,
 	UpdateHashes,

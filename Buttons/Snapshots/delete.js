@@ -1,6 +1,6 @@
 const { COLOR } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
-const { SnapshotStats } = require("../../Utils/SnapshotUtils");
+const { SnapshotStats, DeleteSnapshot } = require("../../Utils/SnapshotUtils");
 
 const ownerEmbed = {
 	color: COLOR.ERROR,
@@ -18,7 +18,7 @@ const successEmbed = {
 
 module.exports = {
 	customID: 'snapshot-delete',
-	execute: async function(interaction, client, args) {
+	execute: async function (interaction, client, args) {
 		if (interaction.guild.ownerId !== interaction.user.id) {
 			return interaction.reply({ embeds: [ownerEmbed], ephemeral: true });
 		}
@@ -29,16 +29,12 @@ module.exports = {
 		const confirm = args[1] === 'confirm';
 
 		if (confirm) {
-			Database.prepare(`
-				UPDATE Snapshots
-				SET deleted = 1
-				WHERE id = ?
-				AND guild_id = ?
-			`).run(snapshotID, interaction.guild.id);
+
+			DeleteSnapshot(snapshotID);
+
 			await interaction.editReply({
-				embeds: [ successEmbed ],
-				components: [],
-				ephemeral: true
+				embeds: [successEmbed],
+				components: []
 			})
 
 			await new Promise(resolve => setTimeout(resolve, 2000));

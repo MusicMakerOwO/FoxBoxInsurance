@@ -206,10 +206,6 @@ CREATE TABLE IF NOT EXISTS Snapshots (
 
 	type INTEGER NOT NULL, -- import, automatic, manual, etc.
 
-	-- Deleted just means don't show it in the UI
-	-- Need to keep the data for data integrity lol
-	deleted INTEGER NOT NULL DEFAULT 0,
-
 	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}})
 ) STRICT;
 CREATE INDEX IF NOT EXISTS shapshots_guild_id ON Snapshots (guild_id);

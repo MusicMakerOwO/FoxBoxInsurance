@@ -33,7 +33,6 @@ module.exports = {
 			SELECT id, type, created_at
 			FROM Snapshots
 			WHERE guild_id = ?
-			AND deleted = 0
 			ORDER BY id DESC
 		`).all(interaction.guild.id);
 		if (availableSnapshots.length === 0) {

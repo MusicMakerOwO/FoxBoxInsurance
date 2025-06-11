@@ -614,15 +614,32 @@ async function UpdateHashes(snapshotID) {
 	if (!snapshotData) return;
 
 	const Update = (lookup, table, id, simplify) => {
-		for (const item of lookup.values()) {
-			const simpleItem = simplify(item);
-			const hash = HashObject(simpleItem);
-			if (item.hash !== hash) {
+		const itemsNeedingUpdate = Database.prepare(`
+			SELECT *
+			FROM ${table}
+			WHERE snapshot_id = ?
+			AND needsUpdate = 1
+		`).all(snapshotID);
+
+		for (const item of itemsNeedingUpdate) {
+
+			if (!lookup.has(item[id])) {
+				Log.error(`Item with ID ${item[id]} not found in lookup for table ${table}`);
+				continue;
+			}
+
+			const simplified = simplify(item);
+			const hash = HashObject(simplified);
+
+			const savedItem = lookup.get(simplified[id]);
+
+			if (savedItem.hash !== hash) {
 				Database.prepare(`
 					UPDATE ${table}
-					SET hash = ?
-					WHERE snapshot_id = ? AND ${id} = ?
-				`).run(hash, snapshotID, simpleItem.id);
+					SET hash = ?, needsUpdate = 0
+					WHERE snapshot_id = ?
+					AND ${id} = ?
+				`).run(hash, snapshotID, simplified[id]);
 			}
 		}
 	}

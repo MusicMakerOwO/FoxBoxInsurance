@@ -226,12 +226,14 @@ CREATE TABLE IF NOT EXISTS SnapshotRoles (
 	permissions TEXT NOT NULL,
 	managed INTEGER NOT NULL DEFAULT 0, -- 1 if the role is managed by an integration
 
+	needsUpdate INTEGER NOT NULL DEFAULT 0, -- 1 if the hash needs to be updated
 	hash TEXT NOT NULL, -- The hash of the role
 
 	PRIMARY KEY (snapshot_id, id)
 ) STRICT;
 CREATE INDEX IF NOT EXISTS snapshot_roles_id ON SnapshotRoles (snapshot_id);
 CREATE INDEX IF NOT EXISTS snapshot_roleID ON SnapshotRoles (id);
+CREATE INDEX IF NOT EXISTS snapshot_roles_update ON SnapshotRoles (needsUpdate) WHERE needsUpdate = 1;
 
 
 CREATE TABLE IF NOT EXISTS SnapshotChannels (
@@ -247,12 +249,14 @@ CREATE TABLE IF NOT EXISTS SnapshotChannels (
 
 	parent_id TEXT, -- NULL if no parent
 
+	needsUpdate INTEGER NOT NULL DEFAULT 0, -- 1 if the hash needs to be updated
 	hash TEXT NOT NULL, -- The hash of the channel
 
 	PRIMARY KEY (snapshot_id, id)
 ) STRICT;
 CREATE INDEX IF NOT EXISTS snapshot_channels_id ON SnapshotChannels (snapshot_id);
 CREATE INDEX IF NOT EXISTS snapshot_channelID ON SnapshotChannels (id);
+CREATE INDEX IF NOT EXISTS snapshot_channels_update ON SnapshotChannels (needsUpdate) WHERE needsUpdate = 1;
 
 CREATE TABLE IF NOT EXISTS SnapshotPermissions (
 	snapshot_id INTEGER NOT NULL,
@@ -266,6 +270,7 @@ CREATE TABLE IF NOT EXISTS SnapshotPermissions (
 	allow INTEGER NOT NULL,
 	deny INTEGER NOT NULL,
 
+	needsUpdate INTEGER NOT NULL DEFAULT 0, -- 1 if the hash needs to be updated
 	hash TEXT NOT NULL, -- The hash of the permission
 
 	PRIMARY KEY (snapshot_id, channel_id, role_id)
@@ -273,6 +278,7 @@ CREATE TABLE IF NOT EXISTS SnapshotPermissions (
 CREATE INDEX IF NOT EXISTS snapshot_permissions_id ON SnapshotPermissions (snapshot_id);
 CREATE INDEX IF NOT EXISTS snapshot_permissions_channelID ON SnapshotPermissions (channel_id);
 CREATE INDEX IF NOT EXISTS snapshot_permissions_roleID ON SnapshotPermissions (role_id);
+CREATE INDEX IF NOT EXISTS snapshot_permissions_update ON SnapshotPermissions (needsUpdate) WHERE needsUpdate = 1;
 
 CREATE TABLE IF NOT EXISTS SnapshotBans (
 	snapshot_id INTEGER NOT NULL,

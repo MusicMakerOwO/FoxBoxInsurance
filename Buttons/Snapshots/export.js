@@ -35,8 +35,7 @@ module.exports = {
 		`).get(snapshotID, interaction.guild.id);
 		if (!exists) {
 			return interaction.editReply({
-				embeds: [NoSnapshotEmbed],
-				ephemeral: true
+				embeds: [NoSnapshotEmbed]
 			});
 		}
 

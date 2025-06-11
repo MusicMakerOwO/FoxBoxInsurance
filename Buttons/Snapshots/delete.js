@@ -78,8 +78,7 @@ Are you sure you want to delete this snapshot?
 
 		await interaction.editReply({
 			embeds: [embed],
-			components: [confirmButtons],
-			ephemeral: true
+			components: [confirmButtons]
 		}).catch(() => { });
 	}
 }

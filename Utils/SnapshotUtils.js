@@ -766,6 +766,22 @@ function ExportSnapshot(snapshotID) {
 	};
 }
 
+const CACHE_TYPE = {
+	STAT : 1 << 0,
+	STATE: 1 << 1,
+	SNAPSHOT: 1 << 2,
+	BAN: 1 << 3,
+}
+
+const ALL_CACHE = Object.values(CACHE_TYPE).reduce((acc, val) => acc | val, 0);
+
+function ClearCache(snapshotID, type = ALL_CACHE) {
+	if (type & CACHE_TYPE.STAT		) statCache.delete(snapshotID);
+	if (type & CACHE_TYPE.STATE		) stateCache.delete(snapshotID);
+	if (type & CACHE_TYPE.SNAPSHOT	) snapshotCache.delete(snapshotID);
+	if (type & CACHE_TYPE.BAN		) banCache.delete(snapshotID);
+}
+
 module.exports = {
 	SimplifyChannel,
 	SimplifyRole,
@@ -787,5 +803,6 @@ module.exports = {
 	CHANGE_TYPE,
 	ALLOWED_CHANNEL_TYPES,
 
-	snapshotCache
+	ClearCache,
+	CACHE_TYPE,
 };

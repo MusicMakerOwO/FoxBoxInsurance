@@ -52,9 +52,10 @@ module.exports = {
 			const type = SNAPSHOT_TYPE[snapshot.type] ?? 'Unknown';
 			const dateString = '<t:' + Math.floor(date.getTime() / 1000) + ':d>';
 			const stats = SnapshotStats(snapshot.id);
+			const emoji = stats.pinned ? EMOJI.PIN : EMOJI.SNAPSHOT;
 
 			embed.description += `
-${EMOJI.SNAPSHOT} **Snapshot #${snapshot.id}** - \`${type}\` ${SNAPSHOT_TYPE_EMOJI[snapshot.type] ?? ''}
+${emoji} **Snapshot #${snapshot.id}** - \`${type}\` ${SNAPSHOT_TYPE_EMOJI[snapshot.type] ?? ''}
 | Channels: ${stats.channels}
 | Roles: ${stats.roles}
 | Bans: ${stats.bans}

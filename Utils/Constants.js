@@ -63,9 +63,13 @@ const EMOJI = {
 	SUCCESS: '✅',
 	INFO: 'ℹ️',
 	WARNING: '🚩',
+	SEARCH: '🔍',
+
+	TADA: '🎉',
 
 	SNAPSHOT: '📦',
 	EXPORT: '📤',
+	PIN: '📌',
 
 	FIRST_PAGE: '⏪',
 	PREVIOUS_PAGE: '◀️',

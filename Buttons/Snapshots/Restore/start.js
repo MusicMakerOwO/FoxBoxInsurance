@@ -3,7 +3,7 @@ const Database = require("../../../Utils/Database");
 const { CreateJob, GetJob, STATUS, isGuildRestoring } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
 const ProgressBar = require("../../../Utils/ProgressBar");
-const { UpdateHashes, snapshotCache } = require("../../../Utils/SnapshotUtils");
+const { UpdateHashes, ClearCache } = require("../../../Utils/SnapshotUtils");
 
 const RolePositionError = {
 	color: COLOR.ERROR,
@@ -249,7 +249,7 @@ Status : ${STATUS.RUNNING}
 
 				UpdateHashes(snapshotID);
 
-				snapshotCache.delete(snapshotID); // Clear the cache for this snapshot
+				ClearCache(snapshotID);
 
 				return;
 			}

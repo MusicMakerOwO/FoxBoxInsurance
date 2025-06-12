@@ -69,6 +69,7 @@ const EMOJI = {
 
 	SNAPSHOT: '📦',
 	EXPORT: '📤',
+	IMPORT: '📥',
 	PIN: '📌',
 
 	FIRST_PAGE: '⏪',
@@ -78,6 +79,7 @@ const EMOJI = {
 
 	DELETE: '🗑️',
 	EDIT: '✏️',
+	OPEN: '<:launch:1382570390861254787>',
 }
 
 const LOADING_MESSAGES = [

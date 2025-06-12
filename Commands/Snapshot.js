@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE, SECONDS } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
-const { CreateSnapshot } = require('../Utils/SnapshotUtils');
+const { CreateSnapshot, SimplifyChannel, SimplifyRole, SimplifyPermission, SimplifyBan } = require('../Utils/SnapshotUtils');
 const { isGuildRestoring } = require('../Utils/Parsers/RestoreJobs');
 const https = require('node:https');
 const crypto = require('node:crypto');
@@ -24,6 +24,12 @@ const disabledEmbed = {
 	description: 'Snapshots are disabled on this server\nPlease enable them first'
 }
 
+const CorruptedSnapshotEmbed = {
+	color: COLOR.ERROR,
+	title: 'Snapshot Corrupted',
+	description: 'The provided snapshot file is corrupted - Please export the snapshot again!'
+}
+
 module.exports = {
 	aliases: ['backup'],
 	data: new SlashCommandBuilder()
@@ -36,6 +42,15 @@ module.exports = {
 		.addSubcommand(x => x
 			.setName('list')
 			.setDescription('List all snapshots')
+		)
+		.addSubcommand(x => x
+			.setName('import')
+			.setDescription('Import a snapshot from a file')
+			.addAttachmentOption(x => x
+				.setName('file')
+				.setDescription('The snapshot file to import')
+				.setRequired(true)
+			)
 		)
 		.addSubcommand(x => x
 			.setName('manage')
@@ -137,6 +152,126 @@ Please proceed with caution and only if you know what you're doing ...`
 			return button.execute(interaction, client, [ snapshotID ]); // Pass the snapshot ID to the button
 		}
 
+		if (subcommand === 'import') {
+			await interaction.deferReply({ ephemeral: true });
 
+			const attachment = interaction.options.getAttachment('file');
+			if (!attachment || !attachment.name.endsWith('.json')) {
+				return interaction.editReply({ 
+					embeds: [{
+						color: COLOR.ERROR,
+						title: 'Invalid File',
+						description: 'Please upload a valid snapshot file in JSON format.'
+					}]
+				});
+			}
+
+			const fileContent = await DownloadURL(attachment.url);
+			try {
+				var snapshotData = JSON.parse(fileContent);
+			} catch (error) {
+				return interaction.editReply({ 
+					embeds: [{
+						color: COLOR.ERROR,
+						title: 'Invalid JSON',
+						description: 'The uploaded file is not a valid JSON snapshot.'
+					}]
+				});
+			}
+
+			const exportID = snapshotData.id || null; // XXXX-XXXX-XXXX-XXXX
+			const EXPORT_REGEX = /^[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i;
+			if (typeof exportID !== 'string' || !EXPORT_REGEX.test(exportID)) {
+				return interaction.editReply({ 
+					embeds: [ CorruptedSnapshotEmbed ]
+				});
+			}
+
+			if (!client.ttlcache.has(`import-${exportID}`)) {
+				const exportMetadata = Database.prepare(`
+					SELECT id, snapshot_id, guild_id, hash, algorithm
+					FROM SnapshotExports
+					WHERE id = ?
+				`).get(exportID);
+				if (!exportMetadata) {
+					return interaction.editReply({ 
+						embeds: [ CorruptedSnapshotEmbed ]
+					});
+				}
+
+				if (exportMetadata.revoked === 1 ||
+					crypto.createHash(exportMetadata.algorithm).update(fileContent).digest('hex') !== exportMetadata.hash
+				) {
+					// revoke the snapshot for all future imports
+					if (!exportMetadata.revoked) {
+						Database.prepare(`
+							UPDATE SnapshotExports
+							SET revoked = 1
+							WHERE id = ?
+						`).run(exportID);
+					}
+
+					return interaction.editReply({ 
+						embeds: [ CorruptedSnapshotEmbed ]
+					});
+				}
+
+				if (typeof snapshotData !== 'object' || !snapshotData) {
+					return interaction.editReply({ 
+						embeds: [ CorruptedSnapshotEmbed ]
+					});
+				}
+
+				const Parse = (entry, simplify) => {
+					if (!(entry in snapshotData) || !Array.isArray(snapshotData[entry])) {
+						return interaction.editReply({
+							embeds: [ CorruptedSnapshotEmbed ]
+						});
+					}
+
+					for (let i = 0; i < snapshotData[entry].length; i++) {
+						if (typeof snapshotData[entry][i] !== 'object' || !snapshotData[entry][i]) {
+							return interaction.editReply({
+								embeds: [ CorruptedSnapshotEmbed ]
+							});
+						}
+						snapshotData[entry][i] = simplify(snapshotData[entry][i]);
+					}
+				}
+
+				Parse('channels',	 SimplifyChannel	);
+				Parse('roles', 		 SimplifyRole		);
+				Parse('permissions', (p) => SimplifyPermission(p.channel_id, p) );
+				Parse('bans', 		 SimplifyBan		);
+
+				// make sure there are no additional fields
+				const requiredFields = new Set(['id', 'version', 'channels', 'roles', 'permissions', 'bans']);
+				for (const field of Object.keys(snapshotData)) {
+					if (!requiredFields.has(field)) {
+						return interaction.editReply({
+							embeds: [ CorruptedSnapshotEmbed ]
+						});
+					}
+				}
+
+				client.ttlcache.set(`import-${exportID}`, {
+					metadata: exportMetadata,
+					data: snapshotData
+				}, SECONDS.HOUR * 2 * 1000); // Store the snapshot data for 60 minutes
+			}
+
+			const importSnapshot = client.buttons.get('import');
+			return importSnapshot.execute(interaction, client, [exportID]);
+		}
 	}
+}
+
+function DownloadURL(url) {
+	return new Promise((resolve, reject) => {
+		https.get(url, (res) => {
+			let data = '';
+			res.on('data', chunk => data += chunk);
+			res.on('end', () => resolve(data));
+		}).on('error', err => reject(err));
+	});
 }

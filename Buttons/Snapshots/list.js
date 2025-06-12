@@ -47,6 +47,32 @@ module.exports = {
 
 		const dropdownOptions = [];
 
+		if (client.ttlcache.has(`guild-imports-${interaction.guild.id}`)) {
+			const imports = client.ttlcache.get(`guild-imports-${interaction.guild.id}`);
+			if (imports.size > 0) {
+				embed.description += `> **You have ${imports.size} imports available:**\n`;
+				for (const [importID, expiration] of imports.entries()) {
+					const importData = client.ttlcache.get(`import-${importID}`);
+					if (!importData) continue; // data might have expired
+
+					const expiresDate = new Date(expiration);
+					const expiresString = '<t:' + Math.floor(expiresDate.getTime() / 1000) + ':R>';
+					
+					embed.description += `> 
+> ${EMOJI.IMPORT} **Import #${importData.metadata.snapshot_id}** - Expires ${expiresString}
+> | Channels: ${importData.data.channels.length}
+> | Roles: ${importData.data.roles.length}
+> | Bans: ${importData.data.bans.length}\n`;
+
+					dropdownOptions.push({
+						label: `Import #${importData.metadata.id}`,
+						value: importID,
+						description: `Channels: ${importData.data.channels.length} | Roles: ${importData.data.roles.length} | Bans: ${importData.data.bans.length}`,
+					});
+				}
+			}
+		}
+
 		for (const snapshot of availableSnapshots) {
 			const date = new Date(snapshot.created_at);
 			const type = SNAPSHOT_TYPE[snapshot.type] ?? 'Unknown';
@@ -59,7 +85,7 @@ ${emoji} **Snapshot #${snapshot.id}** - \`${type}\` ${SNAPSHOT_TYPE_EMOJI[snapsh
 | Channels: ${stats.channels}
 | Roles: ${stats.roles}
 | Bans: ${stats.bans}
-Created at ${dateString}\n\n`;
+Created at ${dateString}\n`;
 
 			dropdownOptions.push({
 				label: `Snapshot #${snapshot.id} - ${type}`,

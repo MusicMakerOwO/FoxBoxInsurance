@@ -33,6 +33,14 @@ const unpinSuccess = {
 	description: `${EMOJI.DELETE} The snapshot has been unpinned successfully!`
 }
 
+const NoMorePinsEmbed = {
+	color: COLOR.ERROR,
+	title: 'Snapshots Full',
+	description: `
+You have reached the maximum number of pinned snapshots for this server.
+Please unpin a snapshot before pinning another.`
+}
+
 module.exports = {
 	customID: 'snapshot-pin',
 	execute: async function(interaction, client, args) {
@@ -45,6 +53,18 @@ module.exports = {
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
 
 		if (!confirm) {
+			const pinnedCount = Database.prepare(`
+				SELECT COUNT(*)
+				FROM Snapshots
+				WHERE guild_id = ? AND pinned = 1
+			`).pluck().get(interaction.guild.id);
+			if (pinnedCount >= 7) {
+				return interaction.reply({
+					embeds: [NoMorePinsEmbed],
+					ephemeral: true
+				});
+			}
+
 			const currentPinned = Database.prepare(`
 				SELECT pinned
 				FROM Snapshots

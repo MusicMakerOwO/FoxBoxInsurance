@@ -201,7 +201,9 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 	}
 }
 
-function PresetFile(cache, componentFolder, callback, filePath) {
+function PresetFile(componentFolder, callback, filePath, type = 0) {
+	if (type !== 0) return; // 0 = file, 1 = directory, 2 = symlink
+	
 	const presetData = PRESET_FILES[componentFolder];
 	if (!presetData) return;
 
@@ -244,7 +246,7 @@ client.on('ready', async function () {
 	for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 		const watcher = new FileWatch(path, true);
 		const callback = Debounce(HotReload.bind(null, cache, path), 2_000);
-		watcher.onAdd = PresetFile.bind(null, cache, path, callback);
+		watcher.onAdd = PresetFile.bind(null, path, callback);
 		watcher.onRemove = callback;
 		watcher.onChange = callback;
 	}

@@ -12,7 +12,7 @@ module.exports = class TTLCache {
 
 	set(key, value, ttl = SECONDS.MINUTE * 10 * 1000) {
 		const expiryTime = Date.now() + ttl;
-		this.cache.set(key, { value, expiryTime });
+		this.cache.set(key, { value, expiryTime, ttl });
 	}
 
 	delete(key) {
@@ -36,13 +36,19 @@ module.exports = class TTLCache {
 	}
 
 
-	get(key) {
+	get(key, touch = true) {
 		const item = this.cache.get(key);
 		if (!item) return null;
 
 		if (this.#isExpired(item)) {
 			this.cache.delete(key);
 			return null;
+		}
+
+		if (touch) {
+			// Update the expiry time to extend the TTL
+			item.expiryTime = Date.now() + item.ttl;
+			this.cache.set(key, item);
 		}
 
 		return item.value;

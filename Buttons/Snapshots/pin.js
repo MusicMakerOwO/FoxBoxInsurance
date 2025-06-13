@@ -41,6 +41,12 @@ You have reached the maximum number of pinned snapshots for this server.
 Please unpin a snapshot before pinning another.`
 }
 
+const noPermissionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'You must be a server administrator for this'
+}
+
 module.exports = {
 	customID: 'snapshot-pin',
 	execute: async function(interaction, client, args) {
@@ -51,6 +57,13 @@ module.exports = {
 		const confirm = args[1] === 'confirm';
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+
+		if (!interaction.member.permissions.has('Administrator')) {
+			return interaction.editReply({
+				embeds: [noPermissionEmbed],
+				components: []
+			});
+		}
 
 		if (!confirm) {
 			const pinnedCount = Database.prepare(`

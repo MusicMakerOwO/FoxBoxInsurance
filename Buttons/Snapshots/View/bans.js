@@ -15,7 +15,7 @@ module.exports = {
 	customID: 'snapshot-view-bans',
 	execute: async function(interaction, client, args) {
 		const snapshotID = parseInt(args[0]);
-		if (isNaN(snapshotID) || snapshotID <= 0) throw new Error('Invalid snapshot ID provided.');0
+		if (isNaN(snapshotID) || snapshotID <= 0) throw new Error('Invalid snapshot ID provided.');
 
 		const page = parseInt(args[1]) || 0;
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');

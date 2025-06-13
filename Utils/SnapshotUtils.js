@@ -355,22 +355,24 @@ async function CreateSnapshot(guild, type = 0) {
 		return null;
 	}
 
-	if (!botMember.permissions.has('BanMembers') || !botMember.permissions.has('ManageRoles') || !botMember.permissions.has('ManageChannels')) {
-		Log.error(`[SNAPSHOT] Bot does not have required permissions in guild ${guild.name} (${guild.id})`);
-		// return null;
-	}
-
-	const botRole = guild.roles.cache.find(role => role.tags.botId === client.user.id);
+	const botRole = guild.roles.cache.find(role => role.tags?.botId === client.user.id);
 	if (!botRole) {
 		Log.error(`[SNAPSHOT] Bot role not found in guild ${guild.name} (${guild.id})`);
 		return null;
 	}
 
 	const fetchStart = process.hrtime.bigint();
-	try {
-		var currentBans = await FetchAllBans(guild);
-	} catch (error) {
+	if (!botMember.permissions.has('BanMembers')) {
+		Log.error(`[SNAPSHOT] Bot does not have BanMembers permission in guild ${guild.name} (${guild.id}), skipping bans fetch`);
 		var currentBans = new Map();
+	} else {
+		// Fetch all bans, this can take a while
+		try {
+			var currentBans = await FetchAllBans(guild);
+		} catch (error) {
+			Log.error(`[SNAPSHOT] Failed to fetch bans for guild ${guild.name} (${guild.id}): ${error.message}`);
+			var currentBans = new Map();
+		}
 	}
 
 	const channels = []; // { change_type, ... data }[];

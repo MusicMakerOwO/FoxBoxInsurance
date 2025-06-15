@@ -23,9 +23,9 @@ module.exports = {
 
 			const channels = Array.from( snapshotData.channels.values() );
 
-			const sorted = channels.sort( (c1, c2) => c1.name.localeCompare(c2.name) );
+			channels.sort( (c1, c2) => c1.name.localeCompare(c2.name) );
 
-			channelCache.set(snapshotID, sorted);
+			channelCache.set(snapshotID, channels);
 		}
 		
 		const channels = channelCache.get(snapshotID);

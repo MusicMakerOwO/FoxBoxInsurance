@@ -27,9 +27,9 @@ module.exports = {
 
 			const bans = Array.from( snapshotData.bans.values() );
 
-			const sorted = bans.sort((b1, b2) => BigInt(b1.user_id) < BigInt(b2.user_id) ? -1 : 1);
+			bans.sort((b1, b2) => BigInt(b1.user_id) < BigInt(b2.user_id) ? -1 : 1);
 
-			banCache.set(snapshotID, sorted);
+			banCache.set(snapshotID, bans);
 		}
 		
 		const bans = banCache.get(snapshotID);

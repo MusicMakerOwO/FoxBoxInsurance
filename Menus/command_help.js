@@ -6,6 +6,6 @@ module.exports = {
 		interaction.options = {
 			getString: () => commandName
 		}
-		await helpCommand.execute(interaction, client);
+		return helpCommand.execute(interaction, client);
 	}
 }

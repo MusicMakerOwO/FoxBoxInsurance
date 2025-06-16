@@ -32,9 +32,9 @@ module.exports = {
 		await interaction.deferUpdate().catch(() => {});
 
 		if (!confirm) {
-			await interaction.editReply({ embeds: [ConfirmEmbed], components: [ConfirmButtons] });
+			interaction.editReply({ embeds: [ConfirmEmbed], components: [ConfirmButtons] });
 		} else {
-			await interaction.deleteReply().catch(() => {});
+			interaction.deleteReply().catch(() => {});
 		}
 	}
 }

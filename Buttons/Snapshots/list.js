@@ -107,7 +107,7 @@ Created at ${dateString}\n`;
 			}]
 		}
 
-		await interaction.editReply({
+		interaction.editReply({
 			embeds: [embed],
 			components: [dropdown]
 		}).catch(() => { });

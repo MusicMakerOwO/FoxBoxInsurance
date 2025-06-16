@@ -40,8 +40,7 @@ module.exports = {
 
 		await interaction.deferReply({ ephemeral: true }).catch(() => {});
 		if (!interaction.member.permissions.has('Administrator')) {
-			await interaction.editReply({ embeds: [NoPermissionsEmbed] }).catch(() => {});
-			return;
+			return interaction.editReply({ embeds: [NoPermissionsEmbed] });
 		}
 
 		const user = interaction.options.getUser('user');
@@ -62,6 +61,6 @@ module.exports = {
 <@${userId}> can no longer export messages in this server`
 		}
 
-		await interaction.editReply({ embeds: [embed] }).catch(() => {});
+		interaction.editReply({ embeds: [embed] });
 	}
 }

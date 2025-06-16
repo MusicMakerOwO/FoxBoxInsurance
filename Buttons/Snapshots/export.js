@@ -76,7 +76,7 @@ module.exports = {
 			}]
 		};
 
-		await interaction.editReply({
+		interaction.editReply({
 			embeds: [{
 				color: COLOR.PRIMARY,
 				description: `

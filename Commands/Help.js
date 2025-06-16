@@ -43,8 +43,7 @@ module.exports = {
 
 		let focusedValue = interaction.options.getFocused();
 		if (!focusedValue) {
-			await interaction.respond(commandList.map(x => ({ name: '/' + x, value: x })));
-			return;
+			return interaction.respond(commandList.map(x => ({ name: '/' + x, value: x })));
 		}
 
 		if (focusedValue.startsWith('/')) {
@@ -52,10 +51,9 @@ module.exports = {
 		}
 
 		const filtered = commandList.filter(x => x.includes(focusedValue));
-		await interaction.respond(
+		return interaction.respond(
 			filtered.map(x => ({ name: '/' + x, value: x }))
 		);
-		return;
 	},
 	execute: async function (interaction, client) {
 		const commandName = interaction.options.getString('command');
@@ -92,12 +90,10 @@ module.exports = {
 				description: '```\n' + lines.join('\n') + '\n```',
 			};
 
-			await interaction.reply({
+			return interaction.reply({
 				embeds: [embed],
 				ephemeral: true,
 			});
-
-			return;
 		}
 
 		const dropdown = {
@@ -128,7 +124,7 @@ module.exports = {
 			color: COLOR.PRIMARY,
 			description: lines.join('\n'),
 		};
-		await interaction.reply({
+		interaction.reply({
 			embeds: [embed],
 			components: [dropdown],
 			ephemeral: true,

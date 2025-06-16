@@ -14,7 +14,7 @@ module.exports = {
 	execute: async function(interaction, client) {
 		const count = Database.prepare(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`).pluck().get(interaction.user.id);
 		if (count === 0) {
-			await interaction.reply({
+			return interaction.reply({
 				embeds: [NoExportsEmbed],
 				ephemeral: true
 			}).catch(() => {});
@@ -22,9 +22,8 @@ module.exports = {
 		}
 
 		await interaction.deferReply({ ephemeral: true });
-		interaction.deferUpdate = async () => {}
 
 		const history = client.buttons.get('history');
-		await history.execute(interaction, client, ['0']);
+		return history.execute(interaction, client, ['0']);
 	}
 }

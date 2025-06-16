@@ -46,14 +46,13 @@ module.exports = {
 
 		const storedHash = Database.prepare(`SELECT hash FROM Exports WHERE id = ?`).pluck().get(exportID);
 		if (!storedHash) {
-			await interaction.editReply({ embeds: [NoExportEmbed] });
-			return;
+			return interaction.editReply({ embeds: [NoExportEmbed] });
 		}
 
 		try {
 			var fileData = await Download(file.url);
 		} catch (err) {
-			await interaction.editReply({ embeds: [FailedEmbed] })
+			interaction.editReply({ embeds: [FailedEmbed] })
 			console.error(err);
 			return;
 		}

@@ -64,8 +64,7 @@ module.exports = {
 				if (channel) {
 					targetID = channel.id;
 				} else {
-					await interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
-					return;
+					return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
 				}
 			}
 		} else {
@@ -105,8 +104,7 @@ module.exports = {
 			if (input in channelList) {
 				// if multiple IDs are found, require the user to specify one
 				if (channelList[input].length > 1) {
-					await interaction.reply({ embeds: [MultipleChannelEmbed], ephemeral: true });
-					return;
+					return interaction.reply({ embeds: [MultipleChannelEmbed], ephemeral: true });
 				} else {
 					targetID = channelList[input][0];
 				}
@@ -117,8 +115,7 @@ module.exports = {
 
 				const selection = channelList.get(match); // id[]
 				if (selection.length > 1) {
-					await interaction.reply({ embeds: [MultipleChannelEmbed], ephemeral: true });
-					return;
+					return interaction.reply({ embeds: [MultipleChannelEmbed], ephemeral: true });
 				} else {
 					targetID = selection[0];
 				}
@@ -133,23 +130,19 @@ module.exports = {
 			!interaction.member.permissions.has('Administrator') &&
 			!(targetChannel?.permissionsFor(interaction.member).has('ViewChannel'))
 		) {
-			await interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
-			return;
+			return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
 		}
 
 		const channelData = targetChannel ?? Database.prepare('SELECT type FROM channels WHERE id = ?').get(targetID);
 		if (!channelData) {
-			await interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
-			return;
+			return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
 		}
 		if (!ALLOWED_CHANNEL_TYPES.includes(channelData.type)) {
-			await interaction.reply({ embeds: [IncompatibleChannelEmbed], ephemeral: true });
-			return;
+			return interaction.reply({ embeds: [IncompatibleChannelEmbed], ephemeral: true });
 		}
 
 		if (!UserCanExport(interaction.member, targetID)) {
-			await interaction.reply({ embeds: [NoExport], ephemeral: true });
-			return;
+			return interaction.reply({ embeds: [NoExport], ephemeral: true });
 		}
 		
 		const channelMessageCount = Database.prepare('SELECT COUNT(*) FROM messages WHERE channel_id = ?').pluck().get(targetID);
@@ -164,6 +157,6 @@ module.exports = {
 		);
 
 		const main = client.buttons.get('export-main');
-		await main.execute(interaction, client, []);
+		return main.execute(interaction, client, []);
 	}
 }

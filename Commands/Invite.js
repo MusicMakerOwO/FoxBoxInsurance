@@ -19,6 +19,6 @@ module.exports = {
 		.setName('invite')
 		.setDescription('Invite the bot to your server'),
 	execute: async function(interaction, client) {
-		await interaction.reply({ embeds: [embed] }).catch(() => {});
+		interaction.reply({ embeds: [embed] });
 	}
 }

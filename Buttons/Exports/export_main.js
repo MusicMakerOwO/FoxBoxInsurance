@@ -33,7 +33,7 @@ module.exports = {
 	customID: 'export-main',
 	execute: async function(interaction, client, args) {
 
-		await interaction.deferUpdate?.().catch(() => {});
+		await interaction.deferUpdate().catch(() => {});
 
 		/*
 		const exportOptions = {
@@ -85,6 +85,6 @@ Messages: ${exportOptions.messageCount}`
 			]
 		};
 
-		await interaction.editReply({ embeds: [embed], components: [optionButtons, exportButtons] });
+		interaction.editReply({ embeds: [embed], components: [optionButtons, exportButtons] });
 	}
 }

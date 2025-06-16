@@ -146,10 +146,7 @@ module.exports = async function DynamicRegister(client, force = false) {
 		return;
 	}
 	
-	if (force) {
-		await RegisterCommands(client);
-		return;
-	}
+	if (force) return RegisterCommands(client);
 
 	if (Date.now() - lastRegister < 1000 * 5) return; // 5 second cooldown
 	lastRegister = Date.now();

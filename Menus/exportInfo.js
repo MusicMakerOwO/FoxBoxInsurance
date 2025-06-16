@@ -14,8 +14,7 @@ module.exports = {
 		const exportID = interaction.values[0];
 		const exportData = Database.prepare(`SELECT * FROM Exports WHERE id = ?`).get(exportID);
 		if (!exportData) {
-			await interaction.editReply({ embeds: [NoExportEmbed], components: [] }).catch(() => {});
-			return;
+			return interaction.editReply({ embeds: [NoExportEmbed], components: [] });
 		}
 
 		const guild = Database.prepare(`SELECT name FROM Guilds WHERE id = ?`).pluck().get(exportData.guild_id);
@@ -35,6 +34,6 @@ module.exports = {
 **Created At** : <t:${Math.floor(new Date(exportData.created_at).getTime() / 1000)}:f>`
 		}
 
-		await interaction.editReply({ embeds: [embed], components: [] }).catch(() => {});
+		interaction.editReply({ embeds: [embed], components: [] });
 	}
 }

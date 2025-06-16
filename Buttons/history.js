@@ -108,6 +108,6 @@ ${guild} - #${channel}
 			]
 		}
 
-		await interaction.editReply({ embeds: [embed], components: [dropdown, navButtons] }).catch(() => {});
+		interaction.editReply({ embeds: [embed], components: [dropdown, navButtons] });
 	}
 }

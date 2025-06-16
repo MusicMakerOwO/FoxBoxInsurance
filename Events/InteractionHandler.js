@@ -100,7 +100,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 
 	const component = cache.get(name);
 	if (!component) {
-		await interaction.reply({
+		interaction.reply({
 			content: `There was an error while executing this command!\n\`\`\`Command not found\`\`\``,
 			ephemeral: true
 		}).catch(() => { });
@@ -114,7 +114,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 		} catch (error) {
 			client.logs.error(error);
 			await interaction.deferReply({ ephemeral: true }).catch(() => {});
-			await interaction.editReply({
+			interaction.editReply({
 				content: `There was an error while executing this command!\n\`\`\`${error}\`\`\``,
 				embeds: [],
 				components: [],
@@ -149,23 +149,22 @@ async function InteractionHandler(client, interaction, type, cache) {
 	if (guildAccepted === 0 && component.bypass !== true) {
 		if (interaction.user.id !== interaction.guild.ownerId) {
 			// warn user that the server owner has not accepted TOS
-			await interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], ephemeral: true }).catch(() => {});
+			interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], ephemeral: true });
 		} else {
 			// Owner must accept TOS
-			await interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true }).catch(() => {});
+			interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
 		}
 		return;
 	}
 
 	if (userAccepted === 0 && component.bypass !== true) {
 		// Force users to accept TOS
-		await interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true }).catch(() => {});
-		return;
+		return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
 	}
 
 
 	if ('defer' in component && component.defer !== null) {
-		await interaction.deferReply({ ephemeral: component.defer }).catch(() => {});
+		await interaction.deferReply({ ephemeral: component.defer });
 	}
 
 	try {
@@ -216,8 +215,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 			}];
 			client.logs.error(error);
 		}
-		await interaction.editReply(payload).catch(() => {});
-		return;
+		return interaction.editReply(payload);
 	}
 
 	try {
@@ -233,7 +231,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 		await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
 		if (!FANCY_ERRORS) {
-			await interaction.editReply({
+			interaction.editReply({
 				content: `There was an error while executing this command!\n\`\`\`${error}\`\`\``,
 				embeds: [],
 				components: [],
@@ -249,7 +247,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 	Error: \`${errorData.message}\`
 	\`\`\`\n${errorData.lines.join('\n')}\`\`\``,
 				}
-				await interaction.editReply({
+				interaction.editReply({
 					content: '',
 					embeds: [embed],
 					components: [],

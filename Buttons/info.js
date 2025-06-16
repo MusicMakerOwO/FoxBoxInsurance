@@ -53,6 +53,6 @@ module.exports = {
 **Support Server** : https://discord.gg/q7bUuVq4vB`
 		}
 
-		await interaction.editReply({ embeds: [embed], components: [statsButton] }).catch(() => {});
+		interaction.editReply({ embeds: [embed], components: [statsButton] });
 	}
 }

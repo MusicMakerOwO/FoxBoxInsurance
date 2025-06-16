@@ -29,7 +29,7 @@ module.exports = {
 		.setName('donate')
 		.setDescription('Show your support by helping us out!'),
 	execute: async function(interaction, client) {
-		await interaction.reply({
+		interaction.reply({
 			embeds: [embed],
 			components: [button]
 		}).catch(() => {});

@@ -36,6 +36,6 @@ module.exports = {
 			]
 		}
 
-		await interaction.update({ components: [buttons] }).catch(() => { });
+		interaction.update({ components: [buttons] });
 	}
 }

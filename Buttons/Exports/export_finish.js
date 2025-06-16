@@ -114,7 +114,7 @@ module.exports = {
 			}]
 		}
 
-		await interaction.editReply({
+		interaction.editReply({
 			components: [downloadButton],
 			embeds: [
 				{

@@ -176,6 +176,6 @@ module.exports = {
 		const elapsed = Number(end - start) / 1e6;
 
 		console.log(`Stats calculated in ${elapsed.toFixed(3)}ms`);
-		await interaction.editReply({ embeds: [stats], components: [BackButton] }).catch(() => {});
+		interaction.editReply({ embeds: [stats], components: [BackButton] });
 	}
 }

@@ -23,8 +23,7 @@ module.exports = {
 		await new Promise(r => setTimeout(r, 2000));
 
 		if (!UserCanExport(interaction.member, interaction.channel.id)) {
-			await interaction.editReply({ embeds: [NoExport] });
-			return;
+			return interaction.editReply({ embeds: [NoExport] });
 		}
 
 		ProcessMessages(client.messageCache); // save messages
@@ -46,6 +45,6 @@ module.exports = {
 		);
 
 		const main = client.buttons.get('export-main');
-		await main.execute(interaction, client, []);
+		return main.execute(interaction, client, []);
 	}
 }

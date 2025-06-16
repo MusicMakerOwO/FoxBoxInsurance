@@ -35,7 +35,7 @@ module.exports = {
 	execute: async function(interaction, client) {
 
 		if (!interaction.member.permissions.has('Administrator')) {
-			await interaction.reply({
+			return interaction.reply({
 				embeds: [PermissionsEmbed],
 				ephemeral: true
 			}).catch(() => {});
@@ -52,7 +52,7 @@ module.exports = {
 
 		BlacklistedChannels.add(channel.id);
 
-		await interaction.reply({
+		interaction.reply({
 			embeds: [Embed],
 			ephemeral: true
 		}).catch(() => {});

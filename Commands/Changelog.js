@@ -114,7 +114,7 @@ module.exports = {
 				embed.description += `${data.changes.map(x => `\\- ${x}`).join('\n')}\n\n`;
 			}
 
-			await interaction.reply({
+			return interaction.reply({
 				embeds: [embed]
 			}).catch(() => {});
 			return;
@@ -125,7 +125,7 @@ module.exports = {
 		const data = CHANGELOG[version];
 		if (!data) {
 			console.error(`Changelog for version "${input}" not found`);
-			await interaction.reply({
+			return interaction.reply({
 				content: `No changelog found for version \`${input}\``,
 				ephemeral: true
 			}).catch(() => {});
@@ -143,7 +143,7 @@ ${data.changes.map(x => `\\- ${x}`).join('\n')}
 https://github.com/MusicMakerOwO/FoxBoxInsurance/commits/main`
 		};
 
-		await interaction.reply({
+		return interaction.reply({
 			embeds: [embed]
 		}).catch(() => {});
 	}

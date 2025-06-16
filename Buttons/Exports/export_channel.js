@@ -23,6 +23,6 @@ module.exports = {
 		const exportOptions = await GetExportCache(client, interaction);
 		if (!exportOptions) return;
 
-		await interaction.showModal(modal);
+		interaction.showModal(modal);
 	}
 }

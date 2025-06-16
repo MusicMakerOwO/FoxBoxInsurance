@@ -92,7 +92,7 @@ module.exports = {
 			});
 		}
 
-		await interaction.editReply({ embeds: [FORMAT_EMBED], components: [buttons, BACK_BUTTON] });
+		interaction.editReply({ embeds: [FORMAT_EMBED], components: [buttons, BACK_BUTTON] });
 
 	}
 }

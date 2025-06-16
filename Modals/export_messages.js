@@ -23,6 +23,6 @@ module.exports = {
 		);
 
 		const main = client.buttons.get('export-main');
-		await main.execute(interaction, client, []);
+		return main.execute(interaction, client, []);
 	}
 }

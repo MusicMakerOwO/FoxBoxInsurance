@@ -60,12 +60,16 @@ module.exports = {
 		await interaction.editReply({ embeds: [RandomLoadingEmbed()] });
 		await new Promise(resolve => setTimeout(resolve, 2000));
 
+		let embed = CleanEmbed;
+
 		const hash = require('crypto').createHash('sha1').update(fileData).digest('hex');
 		if (hash !== storedHash) {
-			await interaction.editReply({ embeds: [ModifiedEmbed] });
-		} else {
-			await interaction.editReply({ embeds: [CleanEmbed] });
+			embed = ModifiedEmbed;
 		}
+
+		return interaction.editReply({
+			embeds: [embed]
+		});
 	}
 }
 

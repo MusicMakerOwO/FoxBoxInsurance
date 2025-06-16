@@ -196,7 +196,7 @@ module.exports = async function DynamicRegister(client, force = false) {
 	}
 
 	if (needToRegister) {
-		await RegisterCommands(client);
+		RegisterCommands(client);
 	} else {
 		Logs.info('No changes detected in commands');
 	}

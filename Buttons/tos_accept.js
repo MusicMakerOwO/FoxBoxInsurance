@@ -26,13 +26,15 @@ module.exports = {
 		const guild = client.guilds.cache.get(guildID);
 		if (!guild) throw new Error('Guild not found');
 
+		let embed = USER_EMBED;
+
 		Database.prepare(`UPDATE Users SET accepted_terms = 1 WHERE id = ?`).run(interaction.user.id);
 		if (interaction.user.id === guild.ownerId) {
 			// if the user is the server owner, update the server as well
 			Database.prepare(`UPDATE Guilds SET accepted_terms = 1 WHERE id = ?`).run(guildID);
-			await interaction.update({ embeds: [SERVER_EMBED], components: [] }).catch(() => {});
-		} else {
-			await interaction.update({ embeds: [USER_EMBED], components: [] }).catch(() => {});
+			embed = SERVER_EMBED;
 		}
+
+		interaction.update({ embeds: [embed], components: [] });
 	}
 }

@@ -46,7 +46,7 @@ module.exports = {
 		Database.prepare(`
 			INSERT INTO Channels (id, guild_id, name, type, block_exports)
 			VALUES (?, ?, ?, ?, ?)
-			ON CONFLICT (id) DO UPDATE SET block_exports = excluded.block_exports;
+			ON CONFLICT (id) DO UPDATE SET block_exports = excluded.block_exports
 		`).run(channel.id, channel.guild.id, channel.name, channel.type, 1);
 
 		BlacklistedChannels.add(channel.id);

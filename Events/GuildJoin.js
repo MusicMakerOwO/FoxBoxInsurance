@@ -1,6 +1,6 @@
 const { COLOR } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
-const { success } = require("../Utils/Logs");
+const { success, error } = require("../Utils/Logs");
 const { AcceptedCache } = require("./Messages");
 
 module.exports = {
@@ -55,7 +55,12 @@ By agreeing to the Terms you are agreeing to the following:
 			]
 		}
 
-		const owner = await client.users.fetch(guild.ownerId);
+		const owner = client.users.cache.get(guild.ownerId) ?? await client.users.fetch(guild.ownerId).catch(() => null);
+		if (!owner) {
+			error(`Could not find owner of guild ${guild.name} (${guild.id})`);
+			return;
+		}
+		
 		try {
 			await owner.send({
 				embeds: [WelcomeEmbed],

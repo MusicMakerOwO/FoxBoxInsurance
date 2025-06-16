@@ -116,8 +116,7 @@ module.exports = {
 
 			return interaction.reply({
 				embeds: [embed]
-			}).catch(() => {});
-			return;
+			});
 		}
 			
 		const version = input === 'latest' ? LATEST_VERSION : input;
@@ -128,8 +127,7 @@ module.exports = {
 			return interaction.reply({
 				content: `No changelog found for version \`${input}\``,
 				ephemeral: true
-			}).catch(() => {});
-			return;
+			});
 		}
 
 		const embed = {
@@ -145,6 +143,6 @@ https://github.com/MusicMakerOwO/FoxBoxInsurance/commits/main`
 
 		return interaction.reply({
 			embeds: [embed]
-		}).catch(() => {});
+		});
 	}
 }

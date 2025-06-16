@@ -38,8 +38,7 @@ module.exports = {
 			return interaction.reply({
 				embeds: [PermissionsEmbed],
 				ephemeral: true
-			}).catch(() => {});
-			return;
+			});
 		}
 
 		const channel = interaction.options.getChannel('channel');
@@ -55,6 +54,6 @@ module.exports = {
 		interaction.reply({
 			embeds: [Embed],
 			ephemeral: true
-		}).catch(() => {});
+		});
 	}
 }

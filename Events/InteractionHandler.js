@@ -103,7 +103,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 		interaction.reply({
 			content: `There was an error while executing this command!\n\`\`\`Command not found\`\`\``,
 			ephemeral: true
-		}).catch(() => { });
+		});
 		client.logs.error(`${type} not found: ${name}`);
 		return;
 	}

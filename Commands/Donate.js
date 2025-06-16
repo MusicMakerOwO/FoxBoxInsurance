@@ -32,6 +32,6 @@ module.exports = {
 		interaction.reply({
 			embeds: [embed],
 			components: [button]
-		}).catch(() => {});
+		});
 	}
 }

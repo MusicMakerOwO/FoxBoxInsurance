@@ -110,7 +110,7 @@ Created at ${dateString}\n`;
 		interaction.editReply({
 			embeds: [embed],
 			components: [dropdown]
-		}).catch(() => { });
+		})
 
 	}
 }

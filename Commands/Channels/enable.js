@@ -38,8 +38,7 @@ module.exports = {
 			return interaction.reply({
 				embeds: [PermissionsEmbed],
 				ephemeral: true
-			}).catch(() => {});
-			return;
+			});
 		}
 
 		const channel = interaction.options.getChannel('channel');
@@ -47,7 +46,7 @@ module.exports = {
 		Database.prepare(`
 			INSERT INTO Channels (id, guild_id, name, type, block_exports)
 			VALUES (?, ?, ?, ?, ?)
-			ON CONFLICT (id) DO UPDATE SET block_exports = excluded.block_exports;
+			ON CONFLICT (id) DO UPDATE SET block_exports = excluded.block_exports
 		`).run(channel.id, channel.guild.id, channel.name, channel.type, 0);
 
 		BlacklistedChannels.delete(channel.id);
@@ -55,6 +54,6 @@ module.exports = {
 		interaction.reply({
 			embeds: [Embed],
 			ephemeral: true
-		}).catch(() => {});
+		});
 	}
 }

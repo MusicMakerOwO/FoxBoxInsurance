@@ -79,6 +79,6 @@ Are you sure you want to delete this snapshot?
 		interaction.editReply({
 			embeds: [embed],
 			components: [confirmButtons]
-		}).catch(() => { });
+		})
 	}
 }

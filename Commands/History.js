@@ -17,8 +17,7 @@ module.exports = {
 			return interaction.reply({
 				embeds: [NoExportsEmbed],
 				ephemeral: true
-			}).catch(() => {});
-			return;
+			});
 		}
 
 		await interaction.deferReply({ ephemeral: true });

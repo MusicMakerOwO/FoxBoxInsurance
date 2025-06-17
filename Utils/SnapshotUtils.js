@@ -793,6 +793,21 @@ function ClearCache(snapshotID, type = ALL_CACHE) {
 	if (type & CACHE_TYPE.BAN		) banCache.delete(snapshotID);
 }
 
+const guildCache = new TTLCache(); // snapshotID -> guildID
+function ResolveGuildFromSnapshot(snapshotID) {
+	if (guildCache.has(snapshotID)) return guildCache.get(snapshotID);
+
+	const guildID = Database.prepare(`
+		SELECT guild_id
+		FROM Snapshots
+		WHERE id = ?
+	`).pluck().get(snapshotID);
+	if (!guildID) throw new Error('Snapshot not found');
+
+	guildCache.set(snapshotID, guildID, SECONDS.HOUR * 6 * 1000); // cache for 6 hours
+	return guildID;
+}
+
 function MaxSnapshots(guildID) {
 	// database stuff later lol
 	return 7;

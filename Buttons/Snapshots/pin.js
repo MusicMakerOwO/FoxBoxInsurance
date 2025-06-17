@@ -1,6 +1,6 @@
 const { COLOR, EMOJI } = require("../../Utils/Constants");
 const Database = require("../../Utils/Database");
-const { ClearCache, CACHE_TYPE } = require("../../Utils/SnapshotUtils");
+const { ClearCache, CACHE_TYPE, MaxSnapshots } = require("../../Utils/SnapshotUtils");
 
 const PinEmbed = {
 	color: COLOR.PRIMARY,
@@ -71,7 +71,10 @@ module.exports = {
 				FROM Snapshots
 				WHERE guild_id = ? AND pinned = 1
 			`).pluck().get(interaction.guild.id);
-			if (pinnedCount >= 7) {
+
+			const maxSnapshots = MaxSnapshots(interaction.guild.id);
+
+			if (pinnedCount >= maxSnapshots) {
 				return interaction.reply({
 					embeds: [NoMorePinsEmbed],
 					ephemeral: true

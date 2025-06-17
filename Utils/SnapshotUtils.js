@@ -123,12 +123,7 @@ const stateCache = new TTLCache();
 function SnapshotStats(snapshotID) {
 	if (statCache.has(snapshotID)) return statCache.get(snapshotID);
 
-	const guildID = Database.prepare(`
-		SELECT guild_id
-		FROM snapshots
-		WHERE id = ?
-	`).pluck().get(snapshotID);
-	if (!guildID) throw new Error('Snapshot not found');
+	const guildID = ResolveGuildFromSnapshot(snapshotID);
 
 	const snapshotIDs = Database.prepare(`
 		SELECT id
@@ -212,8 +207,7 @@ const snapshotCache = new TTLCache(); // 1 hour
 function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 	if (cache && snapshotCache.has(snapshot_id)) return snapshotCache.get(snapshot_id);
 
-	const guildID = Database.prepare('SELECT guild_id FROM snapshots WHERE id = ?').pluck().get(snapshot_id);
-	if (!guildID) throw new Error('Snapshot not found');
+	const guildID = ResolveGuildFromSnapshot(snapshot_id);
 
 	const availableSnapshots = Database.prepare(`
 		SELECT id
@@ -631,12 +625,7 @@ async function CreateSnapshot(guild, type = 0) {
 }
 
 function DeleteSnapshot(snapshotID) {
-	const guildID = Database.prepare(`
-		SELECT guild_id
-		FROM Snapshots
-		WHERE id = ?
-	`).pluck().get(snapshotID);
-	if (!guildID) throw new Error('Snapshot not found');
+	const guildID = ResolveGuildFromSnapshot(snapshotID);
 
 	const availableSnapshots = Database.prepare(`
 		SELECT id
@@ -804,6 +793,11 @@ function ClearCache(snapshotID, type = ALL_CACHE) {
 	if (type & CACHE_TYPE.BAN		) banCache.delete(snapshotID);
 }
 
+function MaxSnapshots(guildID) {
+	// database stuff later lol
+	return 7;
+}
+
 module.exports = {
 	SimplifyChannel,
 	SimplifyRole,
@@ -820,6 +814,9 @@ module.exports = {
 	HashObject,
 	PermKey,
 	FetchAllBans,
+
+	isSnapshotDeletable,
+	MaxSnapshots,
 
 	SNAPSHOT_TYPE,
 	CHANGE_TYPE,

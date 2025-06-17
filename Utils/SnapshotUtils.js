@@ -793,6 +793,30 @@ function ClearCache(snapshotID, type = ALL_CACHE) {
 	if (type & CACHE_TYPE.BAN		) banCache.delete(snapshotID);
 }
 
+function isSnapshotDeletable(snapshotID) {
+	const guildID = ResolveGuildFromSnapshot(snapshotID);
+
+	const snapshotCount = MaxSnapshots(guildID);
+
+	const availableSnapshots = Database.prepare(`
+		SELECT id, pinned
+		FROM Snapshots
+		WHERE guild_id = ?
+		ORDER BY pinned DESC, id DESC
+	`).all(guildID) ?? [];
+	if (availableSnapshots.length <= snapshotCount) return false; // not enough snapshots to delete
+
+	// we only have to check the last snapshots because anything before will stay no matter what
+	for (let i = snapshotCount; i < availableSnapshots.length; i++) {
+		const snapshot = availableSnapshots[i];
+		if (snapshot.id === snapshotID) {
+			return snapshot.pinned === 0; // can only delete if not pinned
+		}
+	}
+
+	return false;
+}
+
 const guildCache = new TTLCache(); // snapshotID -> guildID
 function ResolveGuildFromSnapshot(snapshotID) {
 	if (guildCache.has(snapshotID)) return guildCache.get(snapshotID);

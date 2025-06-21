@@ -269,9 +269,9 @@ Please proceed with caution and only if you know what you're doing ...`
 function DownloadURL(url) {
 	return new Promise((resolve, reject) => {
 		https.get(url, (res) => {
-			let data = '';
-			res.on('data', chunk => data += chunk);
-			res.on('end', () => resolve(data));
+			let data = [];
+			res.on('data', chunk => data.push(chunk));
+			res.on('end', () => resolve( Buffer.concat(data).toString('utf8') ));
 		}).on('error', err => reject(err));
 	});
 }

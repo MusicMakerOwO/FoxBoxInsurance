@@ -28,7 +28,20 @@ module.exports = {
 			});
 		}
 
-		const snapshotID = parseInt(args[0]);
+		const [type, snapshot] = args[0].split('-');
+		const snapshotID = parseInt(snapshot) || 0;
+
+		if (type === 'import') {
+			// TODO lol
+			return interaction.editReply({
+				embeds: [{
+					color: COLOR.ERROR,
+					title: 'Import Management',
+					description: 'Import management is not yet implemented.'
+				}],
+				components: []
+			});
+		}
 
 		const exists = Database.prepare(`
 			SELECT id

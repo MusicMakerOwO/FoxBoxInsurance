@@ -125,7 +125,7 @@ Created at <t:${~~(createdAt / 1000)}:d>`.trim() + '\n\n';
 
 				dropdownOptions.push({
 					label: `Snapshot #${item.id}`,
-					value: item.id.toString(),
+					value: `snapshot-${item.id}`,
 					description: `Channels: ${snapshotStats.channels}, Roles: ${snapshotStats.roles}, Bans: ${snapshotStats.bans}`,
 					emoji: emoji
 				});

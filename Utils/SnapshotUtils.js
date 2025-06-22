@@ -702,6 +702,11 @@ function DeleteSnapshot(snapshotID) {
 				WHERE snapshot_id = ?
 			`).run(snapshotID);
 		}
+
+		Database.prepare(`
+			DELETE FROM Snapshots
+			WHERE id = ?
+		`).run(snapshotID);
 	}
 }
 

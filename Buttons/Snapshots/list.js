@@ -185,8 +185,6 @@ Created at <t:${~~(createdAt / 1000)}:d>`.trim() + '\n\n';
 			}]
 		}
 
-		console.log(pageButtons, dropdown);
-
 		interaction.editReply({
 			embeds: [embed],
 			components: items.length > PAGE_SIZE ? [pageButtons, dropdown] : [dropdown]

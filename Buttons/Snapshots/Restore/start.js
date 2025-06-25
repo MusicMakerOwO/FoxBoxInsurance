@@ -1,4 +1,4 @@
-const { COLOR, EMOJI } = require("../../../Utils/Constants");
+const { COLOR, EMOJI, SNAPSHOT_TYPE } = require("../../../Utils/Constants");
 const Database = require("../../../Utils/Database");
 const { CreateJob, GetJob, STATUS, isGuildRestoring, API_TYPES } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
@@ -39,6 +39,7 @@ In Discord terms, this allows for things like threads, announcements, and forums
 4) Click "Get Started" in the middle of the screen
 5) Follow the prompts to enable community features`
 }
+
 
 const MissingMemberError = {
 	color: COLOR.ERROR,
@@ -247,10 +248,11 @@ Status : ${STATUS.RUNNING}
 					embeds: [{
 						color: COLOR.PRIMARY,
 						description: `
-	${EMOJI.LOADING} Working on it ... \`\`\`
-	Progress : ${bar}
-	Status : ${job.status}
-	\`\`\``
+${EMOJI.LOADING} Working on it ... \`\`\`
+Progress : ${bar}
+Status : ${job.status.toUpperCase()}
+Step ${job.cursor + 1} / ${job.actions.length}
+\`\`\``
 					}]
 				});
 				return;

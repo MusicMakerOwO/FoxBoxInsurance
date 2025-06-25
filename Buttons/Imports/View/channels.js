@@ -14,8 +14,9 @@ module.exports = {
 	customID: 'import-view-channels',
 	execute: async function(interaction, client, args) {
 		const importID = args[0];
+		const managed = args[1] || '';
 
-		const page = parseInt(args[1]) || 0;
+		const page = parseInt(args[2]) || 0;
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
@@ -66,14 +67,14 @@ module.exports = {
 				{
 					type: 2,
 					style: 2,
-					custom_id: `import-view-channels_${importID}_0_`,
+					custom_id: `import-view-channels_${importID}_${managed}_0_`,
 					emoji: EMOJI.FIRST_PAGE,
 					disabled: page === 0
 				},
 				{
 					type: 2,
 					style: 2,
-					custom_id: `import-view-channels_${importID}_${page - 1}`,
+					custom_id: `import-view-channels_${importID}_${managed}_${page - 1}`,
 					emoji: EMOJI.PREVIOUS_PAGE,
 					disabled: page === 0
 				},
@@ -87,14 +88,14 @@ module.exports = {
 				{
 					type: 2,
 					style: 2,
-					custom_id: `import-view-channels_${importID}_${page + 1}`,
+					custom_id: `import-view-channels_${importID}_${managed}_${page + 1}`,
 					emoji: EMOJI.NEXT_PAGE,
 					disabled: (page + 1) * PAGE_SIZE >= channels.length
 				},
 				{
 					type: 2,
 					style: 2,
-					custom_id: `import-view-channels_${importID}_${~~(channels.length / PAGE_SIZE)}_`,
+					custom_id: `import-view-channels_${importID}_${managed}_${~~(channels.length / PAGE_SIZE)}_`,
 					emoji: EMOJI.LAST_PAGE,
 					disabled: (page + 1) * PAGE_SIZE >= channels.length
 				}
@@ -107,7 +108,7 @@ module.exports = {
 				{
 					type: 2,
 					style: 4,
-					custom_id: `import_${importID}`,
+					custom_id: managed ? `snapshot-manage_${importID}_${managed}` : `import_${importID}`,
 					label: 'Back'
 				}
 			]

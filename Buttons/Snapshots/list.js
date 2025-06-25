@@ -104,7 +104,7 @@ module.exports = {
 
 				dropdownOptions.push({
 					label: `Import #${importData.metadata.snapshot_id}`,
-					value: `import-${item.id}`,
+					value: item.id.toString(),
 					description: `Channels: ${importData.data.channels.length}, Roles: ${importData.data.roles.length}, Bans: ${importData.data.bans.length}`,
 					emoji: EMOJI.IMPORT
 				});
@@ -125,7 +125,7 @@ Created at <t:${~~(createdAt / 1000)}:d>`.trim() + '\n\n';
 
 				dropdownOptions.push({
 					label: `Snapshot #${item.id}`,
-					value: `snapshot-${item.id}`,
+					value: item.id.toString(),
 					description: `Channels: ${snapshotStats.channels}, Roles: ${snapshotStats.roles}, Bans: ${snapshotStats.bans}`,
 					emoji: emoji
 				});
@@ -155,7 +155,7 @@ Created at <t:${~~(createdAt / 1000)}:d>`.trim() + '\n\n';
 				{
 					type: 2,
 					style: 2,
-					label: `Page ${page + 1}`,
+					label: `Page ${page + 1} / ${Math.ceil(items.length / PAGE_SIZE)}`,
 					custom_id: 'null',
 					disabled: true
 				},

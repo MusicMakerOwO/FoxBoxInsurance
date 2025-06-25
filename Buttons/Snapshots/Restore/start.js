@@ -11,8 +11,8 @@ const RolePositionError = {
 	description: `
 Please ensure that FBI's role is at the top of the role list!
 1) Click on the server name at the top left of Discord
-2) Find where it says "Server Settings", then click on "Roles".
-3) Find the role "Fox Box Insurance" and drag that to the VERY top of the list.`
+2) Find where it says "Server Settings", then click on "Roles"
+3) Find the role "Fox Box Insurance" and drag that to the VERY top of the list`
 }
 
 const BotPermissionsError = {
@@ -21,10 +21,23 @@ const BotPermissionsError = {
 	description: `
 Please ensure that FBI is a server admin!
 1) Click on the server name at the top left of Discord
-2) Find where it says "Server Settings", then click on "Roles".
-3) Find the role "Fox Box Insurance" and click on it.
+2) Find where it says "Server Settings", then click on "Roles"
+3) Find the role "Fox Box Insurance" and click on it
 4) Click on the "Permissions" tab at the top
-5) Scroll down to the very bottom of the list and enable "Administrator".`
+5) Scroll down to the very bottom of the list and enable "Administrator"`
+}
+
+const EnableCommunityEmbed = {
+	color: COLOR.ERROR,
+	title: 'Enable Community',
+	description: `
+Some of the channels in this snapshot require the server to be a "community" server.
+In Discord terms, this allows for things like threads, announcements, and forums.
+1) Click on the server name at the top left of Discord
+2) Find where it says "Server Settings"
+3) On the left sidebar, scroll to the bottom and find "Enable Community"
+4) Click "Get Started" in the middle of the screen
+5) Follow the prompts to enable community features`
 }
 
 const MissingMemberError = {
@@ -71,6 +84,8 @@ const PUBLIC_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages;
 const PUBLIC_PERMS_DENY = Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
 const PRIVATE_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages | Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
 
+// only text and voice channels are public
+const COMMUNITY_CHANNEL_TYPES = new Set( Array.from(ALLOWED_CHANNEL_TYPES).filter(x => x !== 0 && x !== 2) ); // 0 = GUILD_TEXT, 2 = GUILD_VOICE
 
 module.exports = {
 	customID: 'restore-start',
@@ -134,6 +149,14 @@ module.exports = {
 		if (botRole.position < interaction.guild.roles.highest.position) {
 			return interaction.editReply({
 				embeds: [RolePositionError],
+				components: [retryButton]
+			});
+		}
+
+		const requiresCommunity = RestoreJob.actions.some(action => action.type === API_TYPES.CHANNEL_CREATE && COMMUNITY_CHANNEL_TYPES.has(action.data.type));
+		if (requiresCommunity && !interaction.guild.features.includes('COMMUNITY')) {
+			return interaction.editReply({
+				embeds: [EnableCommunityEmbed],
 				components: [retryButton]
 			});
 		}

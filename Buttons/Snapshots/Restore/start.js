@@ -1,9 +1,9 @@
 const { COLOR, EMOJI } = require("../../../Utils/Constants");
 const Database = require("../../../Utils/Database");
-const { CreateJob, GetJob, STATUS, isGuildRestoring } = require("../../../Utils/Parsers/RestoreJobs");
+const { CreateJob, GetJob, STATUS, isGuildRestoring, API_TYPES } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
 const ProgressBar = require("../../../Utils/ProgressBar");
-const { UpdateHashes, ClearCache } = require("../../../Utils/SnapshotUtils");
+const { UpdateHashes, ClearCache, CreateSnapshot, ALLOWED_CHANNEL_TYPES } = require("../../../Utils/SnapshotUtils");
 
 const RolePositionError = {
 	color: COLOR.ERROR,
@@ -78,6 +78,11 @@ const AlreadyRunningEmbed = {
 	color: COLOR.ERROR,
 	title: 'Restore Already Running',
 	description: 'A restore job is already running in this server. Please cancel or wait for it to complete before starting a new one.'
+}
+
+const CleaningUpEmbed = {
+	color: COLOR.PRIMARY,
+	description: `${EMOJI.LOADING} Cleaning up ...`
 }
 
 const PUBLIC_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages;
@@ -256,22 +261,34 @@ Status : ${STATUS.RUNNING}
 			if (job.status === STATUS.COMPLETED) {
 				updateMessage.edit({
 					content: '',
-					embeds: [ RestoreCompletedEmbed ],
+					embeds: [ CleaningUpEmbed ],
 					components: []
 				});
 
-				// update the ids in the snapshots
-				for (const [oldID, newID] of job.channel_lookups) {
-					Database.prepare(`
-						UPDATE SnapshotChannels
-						SET id = ?, needsUpdate = 1
-						WHERE snapshot_id = ?
-						AND id = ?
-					`).run(newID, snapshotID, oldID);
+				if (job.snapshot_type !== SNAPSHOT_TYPE.IMPORT) {
+					// update the ids in the snapshots
+					for (const [oldID, newID] of job.channel_lookups) {
+						Database.prepare(`
+							UPDATE SnapshotChannels
+							SET id = ?, needsUpdate = 1
+							WHERE snapshot_id = ?
+							AND id = ?
+						`).run(newID, snapshotID, oldID);
+					}
+
+					await UpdateHashes(snapshotID);
+				} else {
+					await CreateSnapshot(interaction.guild, SNAPSHOT_TYPE.AUTOMATIC);
 				}
-
-				UpdateHashes(snapshotID);
-
+				
+				await new Promise(resolve => setTimeout(resolve, 1000));
+				
+				updateMessage.edit({
+					content: '',
+					embeds: [ RestoreCompletedEmbed ],
+					components: []
+				});
+				
 				ClearCache(snapshotID);
 
 				return;

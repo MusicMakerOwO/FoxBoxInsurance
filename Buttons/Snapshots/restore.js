@@ -284,6 +284,7 @@ module.exports = {
 			guildID: interaction.guild.id,
 			ownerID: interaction.user.id,
 			botRoleID: interaction.guild.roles.cache.find(role => role.tags?.botId === client.user.id).id,
+			snapshot_type: SnapshotData.type,
 			actions: executionPlan
 		}
 
@@ -309,17 +310,17 @@ module.exports = {
 		for (let i = 0; i < executionPlan.length; i++) {
 			const action = executionPlan[i];
 			switch (action.type) {
-				case API_TYPES.CHANNEL_CREATE: executionStats.channels.created++; break;
-				case API_TYPES.CHANNEL_UPDATE: executionStats.channels.updated++; break;
-				case API_TYPES.CHANNEL_DELETE: executionStats.channels.deleted++; break;
-
-				case API_TYPES.ROLE_CREATE: executionStats.roles.created++; break;
-				case API_TYPES.ROLE_UPDATE: executionStats.roles.updated++; break;
-				case API_TYPES.ROLE_DELETE: executionStats.roles.deleted++; break;
-
-				case API_TYPES.BAN_CREATE: executionStats.bans.created++; break;
-				case API_TYPES.BAN_DELETE: executionStats.bans.deleted++; break;
-
+				case API_TYPES.CHANNEL_CREATE:
+				case API_TYPES.CHANNEL_UPDATE:
+				case API_TYPES.CHANNEL_DELETE:
+					executionStats.channels.deleted++; break;
+				case API_TYPES.ROLE_CREATE:
+				case API_TYPES.ROLE_UPDATE:
+				case API_TYPES.ROLE_DELETE:
+					executionStats.roles.deleted++; break;
+				case API_TYPES.BAN_CREATE:
+				case API_TYPES.BAN_DELETE:
+					executionStats.bans.deleted++; break;
 				default:
 					Log.warn(`Unknown action type: ${action.type} in restore job for ${interaction.guild.name} (${interaction.guild.id})`);
 					continue; // Skip unknown actions

@@ -98,7 +98,7 @@ const COMMUNITY_CHANNEL_TYPES = new Set(Array.from(ALLOWED_CHANNEL_TYPES).filter
 module.exports = {
 	customID: 'restore-start',
 	execute: async function(interaction, client, args) {
-		
+
 		await interaction.deferUpdate();
 
 		const RestoreJob = client.ttlcache.get(`restore-job-${interaction.guild.id}`);
@@ -256,7 +256,7 @@ Status : ${STATUS.RUNNING}
 
 				const deltaProgress = progress - prevProgress; // how much has changed since last update
 				prevProgress = progress + 0; // de-reference to avoid pointer issues
-				
+
 				let restoreETA;
 				if (deltaProgress > 0) {
 					const remaining = 1 - progress; // assuming progress is between 0 and 1
@@ -306,7 +306,7 @@ ETA to complete : \`${ConvertTimeToText(restoreETA)}\``
 				} else {
 					await CreateSnapshot(interaction.guild, SNAPSHOT_TYPE.AUTOMATIC);
 				}
-				
+
 				await new Promise(resolve => setTimeout(resolve, 1000));
 
 				const embed = {
@@ -321,13 +321,13 @@ ETA to complete : \`${ConvertTimeToText(restoreETA)}\``
 						embed.description += `\`\`\`\n${error}\n\`\`\` `;
 					}
 				}
-				
+
 				updateMessage.edit({
 					content: '',
 					embeds: [ RestoreCompletedEmbed ],
 					components: []
 				});
-				
+
 				ClearCache(snapshotID);
 
 				return;

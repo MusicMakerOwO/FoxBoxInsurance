@@ -1,9 +1,10 @@
-const { COLOR, EMOJI, SECONDS } = require("../../Utils/Constants");
+const { COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE } = require("../../Utils/Constants");
 const { FetchSnapshot, FetchAllBans, SimplifyChannel, ALLOWED_CHANNEL_TYPES, SimplifyRole, SimplifyBan, HashObject, SimplifyPermission, PermKey } = require("../../Utils/SnapshotUtils");
 const { API_TYPES } = require("../../Utils/Parsers/RestoreJobs");
 const Log = require("../../Utils/Logs");
 const SortRoles = require("../../Utils/Sort/SortRoles");
 const SortChannels = require("../../Utils/Sort/SortChannels");
+const Database = require("../../Utils/Database");
 
 const LOADING_STEPS = [
 	'Loading snapshot data ...', // fetch snapshot
@@ -42,7 +43,7 @@ function ConvertTimeToText(seconds) {
     if (days) output += `${days} day${days > 1 ? 's' : ''} `;
     if (hours) output += `${hours} hour${hours > 1 ? 's' : ''} `;
     if (minutes) output += `${minutes} minute${minutes > 1 ? 's' : ''} `;
-    if (seconds) output += `${Math.floor(seconds * 1000) / 1000} second${seconds !== 1 ? 's' : ''} `;
+    if (seconds) output += `${Math.floor(seconds * 1000) / 1000} second${seconds > 1 ? 's' : ''}`;
     
     return output;
 }
@@ -170,6 +171,8 @@ module.exports = {
 
 		for (const role of GuildRoles) {
 			const simpleRole = SimplifyRole(role);
+			if (simpleRole.managed) continue; // Skip bot roles
+			if (simpleRole.id === interaction.guild.id) continue; // Skip @everyone role
 			simplifiedCache.roles.set(simpleRole.id, simpleRole);
 			if (!SnapshotData.roles.has(simpleRole.id)) {
 				modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_DELETE, data: simpleRole });
@@ -216,8 +219,13 @@ module.exports = {
 		}
 
 		for (const [id, role] of SnapshotData.roles) {
+			if (role.managed) continue; // Skip bot roles
 			if (simplifiedCache.roles.has(id)) continue; // Role already exists
-			modifications.roles.set(id, { type: API_TYPES.ROLE_CREATE, data: role });
+			if (id === SnapshotData.guild_id) {
+				modifications.roles.set(id, { type: API_TYPES.ROLE_UPDATE, data: { id: interaction.guild.id, permissions: role.permissions } });
+			} else {
+				modifications.roles.set(id, { type: API_TYPES.ROLE_CREATE, data: role });
+			}
 		}
 
 		for (const [user_id, ban] of SnapshotData.bans) {

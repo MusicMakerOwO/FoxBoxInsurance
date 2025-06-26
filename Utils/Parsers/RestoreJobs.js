@@ -153,7 +153,8 @@ async function RestoreJob() {
 		try {
 			await executeAction(job, action);
 		} catch (err) {
-			job.status = STATUS.FAILED;
+			// fail foward as best as possible
+			Log.error(err);
 			job.errors.push(err.message);
 			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
 		}

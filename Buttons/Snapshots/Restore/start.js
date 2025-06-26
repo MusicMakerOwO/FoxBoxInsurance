@@ -1,6 +1,6 @@
-const { COLOR, EMOJI, SNAPSHOT_TYPE } = require("../../../Utils/Constants");
+const { COLOR, EMOJI, SNAPSHOT_TYPE, SECONDS } = require("../../../Utils/Constants");
 const Database = require("../../../Utils/Database");
-const { CreateJob, GetJob, STATUS, isGuildRestoring, API_TYPES } = require("../../../Utils/Parsers/RestoreJobs");
+const { CreateJob, GetJob, STATUS, isGuildRestoring, API_TYPES, isRateLimited } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
 const ProgressBar = require("../../../Utils/ProgressBar");
 const { UpdateHashes, ClearCache, CreateSnapshot, ALLOWED_CHANNEL_TYPES } = require("../../../Utils/SnapshotUtils");
@@ -63,27 +63,29 @@ const LoadingEmbed = {
 	description: `${EMOJI.LOADING} Loading ...`
 }
 
-const RestoreCompletedEmbed = {
-	color: COLOR.SUCCESS,
-	title: 'Restore Completed',
-	description: 'The restore job has completed successfully!'
-}
-
-const RestoreAbortedEmbed = {
-	color: COLOR.ERROR,
-	title: 'Restore Aborted',
-	description: 'The restore job was aborted by the owner.'
-}
-
 const AlreadyRunningEmbed = {
 	color: COLOR.ERROR,
 	title: 'Restore Already Running',
 	description: 'A restore job is already running in this server. Please cancel or wait for it to complete before starting a new one.'
 }
 
-const CleaningUpEmbed = {
-	color: COLOR.PRIMARY,
-	description: `${EMOJI.LOADING} Cleaning up ...`
+function ConvertTimeToText(seconds) {
+	if (seconds < 1) return '0 seconds';
+
+	const days = ~~(seconds / SECONDS.DAY);
+	seconds %= SECONDS.DAY;
+	const hours = ~~(seconds / SECONDS.HOUR);
+	seconds %= SECONDS.HOUR;
+	const minutes = ~~(seconds / SECONDS.MINUTE);
+	seconds %= SECONDS.MINUTE;
+
+	let output = '';
+	if (days) output += `${days} day${days > 1 ? 's' : ''} `;
+	if (hours) output += `${hours} hour${hours > 1 ? 's' : ''} `;
+	if (minutes) output += `${minutes} minute${minutes > 1 ? 's' : ''} `;
+	if (seconds) output += `${~~(seconds * 1000) / 1000} second${seconds > 1 ? 's' : ''}`;
+
+	return output;
 }
 
 const PUBLIC_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages;
@@ -237,10 +239,32 @@ Status : ${STATUS.RUNNING}
 			}]
 		});
 
+		let prevProgress = 0;
+
 		const interval = setInterval( async () => {
+
+			if (isRateLimited()) return;
+
 			const job = GetJob(jobID);
+			if (!job) {
+				clearInterval(interval);
+				return;
+			}
 
 			if (job.status === STATUS.RUNNING) {
+				const progress = job.progress; // getter
+
+				const deltaProgress = progress - prevProgress; // how much has changed since last update
+				prevProgress = progress + 0; // de-reference to avoid pointer issues
+				
+				let restoreETA;
+				if (deltaProgress > 0) {
+					const remaining = 1 - progress; // assuming progress is between 0 and 1
+					restoreETA = Math.ceil(remaining / deltaProgress); // in seconds
+				} else {
+					restoreETA = 'Calculating...'; // if no progress, we can't estimate ETA
+				}
+
 				const bar = ProgressBar(job.progress);
 
 				updateMessage.edit({
@@ -251,8 +275,8 @@ Status : ${STATUS.RUNNING}
 ${EMOJI.LOADING} Working on it ... \`\`\`
 Progress : ${bar}
 Status : ${job.status.toUpperCase()}
-Step ${job.cursor + 1} / ${job.actions.length}
-\`\`\``
+\`\`\`
+ETA to complete : \`${ConvertTimeToText(restoreETA)}\``
 					}]
 				});
 				return;

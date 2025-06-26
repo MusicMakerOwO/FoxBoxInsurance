@@ -93,7 +93,7 @@ const PUBLIC_PERMS_DENY = Permissions.CreatePublicThreads | Permissions.CreatePr
 const PRIVATE_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages | Permissions.CreatePublicThreads | Permissions.CreatePrivateThreads | Permissions.EmbedLinks | Permissions.AttachFiles;
 
 // only text and voice channels are public
-const COMMUNITY_CHANNEL_TYPES = new Set( Array.from(ALLOWED_CHANNEL_TYPES).filter(x => x !== 0 && x !== 2) ); // 0 = GUILD_TEXT, 2 = GUILD_VOICE
+const COMMUNITY_CHANNEL_TYPES = new Set(Array.from(ALLOWED_CHANNEL_TYPES).filter(x => x !== 0 && x !== 2)); // 0 = GUILD_TEXT, 2 = GUILD_VOICE
 
 module.exports = {
 	customID: 'restore-start',
@@ -308,6 +308,19 @@ ETA to complete : \`${ConvertTimeToText(restoreETA)}\``
 				}
 				
 				await new Promise(resolve => setTimeout(resolve, 1000));
+
+				const embed = {
+					color: COLOR.SUCCESS,
+					title: 'Restore Completed',
+					description: 'The restore job has completed successfully!'
+				}
+
+				if (job.errors.length > 0) {
+					embed.description += `\n\n${EMOJI.WARNING} Some errors occurred during the restoration :`
+					for (const error of job.errors) {
+						embed.description += `\`\`\`\n${error}\n\`\`\` `;
+					}
+				}
 				
 				updateMessage.edit({
 					content: '',

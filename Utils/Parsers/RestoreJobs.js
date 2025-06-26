@@ -150,6 +150,9 @@ function FetchNextAction() {
 	const action = job.actions[job.cursor++];
 	if (!action) {
 		job.status = (job.cursor >= job.actions.length) ? STATUS.COMPLETED : STATUS.FAILED;
+
+		JOBS.set(job.id, job, SECONDS.HOUR * 1000);
+
 		DeleteFromQueue(job.id);
 		return null;
 	}

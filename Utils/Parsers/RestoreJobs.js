@@ -1,7 +1,7 @@
 const client = require('../../client.js');
 const TTLCache = require('../Caching/TTLCache.js');
 const { SECONDS } = require('../Constants');
-const https = require('node:https');
+const Log = require('../Logs.js');
 
 // jobID -> { status: 'pending' | 'in-progress' | 'completed' | 'failed', progress: 0-100, errors: string[] }
 // Delete after 60 minutes of inactivity
@@ -20,26 +20,6 @@ const API_TYPES = {
 	BAN_DELETE: 'ban-delete'
 }
 const API_TYPES_SET = new Set(Object.values(API_TYPES));
-
-const ACTION_ENDPOINTS = {
-	[ API_TYPES.ROLE_CREATE ]: ['POST', '/guilds/{guildID}/roles'],
-	[ API_TYPES.ROLE_UPDATE ]: ['PATCH', '/guilds/{guildID}/roles/{id}'],
-	[ API_TYPES.ROLE_DELETE ]: ['DELETE', '/guilds/{guildID}/roles/{id}'],
-
-	[ API_TYPES.CHANNEL_CREATE ]: ['POST', '/guilds/{guildID}/channels'],
-	[ API_TYPES.CHANNEL_UPDATE ]: ['PATCH', '/channels/{id}'],
-	[ API_TYPES.CHANNEL_DELETE ]: ['DELETE', '/channels/{id}'],
-
-	[ API_TYPES.BAN_CREATE ]: ['PUT', '/guilds/{guildID}/bans/{id}'],
-	[ API_TYPES.BAN_DELETE ]: ['DELETE', '/guilds/{guildID}/bans/{id}']
-}
-
-const ENDPOINTS_WITH_BODY = new Set([
-	API_TYPES.ROLE_CREATE,
-	API_TYPES.ROLE_UPDATE,
-	API_TYPES.CHANNEL_CREATE,
-	API_TYPES.CHANNEL_UPDATE
-]);
 
 const STATUS = {
 	RUNNING: 'running',
@@ -196,101 +176,115 @@ function executeAction(job, action) {
 	return new Promise( async (resolve, reject) => {
 		const timeRemainingRateLimit = rateLimitUntil - Date.now();
 		if (timeRemainingRateLimit > 0) {
+			job.status = STATUS.WAITING;
+			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
+			
 			await new Promise(r => setTimeout(r, timeRemainingRateLimit + 250)); // wait until rate limit expires + 1/4 second buffer
+			rateLimitUntil = 0; // reset rate limit
+
+			job.status = STATUS.RUNNING;
+			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
 		}
 
-		const callback = ACTION_ENDPOINTS[action.type];
-		if (!callback) {
-			reject(new Error(`Invalid action type: ${action.type}`));
-			return;
-		}
+		const guild = client.guilds.cache.get(job.guildID);
+		if (!guild) return reject( new Error(`Guild with ID ${job.guildID} not found`) );
 
-		if (action.type === API_TYPES.CHANNEL_CREATE) {
-			const guild = client.guilds.cache.get(job.guildID);
-			if (!guild) reject(new Error(`Guild with ID ${job.guildID} not found`));
+		try {
+			if (action.type === API_TYPES.CHANNEL_CREATE) {
+				if (action.data.parent_id && job.channel_lookups.has(action.data.parent_id)) {
+					action.data.parent_id = job.channel_lookups.get(action.data.parent_id);
+				}
 
-			if (action.data.parent_id && job.channel_lookups.has(action.data.parent_id)) {
-				action.data.parent_id = job.channel_lookups.get(action.data.parent_id);
+				const channel = await guild.channels.create({
+					... action.data,
+					parent: action.data.parent_id
+				});
+
+				job.channel_lookups.set(action.data.id, channel.id);
+
+				const index = JOB_LIST.findIndex(j => j.id === job.id);
+				if (index !== -1) JOB_LIST[index] = job; // Update the job in the list
+				JOBS.set(job.id, job, SECONDS.HOUR * 1000); // Update the job in the cache
+			} else if (action.type === API_TYPES.CHANNEL_UPDATE) {
+				if (action.data.parent_id && job.channel_lookups.has(action.data.parent_id)) {
+					action.data.parent_id = job.channel_lookups.get(action.data.parent_id);
+				}
+
+				const channel = guild.channels.cache.get(action.data.id);
+				if (!channel) return reject(new Error(`Channel with ID ${action.data.id} not found in guild ${job.guildID}`));
+
+				await channel.edit({
+					... action.data,
+					parent: action.data.parent_id
+				});
+			} else if (action.type === API_TYPES.CHANNEL_DELETE) {
+				const channel = guild.channels.cache.get(action.data.id);
+				if (!channel) return reject(new Error(`Channel with ID ${action.data.id} not found in guild ${job.guildID}`));
+
+				await channel.delete();
+			} else if (action.type === API_TYPES.ROLE_CREATE) {
+				if (action.data.id === job.botRoleID) {
+					// already exists, can't have two bot roles
+					return resolve();
+				}
+
+				const role = await guild.roles.create({
+					... action.data,
+					permissions: action.data.permissions ?? 0n
+				});
+
+				job.role_lookups.set(action.data.id, role.id);
+
+				const index = JOB_LIST.findIndex(j => j.id === job.id);
+				if (index !== -1) JOB_LIST[index] = job;
+				JOBS.set(job.id, job, SECONDS.HOUR * 1000); // Update the job in the cache
+			} else if (action.type === API_TYPES.ROLE_UPDATE) {
+
+				if (action.data.id === job.botRoleID) {
+					if (action.data.position !== 0) {
+						return reject( new Error(`Bot role position must be 0 or else it will bring permissions issues`) );
+					}
+					// already exists, can't have two bot roles
+					return resolve();
+				}
+
+				const role = guild.roles.cache.get(action.data.id);
+				if (!role) return reject(new Error(`Role with ID ${action.data.id} not found in guild ${job.guildID}`));
+
+				await role.edit({
+					... action.data,
+					permissions: action.data.permissions ?? 0n
+				});
+			} else if (action.type === API_TYPES.ROLE_DELETE) {
+				const role = guild.roles.cache.get(action.data.id);
+				if (!role) return reject(new Error(`Role with ID ${action.data.id} not found in guild ${job.guildID}`));
+
+				if (role.id === job.botRoleID) {
+					return reject(new Error(`Cannot delete the bot role (${role.id})`));
+				}
+
+				if (role.id === job.guildID) {
+					return reject(new Error(`Cannot delete the @everyone role (${role.id})`));
+				}
+
+				await role.delete();
+			} else if (action.type === API_TYPES.BAN_CREATE) {
+				await guild.bans.create({
+					user: action.data.id ?? action.data.user_id,
+					reason: action.data.reason ?? 'No reason provided',
+					deleteMessageSeconds: 0
+				});
+			} else if (action.type === API_TYPES.BAN_DELETE) {
+				await guild.bans.remove(action.data.id ?? action.data.user_id);
+			} else {
+				return reject(new Error(`Unknown action type: ${action.type}`));
 			}
-
-			console.log(action);
-
-			const channel = await guild.channels.create({
-				... action.data,
-				parent: action.data.parent_id
-			});
-
-			job.channel_lookups.set(action.data.id, channel.id);
-
-			const index = JOB_LIST.findIndex(j => j.id === job.id);
-			if (index !== -1) JOB_LIST[index] = job; // Update the job in the list
-			JOBS.set(job.id, job, SECONDS.HOUR * 1000); // Update the job in the cache
 
 			resolve();
-			return;
+		} catch (err) {
+			reject(err);
 		}
-
-		const [ method, endpoint ] = callback;
-		const url = endpoint.replace('{guildID}', job.guildID)
-			.replace('{id}', action.data.id ?? action.data.user_id);
-
-		const requiresBody = ENDPOINTS_WITH_BODY.has(action.type);
-		const requestData = requiresBody ? JSON.stringify(action.data) : null;
-
-		await SendRequest(method, url, requestData);
-
-		resolve();
 	})
-}
-
-function SendRequest (method, endpoint, data) {
-	return new Promise((resolve, reject) => {
-		const request = https.request(`https://discord.com/api/v10${endpoint}`, {
-			method: method,
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bot ${client.config.TOKEN}`
-			}
-		}, (res) => {
-			const responseData = [];
-			res.on('data', (chunk) => responseData.push(chunk));
-			res.on('end', () => {
-				const response = Buffer.concat(responseData).toString();
-				if (res.statusCode >= 200 && res.statusCode < 300) {
-					try {
-						var parsedResponse = JSON.parse(response);
-					} catch (e) {
-						var parsedResponse = response;
-					}
-					resolve(parsedResponse);
-				} else {
-					reject(new Error(`HTTP ${res.statusCode}: ${response}`));
-				}
-			});
-		});
-
-		function closeRequest(reason) {
-			if (request.writable) {
-				request.end();
-			}
-			request.removeAllListeners();
-			request.destroy();
-			reject(new Error(`Request closed: ${reason}`));
-		}
-
-		request.on('error', (err) => {
-			closeRequest(`Error: ${err.message}`);
-		});
-		request.on('timeout', () => {
-			closeRequest('Timed out');
-		});
-
-		if (data) {
-			request.write(data);
-		}
-
-		request.end();
-	});
 }
 
 module.exports = {

@@ -42,6 +42,7 @@ function CreateJob(data) {
 	const job = {
 		id: ID,
 		snapshotID: data.snapshotID ?? null,
+		snapshot_type: data.snapshot_type ?? null,
 		guildID: data.guildID ?? null,
 		ownerID: data.ownerID ?? null,
 		botRoleID: data.botRoleID ?? null,

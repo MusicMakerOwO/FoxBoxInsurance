@@ -749,7 +749,6 @@ async function UpdateHashes(snapshotID) {
 	Update(snapshotData.roles, 'SnapshotRoles', 'id', SimplifyRole);
 	Update(snapshotData.channels, 'SnapshotChannels', 'id', SimplifyChannel);
 	Update(snapshotData.permissions, 'SnapshotPermissions', 'id', (permission) => SimplifyPermission(permission.channel_id, permission));
-	Update(snapshotData.bans, 'SnapshotBans', 'user_id', SimplifyBan);
 }
 
 const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';

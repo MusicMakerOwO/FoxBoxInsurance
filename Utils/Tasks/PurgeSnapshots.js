@@ -1,5 +1,5 @@
 const Database = require("../Database");
-const { FetchSnapshot, MaxSnapshots, isSnapshotDeletable, DeleteSnapshot } = require("../SnapshotUtils");
+const { MaxSnapshots, DeleteSnapshot } = require("../SnapshotUtils");
 const Log = require("../Logs");
 
 module.exports = async function PurgeSnapshots() {

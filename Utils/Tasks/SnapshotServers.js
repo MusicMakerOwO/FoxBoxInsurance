@@ -3,6 +3,7 @@ const { SNAPSHOT_TYPE } = require('../Constants.js');
 const { CreateSnapshot } = require('../SnapshotUtils.js');
 const Log = require('../Logs.js');
 const Database = require('../Database.js');
+const PurgeSnapshots = require('./PurgeSnapshots.js');
 
 module.exports = async function SnapshotServers() {
 	const currentHour = new Date().getUTCHours();
@@ -33,4 +34,7 @@ module.exports = async function SnapshotServers() {
 			continue;
 		}
 	}
+
+	PurgeSnapshots();
+
 }

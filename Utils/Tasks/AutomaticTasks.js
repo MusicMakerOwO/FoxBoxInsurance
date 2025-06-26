@@ -13,7 +13,7 @@ const TASK = {
 	UPLOAD_STATS: 'upload_stats',
 	BACKUP_DATABASE: 'backup_database',
 	SERVER_SNAPSHOT: 'server_snapshot',
-	PURGE_SNAPSHOTS: 'purge_snapshots',
+	// PURGE_SNAPSHOTS: 'purge_snapshots',
 }
 
 const TaskFunctions = {
@@ -21,7 +21,7 @@ const TaskFunctions = {
 	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
 	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
 	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
-	[ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
+	// [ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
 	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
 	[ TASK.BACKUP_DATABASE	]: require("./BackupDatabase"),
 	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
@@ -32,7 +32,7 @@ const TASK_INTERVAL = {
 	[TASK.UPLOAD_FILES]: SECONDS.HOUR,
 	[TASK.UPLOAD_STATS]: SECONDS.HOUR,
 	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
-	[TASK.PURGE_SNAPSHOTS]: SECONDS.DAY,
+	// [TASK.PURGE_SNAPSHOTS]: SECONDS.DAY,
 	[TASK.CLEAN_DATABASE]: SECONDS.DAY,
 	[TASK.BACKUP_DATABASE]: SECONDS.DAY,
 	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,

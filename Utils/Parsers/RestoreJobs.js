@@ -112,7 +112,7 @@ function GetJob(jobID) {
 	if (typeof jobID !== 'number') throw new Error('Job ID must be a number');
 
 	const job = JOBS.get(jobID);
-	if (!job) throw new Error(`Job with ID ${jobID} not found`);
+	if (!job) return null;
 
 	return job;
 }
@@ -121,19 +121,24 @@ function CancelJob(jobID) {
 	if (typeof jobID !== 'number') throw new Error('Job ID must be a number');
 
 	const job = JOBS.get(jobID);
-	if (!job) throw new Error(`Job with ID ${jobID} not found`);
+	if (!job) return false; // Job not found
 	if (job.status !== STATUS.RUNNING) return false; // No need to cancel if not running
 
 	job.status = STATUS.ABORTED;
+	ACTIVE_RESTORE_GUILDS.delete(job.guildID);
+
+	JOBS.set(job.id, job, SECONDS.HOUR * 1000);
+	DeleteFromQueue(job.id);
+	return true;
 }
 
 function DeleteFromQueue(jobID) {
 	if (typeof jobID !== 'number') throw new Error('Job ID must be a number');
 
-	const jobIndex = JOB_LIST.findIndex(job => job.id === jobID);
-	if (jobIndex === -1) throw new Error(`Job with ID ${jobID} not found in queue`);
+	JOB_LIST = JOB_LIST.filter(job => job.id !== jobID);
+	JOBS.delete(jobID);
 
-	JOB_LIST.splice(jobIndex, 1);
+	return true;
 }
 
 let index = 0;

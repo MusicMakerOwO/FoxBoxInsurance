@@ -312,15 +312,6 @@ ${job.errors.join('\n')}
 				});
 				return;
 			}
-
-			if (job.status === STATUS.ABORTED) {
-				updateMessage.edit({
-					content: '',
-					embeds: [ RestoreAbortedEmbed ],
-					components: []
-				});
-				return;
-			}
 		}, 1000);
 
 	}

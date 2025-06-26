@@ -25,7 +25,8 @@ const STATUS = {
 	RUNNING: 'running',
 	COMPLETED: 'completed',
 	FAILED: 'failed',
-	ABORTED: 'aborted'
+	ABORTED: 'aborted',
+	WAITING: 'waiting' // Hit the rate limit lol
 }
 
 let JOB_LIST = [];
@@ -82,6 +83,10 @@ function CreateJob(data) {
 		RestoreJob();
 	}
 	return ID;
+}
+
+function isRateLimited() {
+	return rateLimitUntil > Date.now();
 }
 
 function isGuildRestoring(guildID) {
@@ -297,6 +302,7 @@ module.exports = {
 	GetJob,
 	CancelJob,
 	isGuildRestoring,
+	isRateLimited,
 	
 	JOBS,
 	rateLimitUntil

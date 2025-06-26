@@ -64,6 +64,40 @@ const MissingMemberEmbed = {
 	description: 'Something went wrong ... \nPlease try again later or contact support 💔'
 }
 
+function ResolveSnapshot(client, guildID, id) {
+
+	const availableImports = client.ttlcache.get(`guild-imports-${guildID}`);
+	if (!availableImports || !availableImports.has(id)) {
+		id = parseInt(id) || 0;
+		if (isNaN(id) || id <= 0) throw new Error(`Invalid snapshot ID provided : ${id}`);
+
+		const exists = Database.prepare(`
+			SELECT 1
+			FROM Snapshots
+			WHERE id = ?
+		`).get(id);
+		if (!exists) return null
+
+		return FetchSnapshot(id);
+	}
+	
+	const importData = client.ttlcache.get(`import-${id}`);
+	if (!importData) return null;
+
+	return {
+		id: importData.metadata.snapshot_id,
+		guild_id: importData.metadata.guild_id,
+		type: SNAPSHOT_TYPE.IMPORT,
+
+		importID: id,
+
+		channels: new Map( importData.data.channels.map(channel => [ channel.id, channel ]) ),
+		roles: new Map( importData.data.roles.map(role => [ role.id, role ]) ),
+		bans: new Map( importData.data.bans.map(ban => [ ban.user_id, ban ]) ),
+		permissions: new Map( importData.data.permissions.map(perm => [ PermKey(perm.channel_id, perm.role_id), perm ]) )
+	}
+}
+
 module.exports = {
 	customID: 'snapshot-restore',
 	execute: async function(interaction, client, args) {
@@ -72,9 +106,7 @@ module.exports = {
 			return interaction.reply({ embeds: [ownerEmbed], ephemeral: true });
 		}
 
-		const snapshotID = parseInt(args[0]);
-
-		if (isNaN(snapshotID) || snapshotID <= 0) throw new Error('Invalid snapshot ID provided.');
+		let snapshotID = args[0];
 
 		await interaction.deferUpdate({ ephemeral: true });
 
@@ -84,8 +116,13 @@ module.exports = {
 		});
 
 		const snapshotStart = Date.now();
-		const SnapshotData = FetchSnapshot(snapshotID);
+		const SnapshotData = ResolveSnapshot(client, interaction.guild.id, snapshotID);
 		if (!SnapshotData) throw new Error(`Snapshot with ID ${snapshotID} not found.`);
+
+		if (SnapshotData.type === SNAPSHOT_TYPE.IMPORT) {
+			snapshotID = SnapshotData.id; // use the actual snapshot ID
+		}
+
 		const snapshotEnd = Date.now();
 		const snapshotTime = (snapshotEnd - snapshotStart) / 1000; // in seconds
 

@@ -47,7 +47,8 @@ function CreateJob(data) {
 		actions: data.actions ?? null,
 		cursor: 0,
 		status: STATUS.RUNNING,
-		channel_lookups: new Map(), // old-channel-id -> new-channel-id
+		channel_lookups: new Map(), // old-id -> new-id
+		role_lookups: new Map(),
 		errors: []
 	};
 	for (const key in job) {

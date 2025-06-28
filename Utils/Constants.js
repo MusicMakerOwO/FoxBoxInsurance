@@ -117,6 +117,18 @@ function RandomLoadingEmbed() {
 	}
 }
 
+const RESTORE_OPTIONS = {
+	CHANNELS: 1 << 0,
+	ROLES: 1 << 1,
+	BANS: 1 << 2
+}
+
+const RESTORE_OPTION_NAMES = {
+	[RESTORE_OPTIONS.CHANNELS]: '📁 Channels',
+	[RESTORE_OPTIONS.ROLES]: '👥 Roles',
+	[RESTORE_OPTIONS.BANS]: '🚫 Bans'
+}
+
 module.exports = {
 	ROOT_FOLDER,
 
@@ -136,6 +148,9 @@ module.exports = {
 	SNAPSHOT_TYPE,
 	SNAPSHOT_TYPE_EMOJI,
 	EMOJI,
+
+	RESTORE_OPTIONS,
+	RESTORE_OPTION_NAMES,
 
 	RandomLoadingMessage,
 	RandomLoadingEmbed

@@ -18,7 +18,7 @@ const DEFAULT_OPTIONS = {
 }
 
 function BatchCache(list = [{}], property = '', table = '', column = '') {
-	if (typeof list[0] === 'object') list = list.map(m => m[property]);
+	if (typeof list[0] === 'object') list = list.map(m => m?.[property]);
 	if (list.length === 0) return new Map();
 	const IDs = new Set(list);
 	const dbData = Database.prepare(`

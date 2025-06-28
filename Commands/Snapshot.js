@@ -38,6 +38,12 @@ const FileMismatchEmbed = {
 
 module.exports = {
 	aliases: ['backup'],
+	examples: [
+		'/snapshot create',
+		'/snapshot list',
+		'/snapshot disable',
+		'/snapshot import <file>'
+	],
 	data: new SlashCommandBuilder()
 		.setName('snapshot')
 		.setDescription('Manage server snapshots')

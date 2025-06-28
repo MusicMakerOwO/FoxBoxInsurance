@@ -58,7 +58,7 @@ module.exports = {
 				version, length,
 				hash, algorithm
 			)
-			VALUES (?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		`).run(
 			data.id,
 			snapshotID,

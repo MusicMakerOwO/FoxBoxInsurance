@@ -19,7 +19,7 @@ const noPermissionEmbed = {
 function ResolveSnapshot(client, guildID, id) {
 
 	const availableImports = client.ttlcache.get(`guild-imports-${guildID}`);
-	if (!availableImports) {
+	if (!availableImports || !availableImports.has(id)) {
 		id = parseInt(id) || 0;
 		if (isNaN(id) || id <= 0) throw new Error(`Invalid snapshot ID provided : ${id}`);
 

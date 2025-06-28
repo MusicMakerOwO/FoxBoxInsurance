@@ -202,7 +202,7 @@ Please proceed with caution and only if you know what you're doing ...`
 
 			if (!client.ttlcache.has(`import-${exportID}`)) {
 				const exportMetadata = Database.prepare(`
-					SELECT id, snapshot_id, guild_id, hash, algorithm
+					SELECT id, snapshot_id, guild_id, hash, algorithm, length, version
 					FROM SnapshotExports
 					WHERE id = ?
 				`).get(exportID);

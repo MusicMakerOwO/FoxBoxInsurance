@@ -78,6 +78,14 @@ const CHANGELOG = {
 			"Adjusted internal configs for (slightly) better performance"
 		]
 	},
+	"v2.4.4": {
+		date: "2025 June 28th",
+		changes: [
+			"Couple of small fixes to message exporting",
+			"Error message if no messages found in channel",
+			"Popup message if server has not accepted the TOS"
+		]
+	}
 }
 
 const OLDEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => a.localeCompare(b))[0];

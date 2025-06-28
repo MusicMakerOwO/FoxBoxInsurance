@@ -12,6 +12,22 @@ const NoExport = {
 	description: 'This channel cannot be exported - Please contact an admin'
 }
 
+const ServerTOSEmbed = {
+	color: COLOR.ERROR,
+	title: 'Export Disabled',
+	description: "The server owners have not accepted FBI's Terms of Service yet.\n**No messages will be saved until these terms are accepted.**"
+}
+
+const NoMessagesEmbed = {
+	color: COLOR.ERROR,
+	title: 'No Messages Found',
+	description: `
+I couldn't find any messages in this channel to export
+Try sending a message in the channel and try again
+
+**FBI only saves messages sent after the bot was added to the server**`
+}
+
 module.exports = {
 	aliases: ['download'],
 	cooldown: 5,
@@ -26,9 +42,21 @@ module.exports = {
 			return interaction.editReply({ embeds: [NoExport] });
 		}
 
+		const serverTerms = Database.prepare('SELECT accepted_terms FROM Guilds WHERE id = ?').pluck().get(interaction.guild.id);
+		if (serverTerms === 0) {
+			return interaction.editReply({
+				embeds: [ ServerTOSEmbed ]
+			});
+		}
+
 		ProcessMessages(client.messageCache); // save messages
 
 		const channelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?").pluck().get(interaction.channel.id);
+		if (channelMessageCount === 0) {
+			return interaction.editReply({
+				embeds: [ NoMessagesEmbed ]
+			});
+		}
 
 		const exportOptions = {
 			guildID: interaction.guild.id,

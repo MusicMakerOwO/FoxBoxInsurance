@@ -194,6 +194,7 @@ Please proceed with caution and only if you know what you're doing ...`
 			const exportID = snapshotData.id || null; // XXXX-XXXX-XXXX-XXXX
 			const EXPORT_REGEX = /^[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i;
 			if (typeof exportID !== 'string' || !EXPORT_REGEX.test(exportID)) {
+				console.log(`Invalid export ID format: ${exportID}`);
 				return interaction.editReply({ 
 					embeds: [ CorruptedSnapshotEmbed ]
 				});
@@ -206,6 +207,7 @@ Please proceed with caution and only if you know what you're doing ...`
 					WHERE id = ?
 				`).get(exportID);
 				if (!exportMetadata || exportMetadata.revoked === 1) {
+					console.log(`Snapshot export not found or revoked: ${exportID}`);
 					return interaction.editReply({ 
 						embeds: [ FileMismatchEmbed ]
 					});
@@ -216,6 +218,7 @@ Please proceed with caution and only if you know what you're doing ...`
 					typeof snapshotData.version !== 'number' ||
 					typeof snapshotData.id !== 'string'
 				) {
+					console.log(`Snapshot data is not a valid object or missing root fields`);
 					return interaction.editReply({ 
 						embeds: [ CorruptedSnapshotEmbed ]
 					});
@@ -225,6 +228,7 @@ Please proceed with caution and only if you know what you're doing ...`
 				const requiredFields = new Set(['id', 'version', 'channels', 'roles', 'permissions', 'bans']);
 				for (const field of Object.keys(snapshotData)) {
 					if (!requiredFields.has(field)) {
+						console.log(`Snapshot data contains unexpected field: ${field}`);
 						return interaction.editReply({
 							embeds: [ CorruptedSnapshotEmbed ]
 						});
@@ -232,6 +236,7 @@ Please proceed with caution and only if you know what you're doing ...`
 				}
 
 				if (exportMetadata.version !== snapshotData.version) {
+					console.log(`Snapshot version mismatch: expected ${exportMetadata.version}, got ${snapshotData.version}`);
 					return interaction.editReply({ 
 						embeds: [ FileMismatchEmbed ]
 					});
@@ -241,6 +246,8 @@ Please proceed with caution and only if you know what you're doing ...`
 					exportMetadata.length !== fileContent.length ||
 					crypto.createHash(exportMetadata.algorithm).update(fileContent).digest('hex') !== exportMetadata.hash
 				) {
+					console.log(`Snapshot file length or hash mismatch: expected ${exportMetadata.length} bytes, got ${fileContent.length} bytes`);
+
 					Database.prepare(`
 						UPDATE SnapshotExports
 						SET revoked = 1

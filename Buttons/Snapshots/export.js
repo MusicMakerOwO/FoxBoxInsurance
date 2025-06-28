@@ -52,13 +52,20 @@ module.exports = {
 		const fileName = 'snapshot-' + snapshotID;
 
 		Database.prepare(`
-			INSERT INTO SnapshotExports (id, snapshot_id, guild_id, user_id, hash, algorithm)
+			INSERT INTO SnapshotExports (
+				id,
+				snapshot_id, guild_id, user_id,
+				version, length,
+				hash, algorithm
+			)
 			VALUES (?, ?, ?, ?, ?, ?)
 		`).run(
 			data.id,
 			snapshotID,
 			interaction.guild.id,
 			interaction.user.id,
+			data.version,
+			serializedData.length,
 			hash,
 			HASH_ALGORITHM
 		);

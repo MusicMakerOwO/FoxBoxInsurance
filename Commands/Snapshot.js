@@ -30,6 +30,12 @@ const CorruptedSnapshotEmbed = {
 	description: 'The provided snapshot file is corrupted - Please export the snapshot again!'
 }
 
+const FileMismatchEmbed = {
+	color: COLOR.ERROR,
+	title: 'File Mismatch',
+	description: 'The uploaded file does not match the expected snapshot format. Please create a new export and try again.'
+}
+
 module.exports = {
 	aliases: ['backup'],
 	data: new SlashCommandBuilder()
@@ -193,30 +199,48 @@ Please proceed with caution and only if you know what you're doing ...`
 					FROM SnapshotExports
 					WHERE id = ?
 				`).get(exportID);
-				if (!exportMetadata) {
+				if (!exportMetadata || exportMetadata.revoked === 1) {
+					return interaction.editReply({ 
+						embeds: [ FileMismatchEmbed ]
+					});
+				}
+
+				if (
+					typeof snapshotData !== 'object' || !snapshotData ||
+					typeof snapshotData.version !== 'number' ||
+					typeof snapshotData.id !== 'string'
+				) {
 					return interaction.editReply({ 
 						embeds: [ CorruptedSnapshotEmbed ]
 					});
 				}
 
-				if (exportMetadata.revoked === 1 ||
+				// make sure there are no additional fields
+				const requiredFields = new Set(['id', 'version', 'channels', 'roles', 'permissions', 'bans']);
+				for (const field of Object.keys(snapshotData)) {
+					if (!requiredFields.has(field)) {
+						return interaction.editReply({
+							embeds: [ CorruptedSnapshotEmbed ]
+						});
+					}
+				}
+
+				if (exportMetadata.version !== snapshotData.version) {
+					return interaction.editReply({ 
+						embeds: [ FileMismatchEmbed ]
+					});
+				}
+
+				if (
+					exportMetadata.length !== fileContent.length ||
 					crypto.createHash(exportMetadata.algorithm).update(fileContent).digest('hex') !== exportMetadata.hash
 				) {
-					// revoke the snapshot for all future imports
-					if (!exportMetadata.revoked) {
-						Database.prepare(`
-							UPDATE SnapshotExports
-							SET revoked = 1
-							WHERE id = ?
-						`).run(exportID);
-					}
+					Database.prepare(`
+						UPDATE SnapshotExports
+						SET revoked = 1
+						WHERE id = ?
+					`).run(exportID);
 
-					return interaction.editReply({ 
-						embeds: [ CorruptedSnapshotEmbed ]
-					});
-				}
-
-				if (typeof snapshotData !== 'object' || !snapshotData) {
 					return interaction.editReply({ 
 						embeds: [ CorruptedSnapshotEmbed ]
 					});
@@ -243,16 +267,6 @@ Please proceed with caution and only if you know what you're doing ...`
 				Parse('roles', 		 SimplifyRole		);
 				Parse('permissions', (p) => SimplifyPermission(p.channel_id, p) );
 				Parse('bans', 		 SimplifyBan		);
-
-				// make sure there are no additional fields
-				const requiredFields = new Set(['id', 'version', 'channels', 'roles', 'permissions', 'bans']);
-				for (const field of Object.keys(snapshotData)) {
-					if (!requiredFields.has(field)) {
-						return interaction.editReply({
-							embeds: [ CorruptedSnapshotEmbed ]
-						});
-					}
-				}
 
 				client.ttlcache.set(`import-${exportID}`, {
 					metadata: exportMetadata,

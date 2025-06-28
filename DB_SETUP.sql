@@ -298,6 +298,9 @@ CREATE TABLE IF NOT EXISTS SnapshotExports (
 	guild_id TEXT NOT NULL,
 	user_id TEXT NOT NULL,
 
+	length INTEGER NOT NULL DEFAULT 0, -- The length of the export in bytes
+	version INTEGER NOT NULL DEFAULT 1, -- The version of the export format
+
 	hash TEXT NOT NULL, -- The hash of the file
 	algorithm TEXT NOT NULL, -- The algorithm used to encrypt the file
 	revoked INTEGER NOT NULL DEFAULT 0, -- 1 if the export is revoked

@@ -426,7 +426,7 @@ Channels will be deleted, roles will be removed, and bans will be applied as per
 			}
 		}
 
-		embed.description += '\n\n';
+		embed.description = embed.description.trim() + '\n\n';
 		
 		if (executionStats.roles.created > 0 ||
 			executionStats.roles.updated > 0 ||
@@ -444,7 +444,7 @@ Channels will be deleted, roles will be removed, and bans will be applied as per
 			}
 		}
 		
-		embed.description += '\n\n';
+		embed.description = embed.description.trim() + '\n\n';
 
 		if (executionStats.bans.created > 0 ||
 			executionStats.bans.deleted > 0

@@ -277,6 +277,8 @@ Please proceed with caution and only if you know what you're doing ...`
 			const importSnapshot = client.buttons.get('import');
 			return importSnapshot.execute(interaction, client, [exportID]);
 		}
+
+		throw new Error(`Unknown subcommand: ${subcommand}`);
 	}
 }
 

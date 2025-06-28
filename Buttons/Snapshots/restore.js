@@ -1,4 +1,4 @@
-const { COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE } = require("../../Utils/Constants");
+const { COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE, RESTORE_OPTIONS } = require("../../Utils/Constants");
 const { FetchSnapshot, FetchAllBans, SimplifyChannel, ALLOWED_CHANNEL_TYPES, SimplifyRole, SimplifyBan, HashObject, SimplifyPermission, PermKey } = require("../../Utils/SnapshotUtils");
 const { API_TYPES } = require("../../Utils/Parsers/RestoreJobs");
 const Log = require("../../Utils/Logs");
@@ -65,6 +65,12 @@ const MissingMemberEmbed = {
 	description: 'Something went wrong ... \nPlease try again later or contact support 💔'
 }
 
+const SessionExpiredEmbed = {
+	color: COLOR.ERROR,
+	title: 'Session Expired',
+	description: 'Your session has expired. Please try again.'
+}
+
 function ResolveSnapshot(client, guildID, id) {
 
 	const availableImports = client.ttlcache.get(`guild-imports-${guildID}`);
@@ -105,6 +111,13 @@ module.exports = {
 
 		if (interaction.user.id !== interaction.guild.ownerId) {
 			return interaction.reply({ embeds: [ownerEmbed], ephemeral: true });
+		}
+
+		const restoreOptions = client.ttlcache.get(`restore-options-${interaction.guild.id}`);
+		if (!restoreOptions) {
+			return interaction.reply({
+				embeds: [ SessionExpiredEmbed ]
+			});
 		}
 
 		let snapshotID = args[0];
@@ -158,138 +171,155 @@ module.exports = {
 			bans: new Map()
 		};
 
-		// Determine deletions first
-		for (const channel of GuildChannels) {
-			const simpleChannel = SimplifyChannel(channel);
-			if (channel.type === 0 && channel.name === 'restore-updates') continue; // Skip the restore updates channel
-			simplifiedCache.channels.set(simpleChannel.id, simpleChannel);
-			if (!ALLOWED_CHANNEL_TYPES.has(simpleChannel.type)) continue; // Skip unsupported channel types
-			if (!SnapshotData.channels.has(simpleChannel.id)) {
-				modifications.channels.set(simpleChannel.id, { type: API_TYPES.CHANNEL_DELETE, data: simpleChannel });
+		if (restoreOptions & RESTORE_OPTIONS.CHANNELS) {
+			// deletions
+			for (const channel of GuildChannels) {
+				const simpleChannel = SimplifyChannel(channel);
+				if (channel.type === 0 && channel.name === 'restore-updates') continue; // Skip the restore updates channel
+				simplifiedCache.channels.set(simpleChannel.id, simpleChannel);
+				if (!ALLOWED_CHANNEL_TYPES.has(simpleChannel.type)) continue; // Skip unsupported channel types
+				if (!SnapshotData.channels.has(simpleChannel.id)) {
+					modifications.channels.set(simpleChannel.id, { type: API_TYPES.CHANNEL_DELETE, data: simpleChannel });
+				}
+			}
+
+			// creations
+			for (const [id, channel] of SnapshotData.channels) {
+				if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue;
+				if (simplifiedCache.channels.has(id)) continue;
+
+				modifications.channels.set(id, { type: API_TYPES.CHANNEL_CREATE, data: SimplifyChannel(channel) });
+			}
+
+			// updates
+			for (const channel of simplifiedCache.channels.values()) {
+				const snapshotChannel = SnapshotData.channels.get(channel.id);
+				if (!snapshotChannel) continue; // Channel does not exist in snapshot
+				if ( HashObject(channel) === snapshotChannel.hash ) continue; // No changes detected
+
+				modifications.channels.set(channel.id, { type: API_TYPES.CHANNEL_UPDATE, data: snapshotChannel });
 			}
 		}
 
-		for (const role of GuildRoles) {
-			const simpleRole = SimplifyRole(role);
-			if (simpleRole.managed) continue; // Skip bot roles
-			if (simpleRole.id === interaction.guild.id) continue; // Skip @everyone role
-			simplifiedCache.roles.set(simpleRole.id, simpleRole);
-			if (!SnapshotData.roles.has(simpleRole.id)) {
-				modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_DELETE, data: simpleRole });
+		if (restoreOptions & RESTORE_OPTIONS.ROLES) {
+			// deletions
+			for (const role of GuildRoles) {
+				const simpleRole = SimplifyRole(role);
+				if (simpleRole.managed) continue; // Skip bot roles
+				if (simpleRole.id === interaction.guild.id) continue; // Skip @everyone role
+				simplifiedCache.roles.set(simpleRole.id, simpleRole);
+				if (!SnapshotData.roles.has(simpleRole.id)) {
+					modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_DELETE, data: simpleRole });
+				}
+			}
+
+			// creations
+			// Note: We do not delete the @everyone role, as it is always present
+			for (const [id, role] of SnapshotData.roles) {
+				if (role.managed) continue; // Skip bot roles
+				if (simplifiedCache.roles.has(id)) continue; // Role already exists
+				if (id === SnapshotData.guild_id) {
+					modifications.roles.set(id, { type: API_TYPES.ROLE_UPDATE, data: { id: interaction.guild.id, permissions: role.permissions } });
+				} else {
+					modifications.roles.set(id, { type: API_TYPES.ROLE_CREATE, data: role });
+				}
+			}
+
+			// updates
+			for (const role of simplifiedCache.roles.values()) {
+				const snapshotRole = SnapshotData.roles.get(role.id);
+				if (!snapshotRole) continue; // Role does not exist in snapshot
+				if ( HashObject(role) === snapshotRole.hash ) continue; // No changes detected
+				modifications.roles.set(role.id, { type: API_TYPES.ROLE_UPDATE, data: snapshotRole });
 			}
 		}
 		
-		for (const ban of GuildBans) {
-			const simpleBan = SimplifyBan(ban);
-			simplifiedCache.bans.set(simpleBan.user_id, simpleBan);
-			if (!SnapshotData.bans.has(simpleBan.user_id)) {
-				modifications.bans.set(simpleBan.user_id, { type: API_TYPES.BAN_DELETE, data: simpleBan });
+		if (restoreOptions & RESTORE_OPTIONS.BANS) {
+			// deletions
+			for (const ban of GuildBans) {
+				const simpleBan = SimplifyBan(ban);
+				simplifiedCache.bans.set(simpleBan.user_id, simpleBan);
+				if (!SnapshotData.bans.has(simpleBan.user_id)) {
+					modifications.bans.set(simpleBan.user_id, { type: API_TYPES.BAN_DELETE, data: simpleBan });
+				}
+			}
+
+			// creations
+			for (const [user_id, ban] of SnapshotData.bans) {
+				if (simplifiedCache.bans.has(user_id)) continue; // Ban already exists
+				modifications.bans.set(user_id, { type: API_TYPES.BAN_CREATE, data: ban });
 			}
 		}
 
-		// Determine creations
-		for (const [id, channel] of SnapshotData.channels) {
-			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue;
-			if (simplifiedCache.channels.has(id)) continue;
+		// permission stuff lol
+		if (restoreOptions & RESTORE_OPTIONS.ROLES &&
+			restoreOptions & RESTORE_OPTIONS.CHANNELS
+		) {
+			for (const overwrite of SnapshotData.permissions.values()) {
+				const [channel_id, role_id] = overwrite.id.split('-');
+				if (!modifications.channels.has(channel_id)) continue;
+				
+				const targetChannel = modifications.channels.get(channel_id);
+				if (targetChannel.type !== API_TYPES.CHANNEL_CREATE) continue;
 
-			modifications.channels.set(id, { type: API_TYPES.CHANNEL_CREATE, data: SimplifyChannel(channel) });
-		}
-
-		for (const overwrite of SnapshotData.permissions.values()) {
-			const [channel_id, role_id] = overwrite.id.split('-');
-			if (!modifications.channels.has(channel_id)) continue;
-			
-			const targetChannel = modifications.channels.get(channel_id);
-			if (targetChannel.type !== API_TYPES.CHANNEL_CREATE) continue;
-
-			const perm = {
-				id: role_id,
-				type: 0, // 0 for role overwrites
-				allow: String(overwrite.allow),
-				deny: String(overwrite.deny)
-			}
-
-			if (targetChannel.data.permission_overwrites === undefined) {
-				targetChannel.data.permission_overwrites = [ perm ];
-			} else {
-				targetChannel.data.permission_overwrites.push(perm);
-			}
-
-			modifications.channels.set(channel_id, targetChannel);
-		}
-
-		for (const [id, role] of SnapshotData.roles) {
-			if (role.managed) continue; // Skip bot roles
-			if (simplifiedCache.roles.has(id)) continue; // Role already exists
-			if (id === SnapshotData.guild_id) {
-				modifications.roles.set(id, { type: API_TYPES.ROLE_UPDATE, data: { id: interaction.guild.id, permissions: role.permissions } });
-			} else {
-				modifications.roles.set(id, { type: API_TYPES.ROLE_CREATE, data: role });
-			}
-		}
-
-		for (const [user_id, ban] of SnapshotData.bans) {
-			if (simplifiedCache.bans.has(user_id)) continue; // Ban already exists
-			modifications.bans.set(user_id, { type: API_TYPES.BAN_CREATE, data: ban });
-		}
-
-		// Determine updates
-		for (const channel of simplifiedCache.channels.values()) {
-			const snapshotChannel = SnapshotData.channels.get(channel.id);
-			if (!snapshotChannel) continue; // Channel does not exist in snapshot
-			if ( HashObject(channel) === snapshotChannel.hash ) continue; // No changes detected
-
-			modifications.channels.set(channel.id, { type: API_TYPES.CHANNEL_UPDATE, data: snapshotChannel });
-		}
-
-		for (const role of simplifiedCache.roles.values()) {
-			const snapshotRole = SnapshotData.roles.get(role.id);
-			if (!snapshotRole) continue; // Role does not exist in snapshot
-			if ( HashObject(role) === snapshotRole.hash ) continue; // No changes detected
-			modifications.roles.set(role.id, { type: API_TYPES.ROLE_UPDATE, data: snapshotRole });
-		}
-
-		for (const channel of GuildChannels) {
-			if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue; // Skip unsupported channel types
-			if (!SnapshotData.channels.has(channel.id)) continue; // Channel does not exist in snapshot
-
-			let needsPermissionUpdate = false;
-
-			const permission_overwrites = []; // { id: string, type: 0, allow: string, deny: string }
-			for (const overwrite of channel.permissionOverwrites.cache.values()) {
-				if (overwrite.type !== 0) continue; // Only process role overwrites
-				if (overwrite.allow.bitfield === 0n && overwrite.deny.bitfield === 0n) continue; // Skip empty overwrites
-
-				const key = PermKey(channel.id, overwrite.id);
-				const snapshotOverwrite = SnapshotData.permissions.get(key);
-				if (!snapshotOverwrite) {
-					// If the overwrite does not exist in the snapshot, we need to remove it
-					needsPermissionUpdate = true;
-					continue;
+				const perm = {
+					id: role_id,
+					type: 0, // 0 for role overwrites
+					allow: String(overwrite.allow),
+					deny: String(overwrite.deny)
 				}
 
-				const simpleOverwrite = SimplifyPermission(channel.id, overwrite);
-				if (HashObject(simpleOverwrite) === snapshotOverwrite.hash) continue; // No changes detected
+				if (targetChannel.data.permission_overwrites === undefined) {
+					targetChannel.data.permission_overwrites = [ perm ];
+				} else {
+					targetChannel.data.permission_overwrites.push(perm);
+				}
 
-				permission_overwrites.push({
-					id: overwrite.id,
-					type: 0, // 0 for role overwrites
-					allow: String(simpleOverwrite.allow),
-					deny: String(simpleOverwrite.deny)
-				});
-
-				needsPermissionUpdate = true;
+				modifications.channels.set(channel_id, targetChannel);
 			}
 
-			if (!needsPermissionUpdate) continue;
+			for (const channel of GuildChannels) {
+				if (!ALLOWED_CHANNEL_TYPES.has(channel.type)) continue; // Skip unsupported channel types
+				if (!SnapshotData.channels.has(channel.id)) continue; // Channel does not exist in snapshot
 
-			const channelData = modifications.channels.get(channel.id) ?? { type: API_TYPES.CHANNEL_UPDATE, data: { id: channel.id, permission_overwrites: [] } };
-			if (!channelData.data.permission_overwrites) {
-				channelData.data.permission_overwrites = [ ...permission_overwrites ];
-			} else {
-				channelData.data.permission_overwrites.push(...permission_overwrites);
+				let needsPermissionUpdate = false;
+
+				const permission_overwrites = []; // { id: string, type: 0, allow: string, deny: string }
+				for (const overwrite of channel.permissionOverwrites.cache.values()) {
+					if (overwrite.type !== 0) continue; // Only process role overwrites
+					if (overwrite.allow.bitfield === 0n && overwrite.deny.bitfield === 0n) continue; // Skip empty overwrites
+
+					const key = PermKey(channel.id, overwrite.id);
+					const snapshotOverwrite = SnapshotData.permissions.get(key);
+					if (!snapshotOverwrite) {
+						// If the overwrite does not exist in the snapshot, we need to remove it
+						needsPermissionUpdate = true;
+						continue;
+					}
+
+					const simpleOverwrite = SimplifyPermission(channel.id, overwrite);
+					if (HashObject(simpleOverwrite) === snapshotOverwrite.hash) continue; // No changes detected
+
+					permission_overwrites.push({
+						id: overwrite.id,
+						type: 0, // 0 for role overwrites
+						allow: String(simpleOverwrite.allow),
+						deny: String(simpleOverwrite.deny)
+					});
+
+					needsPermissionUpdate = true;
+				}
+
+				if (!needsPermissionUpdate) continue;
+
+				const channelData = modifications.channels.get(channel.id) ?? { type: API_TYPES.CHANNEL_UPDATE, data: { id: channel.id, permission_overwrites: [] } };
+				if (!channelData.data.permission_overwrites) {
+					channelData.data.permission_overwrites = [ ...permission_overwrites ];
+				} else {
+					channelData.data.permission_overwrites.push(...permission_overwrites);
+				}
+				modifications.channels.set(channel.id, channelData);
 			}
-			modifications.channels.set(channel.id, channelData);
 		}
 
 		if ( Object.values(modifications).every(edits => edits.size === 0) ) {

@@ -478,7 +478,7 @@ This may take a while and WILL disrupt the server!
 					type: 2,
 					style: 3,
 					label: 'Nevermind',
-					custom_id: 'close'
+					custom_id: 'snapshot-list'
 				}
 			]
 		}

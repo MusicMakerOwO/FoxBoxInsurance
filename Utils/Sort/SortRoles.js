@@ -12,5 +12,15 @@ module.exports = function SortRoles(roles, property) {
 		return BigInt(r1.id) < BigInt(r2.id) ? -1 : 1;
 	});
 
+	if (!property) {
+		for (let i = 0; i < sorted.length; i++) {
+			sorted[i].position = i;
+		}
+	} else {
+		for (let i = 0; i < sorted.length; i++) {
+			sorted[i][property].position = i;
+		}
+	}
+
 	return sorted;
 }

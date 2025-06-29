@@ -299,12 +299,52 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 				if (job.snapshot_type !== SNAPSHOT_TYPE.IMPORT) {
 					// update the ids in the snapshots
 					for (const [oldID, newID] of job.channel_lookups) {
+						// Snapshot data
 						Database.prepare(`
 							UPDATE SnapshotChannels
 							SET id = ?, needsUpdate = 1
 							WHERE snapshot_id = ?
 							AND id = ?
 						`).run(newID, snapshotID, oldID);
+
+						// Channel parents
+						Database.prepare(`
+							UPDATE SnapshotChannels
+							SET parent_id = ?, needsUpdate = 1
+							WHERE snapshot_id = ?
+							AND parent_id = ?
+						`).run(newID, snapshotID, oldID);
+
+						// Permission overwrites
+						Database.prepare(`
+							UPDATE SnapshotPermissions
+							SET channel_id = ?, needsUpdate = 1
+							WHERE channel_id = ?
+						`).run(newID, oldID);
+
+						// Messages data - No hashing here!
+						Database.prepare(`
+							UPDATE Messages
+							SET channel_id = ?
+							WHERE channel_id = ?
+						`).run(newID, oldID);
+					}
+
+					for (const [oldID, newID] of job.role_lookups) {
+						// Snapshot data
+						Database.prepare(`
+							UPDATE SnapshotRoles
+							SET id = ?, needsUpdate = 1
+							WHERE snapshot_id = ?
+							AND id = ?
+						`).run(newID, snapshotID, oldID);
+
+						// Permissions data
+						Database.prepare(`
+							UPDATE SnapshotPermissions
+							SET role_id = ?, needsUpdate = 1
+							WHERE role_id = ?
+						`).run(newID, oldID);
 					}
 
 					await UpdateHashes(snapshotID);

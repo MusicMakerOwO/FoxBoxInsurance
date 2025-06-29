@@ -139,9 +139,11 @@ function FetchNextAction() {
 	if (!action) {
 		job.status = (job.cursor >= job.actions.length) ? STATUS.COMPLETED : STATUS.FAILED;
 
-		JOBS.set(job.id, job, SECONDS.HOUR * 1000);
+		UpdateJobCache(job);
 
-		DeleteFromQueue(job.id);
+		ACTIVE_RESTORE_GUILDS.delete(job.guildID);
+
+		JOB_LIST = JOB_LIST.filter(j => j.id !== job.id);
 		return null;
 	}
 

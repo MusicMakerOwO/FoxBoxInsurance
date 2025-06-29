@@ -339,7 +339,12 @@ module.exports = {
 
 		const executionPlan = [
 			... SortRoles( Array.from( modifications.roles.values() ), 'data' ),
-			... SortChannels( Array.from( modifications.channels.values() ), 'data' ),
+			... SortChannels( Array.from( modifications.channels.values() ), 'data' ).sort((a, b) => {
+				// categories first
+				if (a.data.type === 4 && b.data.type !== 4) return -1; // a is category, b is not
+				if (a.data.type !== 4 && b.data.type === 4) return 1; // b is category, a is not
+				return 0;
+			}),
 			... Array.from( modifications.bans.values() ) // order does not matter lol
 		]
 

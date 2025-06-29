@@ -6,7 +6,7 @@ module.exports = function SortRoles(roles, property) {
 		}
 
 		// Primary sort: raw position
-		if (r1.position !== r2.position) return r2.position - r1.position;
+		if (r1.position !== r2.position) return r1.position - r2.position;
 
 		// Tiebreaker: snowflake ID
 		return BigInt(r1.id) < BigInt(r2.id) ? -1 : 1;

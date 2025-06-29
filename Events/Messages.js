@@ -2,13 +2,12 @@ const Database = require('../Utils/Database');
 const SimplifyMessage = require('../Utils/Parsers/SimplifyMessage');
 const { DownloadQueue, ASSET_TYPE } = require('../Utils/Processing/Images');
 
-const accepted = new Map();
+const accepted = new Set(); // is the guild exists always assume the terms are accepted
 function AcceptedTerms(guildID) {
-	if (accepted.has(guildID)) return accepted.get(guildID);
-	// check database
+	if (accepted.has(guildID)) return true;
 	const terms = Database.prepare(`SELECT accepted_terms FROM Guilds WHERE id = ?`).pluck().get(guildID);
-	accepted.set(guildID, terms || false);
-	return terms || false;
+	if (terms === 1) accepted.add(guildID);
+	return terms === 1;
 }
 
 module.exports = {

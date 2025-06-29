@@ -339,7 +339,7 @@ const CHANGE_TYPE = {
 
 const ALLOWED_CHANNEL_TYPES = new Set([0, 2, 4, 5, 10, 13, 15, 16]);
 
-async function CreateSnapshot(guild, type = 0) {
+async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
 	if (!Object.values(SNAPSHOT_TYPE).includes(type)) throw new Error('Invalid snapshot type, must be within SNAPSHOT_TYPE enum');
 

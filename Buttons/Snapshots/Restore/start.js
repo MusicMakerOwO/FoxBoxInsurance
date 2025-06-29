@@ -254,7 +254,7 @@ Status : ${STATUS.RUNNING}
 			const job = GetJob(jobID);
 			if (!job) {
 				clearInterval(interval);
-				return;
+				throw new Error(`Job #${jobID} not found in cache - Was it deleted by accident?`);
 			}
 
 			if (job.status === STATUS.RUNNING) {

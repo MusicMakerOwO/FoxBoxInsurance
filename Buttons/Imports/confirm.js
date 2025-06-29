@@ -1,4 +1,10 @@
-const { SECONDS, EMOJI } = require("../../Utils/Constants");
+const { SECONDS, EMOJI, COLOR } = require("../../Utils/Constants");
+
+const NoImportEmbed = {
+	color: COLOR.ERROR,
+	title: 'Import Not Found',
+	description: 'The import does not exist or has expired.\nPlease import the file and try again.'
+}
 
 module.exports = {
 	customID: 'import-confirm',
@@ -6,6 +12,13 @@ module.exports = {
 		const importID = args[0];
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+
+		if (!client.ttlcache.has(`import-${importID}`)) {
+			return interaction.editReply({
+				embeds: [ NoImportEmbed ],
+				components: []
+			});
+		}
 
 		if (!client.ttlcache.has(`guild-imports-${interaction.guild.id}`)) {
 			client.ttlcache.set(`guild-imports-${interaction.guild.id}`, new Map([

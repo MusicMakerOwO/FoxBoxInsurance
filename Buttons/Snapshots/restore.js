@@ -30,22 +30,22 @@ function LoadingEmbed(snapshotID, step, times = []) {
 }
 
 function ConvertTimeToText(seconds) {
-    if (seconds < 1) return '0 seconds';
-    
-    const days = ~~(seconds / SECONDS.DAY);
-    seconds %= SECONDS.DAY;
-    const hours = ~~(seconds / SECONDS.HOUR);
-    seconds %= SECONDS.HOUR;
-    const minutes = ~~(seconds / SECONDS.MINUTE);
-    seconds %= SECONDS.MINUTE;
-    
-    let output = '';
-    if (days) output += `${days} day${days > 1 ? 's' : ''} `;
-    if (hours) output += `${hours} hour${hours > 1 ? 's' : ''} `;
-    if (minutes) output += `${minutes} minute${minutes > 1 ? 's' : ''} `;
-    if (seconds) output += `${Math.floor(seconds * 1000) / 1000} second${seconds > 1 ? 's' : ''}`;
-    
-    return output;
+	if (seconds < 1) return '0 seconds';
+
+	const days = ~~(seconds / SECONDS.DAY);
+	seconds %= SECONDS.DAY;
+	const hours = ~~(seconds / SECONDS.HOUR);
+	seconds %= SECONDS.HOUR;
+	const minutes = ~~(seconds / SECONDS.MINUTE);
+	seconds %= SECONDS.MINUTE;
+
+	let output = '';
+	if (days) output += `${days} day${days > 1 ? 's' : ''} `;
+	if (hours) output += `${hours} hour${hours > 1 ? 's' : ''} `;
+	if (minutes) output += `${minutes} minute${minutes > 1 ? 's' : ''} `;
+	if (seconds) output += `${~~(seconds * 1000) / 1000} second${seconds > 1 ? 's' : ''}`;
+
+	return output;
 }
 
 const NoChangesEmbed = {
@@ -463,7 +463,7 @@ Channels will be deleted, roles will be removed, and bans will be applied as per
 		embed.description += `\n
 Are you sure you want to proceed?
 This may take a while and WILL disrupt the server!
-**Estimated time to complete:** \`${ConvertTimeToText( executionPlan.length * 2 )}\``
+**Estimated time to complete:** \`${ConvertTimeToText(executionPlan.length)}\``
 
 		const confirmationButtons = {
 			type: 1,

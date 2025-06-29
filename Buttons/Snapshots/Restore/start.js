@@ -246,6 +246,7 @@ Status : ${STATUS.RUNNING}
 		});
 
 		let prevProgress = 0;
+		let restoreETA = 'Calculating...';
 
 		const interval = setInterval( async () => {
 
@@ -263,12 +264,9 @@ Status : ${STATUS.RUNNING}
 				const deltaProgress = progress - prevProgress; // how much has changed since last update
 				prevProgress = progress + 0; // de-reference to avoid pointer issues
 
-				let restoreETA;
 				if (deltaProgress > 0) {
 					const remaining = 1 - progress; // assuming progress is between 0 and 1
 					restoreETA = Math.ceil(remaining / deltaProgress); // in seconds
-				} else {
-					restoreETA = 'Calculating...'; // if no progress, we can't estimate ETA
 				}
 
 				const bar = ProgressBar(job.progress);
@@ -282,7 +280,7 @@ ${EMOJI.LOADING} Working on it ... \`\`\`
 Progress : ${bar}
 Status : ${job.status.toUpperCase()}
 \`\`\`
-ETA to complete : \`${ConvertTimeToText(restoreETA)}\``
+ETA to complete : \`${typeof restoreETA === 'number' ? ConvertTimeToText(restoreETA) : restoreETA}\``
 					}]
 				});
 				return;

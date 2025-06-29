@@ -317,14 +317,20 @@ ETA to complete : \`${ConvertTimeToText(restoreETA)}\``
 
 				if (job.errors.length > 0) {
 					embed.description += `\n\n${EMOJI.WARNING} Some errors occurred during the restoration :`
-					for (const error of job.errors) {
-						embed.description += `\`\`\`\n${error}\n\`\`\` `;
+					let i = 0;
+					while (embed.description.length < 2000) {
+						if (i >= job.errors.length) break; // no more errors to add
+						embed.description += ` \`\`\`${job.errors[i]}\`\`\``;
+						i++;
+					}
+					if (i < job.errors.length) {
+						embed.description += `\n\n> **And ${job.errors.length - i} more errors not shown**`;
 					}
 				}
 
 				updateMessage.edit({
 					content: '',
-					embeds: [ RestoreCompletedEmbed ],
+					embeds: [ embed ],
 					components: []
 				});
 

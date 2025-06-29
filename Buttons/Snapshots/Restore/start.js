@@ -69,6 +69,12 @@ const AlreadyRunningEmbed = {
 	description: 'A restore job is already running in this server. Please cancel or wait for it to complete before starting a new one.'
 }
 
+const CleaningUpEmbed = {
+	color: COLOR.PRIMARY,
+	title: 'Cleaning Up',
+	description: `${EMOJI.LOADING} Cleaning up, one moment ...`
+}
+
 function ConvertTimeToText(seconds) {
 	if (seconds < 1) return '0 seconds';
 

@@ -280,7 +280,8 @@ ${EMOJI.LOADING} Working on it ... \`\`\`
 Progress : ${bar}
 Status : ${job.status.toUpperCase()}
 \`\`\`
-ETA to complete : \`${typeof restoreETA === 'number' ? ConvertTimeToText(restoreETA) : restoreETA}\``
+ETA to complete : \`${typeof restoreETA === 'number' ? ConvertTimeToText(restoreETA) : restoreETA}\`
+Step ${job.cursor + 1} / ${job.actions.length + 1}`
 					}]
 				});
 				return;

@@ -2,6 +2,7 @@ const client = require('../../client.js');
 const TTLCache = require('../Caching/TTLCache.js');
 const { SECONDS } = require('../Constants');
 const Log = require('../Logs.js');
+const { inspect } = require('node:util');
 
 // jobID -> { status: 'pending' | 'in-progress' | 'completed' | 'failed', progress: 0-100, errors: string[] }
 // Delete after 60 minutes of inactivity
@@ -161,138 +162,167 @@ async function RestoreJob() {
 			await executeAction(job, action);
 		} catch (err) {
 			// fail foward as best as possible
-			Log.error(err);
 			job.errors.push(err.message);
 			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
 		}
 	}
 
-	// reset state before exit
 	index = 0;
 	JOB_LIST = JOB_LIST.filter(job => job.status === STATUS.RUNNING);
+	restoreRunning = JOB_LIST.length > 0;
 
-	restoreRunning = JOB_LIST.length > 0; // If there are still jobs to process, keep running
+	if (restoreRunning) setImmediate(RestoreJob);
+}
 
-	if (JOB_LIST.length > 0) {
-		// If there are still jobs to process, continue restoring
-		setImmediate(RestoreJob);
+function UpdateJobCache(job) {
+	const index = JOB_LIST.findIndex(j => j.id === job.id);
+	if (index !== -1) JOB_LIST[index] = job;
+	JOBS.set(job.id, job, SECONDS.HOUR * 1000);
+}
+
+function HandleDiscordError(err, context) {
+	switch (err.code) {
+		case 50013: throw new Error(`Missing permissions to ${context}`);
+		case 50001: throw new Error(`Missing access to the guild for ${context}`);
+		case 10026: throw new Error(`User not found for ${context}`);
+		case 50074: throw new Error(`Cannot delete channel required for community server`);
+		default:
+			console.log( inspect(err.rawError ?? err, { depth: 5, colors: true }) );
+			throw new Error(`Failed to ${context}`);
 	}
 }
 
 let rateLimitUntil = 0;
-function executeAction(job, action) {
-	return new Promise( async (resolve, reject) => {
-		const timeRemainingRateLimit = rateLimitUntil - Date.now();
-		if (timeRemainingRateLimit > 0) {
-			job.status = STATUS.WAITING;
-			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
-			
-			await new Promise(r => setTimeout(r, timeRemainingRateLimit + 250)); // wait until rate limit expires + 1/4 second buffer
-			rateLimitUntil = 0; // reset rate limit
+async function executeAction(job, action) {
+	const now = Date.now();
+	if (rateLimitUntil > now) {
+		job.status = STATUS.WAITING;
+		UpdateJobCache(job);
 
-			job.status = STATUS.RUNNING;
-			JOBS.set(job.id, job, SECONDS.HOUR * 1000);
+		await new Promise(r => setTimeout(r, rateLimitUntil - now + 250)); // wait for rate limit to expire + 1/4 second buffer
+		rateLimitUntil = 0;
+		
+		job.status = STATUS.RUNNING;
+		UpdateJobCache(job);
+	}
+
+	const guild = client.guilds.cache.get(job.guildID);
+	if (!guild) throw new Error(`Guild with ID ${job.guildID} not found`);
+
+	if (action.data.parent_id && job.channel_lookups.has(action.data.parent_id)) {
+		action.data.parent_id = job.channel_lookups.get(action.data.parent_id);
+	}
+
+	switch (action.type) {
+		case API_TYPES.CHANNEL_CREATE: {
+			const channel = await guild.channels.create({
+				... action.data,
+				parent: action.data.parent_id
+			}).catch(err => {
+				HandleDiscordError(err, `create channel #${action.data.name} (${action.data.id})`);
+			});
+
+			job.channel_lookups.set(action.data.id, channel.id);
+
+			UpdateJobCache(job);
+			break;
 		}
+		case API_TYPES.CHANNEL_UPDATE: {
+			const channel = guild.channels.cache.get(action.data.id);
+			if (!channel) throw new Error(`Channel with ID ${action.data.id} not found in guild ${job.guildID}`);
 
-		const guild = client.guilds.cache.get(job.guildID);
-		if (!guild) return reject( new Error(`Guild with ID ${job.guildID} not found`) );
+			await channel.edit({
+				... action.data,
+				parent: action.data.parent_id
+			}).catch(err => {
+				HandleDiscordError(err, `update channel #${channel.name} (${action.data.id})`);
+			});
+			break;
+		}
+		case API_TYPES.CHANNEL_DELETE: {
+			const channel = guild.channels.cache.get(action.data.id);
+			if (!channel) throw new Error(`Channel with ID ${action.data.id} not found in guild ${job.guildID}`);
 
-		try {
-			if (action.type === API_TYPES.CHANNEL_CREATE) {
-				if (action.data.parent_id && job.channel_lookups.has(action.data.parent_id)) {
-					action.data.parent_id = job.channel_lookups.get(action.data.parent_id);
-				}
-
-				const channel = await guild.channels.create({
-					... action.data,
-					parent: action.data.parent_id
-				});
-
-				job.channel_lookups.set(action.data.id, channel.id);
-
-				const index = JOB_LIST.findIndex(j => j.id === job.id);
-				if (index !== -1) JOB_LIST[index] = job; // Update the job in the list
-				JOBS.set(job.id, job, SECONDS.HOUR * 1000); // Update the job in the cache
-			} else if (action.type === API_TYPES.CHANNEL_UPDATE) {
-				if (action.data.parent_id && job.channel_lookups.has(action.data.parent_id)) {
-					action.data.parent_id = job.channel_lookups.get(action.data.parent_id);
-				}
-
-				const channel = guild.channels.cache.get(action.data.id);
-				if (!channel) return reject(new Error(`Channel with ID ${action.data.id} not found in guild ${job.guildID}`));
-
-				await channel.edit({
-					... action.data,
-					parent: action.data.parent_id
-				});
-			} else if (action.type === API_TYPES.CHANNEL_DELETE) {
-				const channel = guild.channels.cache.get(action.data.id);
-				if (!channel) return reject(new Error(`Channel with ID ${action.data.id} not found in guild ${job.guildID}`));
-
-				await channel.delete();
-			} else if (action.type === API_TYPES.ROLE_CREATE) {
-				if (action.data.id === job.botRoleID) {
-					// already exists, can't have two bot roles
-					return resolve();
-				}
-
-				const role = await guild.roles.create({
-					... action.data,
-					permissions: action.data.permissions ?? 0n
-				});
-
-				job.role_lookups.set(action.data.id, role.id);
-
-				const index = JOB_LIST.findIndex(j => j.id === job.id);
-				if (index !== -1) JOB_LIST[index] = job;
-				JOBS.set(job.id, job, SECONDS.HOUR * 1000); // Update the job in the cache
-			} else if (action.type === API_TYPES.ROLE_UPDATE) {
-
-				if (action.data.id === job.botRoleID) {
-					if (action.data.position !== 0) {
-						return reject( new Error(`Bot role position must be 0 or else it will bring permissions issues`) );
-					}
-					// already exists, can't have two bot roles
-					return resolve();
-				}
-
-				const role = guild.roles.cache.get(action.data.id);
-				if (!role) return reject(new Error(`Role with ID ${action.data.id} not found in guild ${job.guildID}`));
-
-				await role.edit({
-					... action.data,
-					permissions: action.data.permissions ?? 0n
-				});
-			} else if (action.type === API_TYPES.ROLE_DELETE) {
-				const role = guild.roles.cache.get(action.data.id);
-				if (!role) return reject(new Error(`Role with ID ${action.data.id} not found in guild ${job.guildID}`));
-
-				if (role.id === job.botRoleID) {
-					return reject(new Error(`Cannot delete the bot role (${role.id})`));
-				}
-
-				if (role.id === job.guildID) {
-					return reject(new Error(`Cannot delete the @everyone role (${role.id})`));
-				}
-
-				await role.delete();
-			} else if (action.type === API_TYPES.BAN_CREATE) {
-				await guild.bans.create({
-					user: action.data.id ?? action.data.user_id,
-					reason: action.data.reason ?? 'No reason provided',
-					deleteMessageSeconds: 0
-				});
-			} else if (action.type === API_TYPES.BAN_DELETE) {
-				await guild.bans.remove(action.data.id ?? action.data.user_id);
-			} else {
-				return reject(new Error(`Unknown action type: ${action.type}`));
+			await channel.delete().catch(err => {
+				HandleDiscordError(err, `delete channel #${channel.name} (${action.data.id})`);
+			});
+			break;
+		}
+		case API_TYPES.ROLE_CREATE: {
+			if (action.data.id === job.botRoleID) {
+				// already exists, can't have two bot roles
+				return resolve();
 			}
 
-			resolve();
-		} catch (err) {
-			reject(err);
+			const role = await guild.roles.create({
+				... action.data,
+				permissions: action.data.permissions ?? 0n
+			}).catch(err => {
+				HandleDiscordError(err, `create role @${action.data.name} (${action.data.id})`);
+			});
+
+			job.role_lookups.set(action.data.id, role.id);
+
+			UpdateJobCache(job);
+			break;
 		}
-	})
+		case API_TYPES.ROLE_UPDATE: {
+			if (action.data.id === job.botRoleID) {
+				if (action.data.position !== 0) {
+					throw new Error(`Bot role position must be 0 or else it will bring permissions issues`);
+				}
+				// already exists, can't have two bot roles
+				return resolve();
+			}
+
+			const role = guild.roles.cache.get(action.data.id);
+			if (!role) throw new Error(`Role with ID ${action.data.id} not found in guild ${job.guildID}`);
+
+			await role.edit({
+				... action.data,
+				permissions: action.data.permissions ?? 0n
+			}).catch(err => {
+				HandleDiscordError(err, `update role @${role.name} (${action.data.id})`);
+			});
+			break;
+		}
+		case API_TYPES.ROLE_DELETE: {
+			const role = guild.roles.cache.get(action.data.id);
+			if (!role) throw new Error(`Role with ID ${action.data.id} not found in guild ${job.guildID}`);
+
+			if (role.id === job.botRoleID) {
+				throw new Error(`Cannot delete the bot role (${role.id})`);
+			}
+
+			if (role.id === job.guildID) {
+				throw new Error(`Cannot delete the @everyone role (${role.id})`);
+			}
+
+			await role.delete().catch(err => {
+				HandleDiscordError(err, `delete role @${role.name} (${action.data.id})`);
+			});
+			break;
+		}
+		case API_TYPES.BAN_CREATE: {
+			await guild.bans.create(
+				action.data.id ?? action.data.user_id,
+				{
+					reason: action.data.reason ?? 'No reason provided',
+					deleteMessageSeconds: 0
+				}
+			).catch(err => {
+				HandleDiscordError(err, `ban user with ID ${action.data.id ?? action.data.user_id}`);
+			});
+			break;
+		}
+		case API_TYPES.BAN_DELETE: {
+			await guild.bans.remove(action.data.id ?? action.data.user_id).catch(err => {
+				HandleDiscordError(err, `unban user with ID ${action.data.id ?? action.data.user_id}`);
+			});
+			break;
+		}
+		default: throw new Error(`Unknown action type: ${action.type}`);
+	}
 }
 
 module.exports = {

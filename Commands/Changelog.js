@@ -85,6 +85,12 @@ const CHANGELOG = {
 			"Error message if no messages found in channel",
 			"Popup message if server has not accepted the TOS"
 		]
+	},
+	"v2.4.5": {
+		date: "2025 June 29th",
+		changes: [
+			"Fixed a bug with stale data in cache"
+		]
 	}
 }
 
@@ -102,14 +108,14 @@ module.exports = {
 			.setRequired(false)
 			.addChoices([
 				{ name: 'Latest', value: 'latest' },
-				{ name: 'All', value: 'historical' },
+				{ name: 'All', value: 'all' },
 				... Object.entries(CHANGELOG).sort((a, b) => b[0].localeCompare(a[0])).map(([version, data]) => ({ name: version, value: version })),
 			])
 		),
 	execute: async function(interaction, client) {
 		const input = interaction.options.getString('version') || 'latest';
 		
-		if (input === 'historical') {
+		if (input === 'all') {
 			// show all versions
 			const embed = {
 				color: COLOR.PRIMARY,

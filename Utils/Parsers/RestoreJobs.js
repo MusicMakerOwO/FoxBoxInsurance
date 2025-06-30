@@ -182,7 +182,7 @@ function HandleDiscordError(err, context) {
 		case 50013: throw new Error(`Missing permissions to ${context}`);
 		case 50001: throw new Error(`Missing access to the guild for ${context}`);
 		case 10026: throw new Error(`User not found for ${context}`);
-		case 50074: throw new Error(`Cannot delete channel required for community server`);
+		case 50074: throw new Error(`Cannot ${context} required for community server`);
 		default:
 			console.log( inspect(err.rawError ?? err, { depth: 5, colors: true }) );
 			throw new Error(`Failed to ${context}`);

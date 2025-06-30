@@ -337,16 +337,28 @@ module.exports = {
 			components: []
 		});
 
-		const executionPlan = [
-			... SortRoles( Array.from( modifications.roles.values() ), 'data' ),
-			... SortChannels( Array.from( modifications.channels.values() ), 'data' ).sort((a, b) => {
-				// categories first
-				if (a.data.type === 4 && b.data.type !== 4) return -1; // a is category, b is not
-				if (a.data.type !== 4 && b.data.type === 4) return 1; // b is category, a is not
-				return 0;
-			}),
-			... Array.from( modifications.bans.values() ) // order does not matter lol
-		]
+		const executionPlan = [];
+
+		function Filter(modifications, deletedType, sortFn) {
+			const items = Array.from(modifications.values());
+			const deleted = [];
+			const others = [];
+			for (let i = 0; i < items.length; i++) {
+				const item = items[i];
+				if (item.type === deletedType) {
+					deleted.push(item);
+				} else {
+					others.push(item);
+				}
+			}
+
+			executionPlan.push( ... deleted );
+			executionPlan.push( ... (sortFn ? sortFn(others) : others) );
+		}
+
+		Filter(modifications.roles, API_TYPES.ROLE_DELETE, (...args) => SortRoles(...args, 'data'));
+		Filter(modifications.channels, API_TYPES.CHANNEL_DELETE, (...args) => SortChannels(...args, 'data'));
+		Filter(modifications.bans, API_TYPES.BAN_DELETE);
 
 		const botMember = interaction.guild.members.cache.get(client.user.id) ?? await interaction.guild.members.fetch(client.user.id).catch(() => null);
 		if (!botMember) {

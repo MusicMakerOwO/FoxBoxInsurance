@@ -84,6 +84,14 @@ function CreateJob(data) {
 	return ID;
 }
 
+function setRateLimit(delay) {
+	if (typeof delay !== 'number' || delay < 0) {
+		throw new Error('Rate limit delay must be a non-negative number');
+	}
+	rateLimitUntil = Date.now() + delay;
+	Log.error(`[RATELIMIT] Rate limit until: ${new Date(rateLimitUntil).toLocaleString()} (Cooldown: ${delay}ms)`);
+}
+
 function isRateLimited() {
 	return rateLimitUntil > Date.now();
 }
@@ -322,8 +330,9 @@ module.exports = {
 	GetJob,
 	CancelJob,
 	isGuildRestoring,
+
+	setRateLimit,
 	isRateLimited,
 	
 	JOBS,
-	rateLimitUntil
 };

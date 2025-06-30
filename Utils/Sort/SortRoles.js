@@ -14,11 +14,11 @@ module.exports = function SortRoles(roles, property) {
 
 	if (!property) {
 		for (let i = 0; i < sorted.length; i++) {
-			sorted[i].position = i;
+			sorted[i].position = i + 1;
 		}
 	} else {
 		for (let i = 0; i < sorted.length; i++) {
-			sorted[i][property].position = i;
+			sorted[i][property].position = i + 1;
 		}
 	}
 

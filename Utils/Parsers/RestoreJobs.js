@@ -30,8 +30,6 @@ const STATUS = {
 	WAITING: 'waiting' // Hit the rate limit lol
 }
 
-let JOB_LIST = [];
-
 let JOB_ID_COUNTER = 0;
 function CreateJob(data) {
 
@@ -79,7 +77,6 @@ function CreateJob(data) {
 	});
 	ACTIVE_RESTORE_GUILDS.add(data.guildID);
 	JOBS.set(ID, job, SECONDS.HOUR * 1000); // Store job for 1 hour
-	JOB_LIST.push(job);
 	if (!restoreRunning) {
 		restoreRunning = true;
 		RestoreJob();
@@ -116,24 +113,19 @@ function CancelJob(jobID) {
 	ACTIVE_RESTORE_GUILDS.delete(job.guildID);
 
 	JOBS.set(job.id, job, SECONDS.HOUR * 1000);
-	DeleteFromQueue(job.id);
-	return true;
-}
-
-function DeleteFromQueue(jobID) {
-	if (typeof jobID !== 'number') throw new Error('Job ID must be a number');
-
-	JOB_LIST = JOB_LIST.filter(job => job.id !== jobID);
-	JOBS.delete(jobID);
 
 	return true;
 }
 
 let index = 0;
 function FetchNextAction() {
-	if (index >= JOB_LIST.length) index = 0;
-	const job = JOB_LIST[index++];
-	if (!job) return null;
+	const JobList = Array.from(JOBS.values()).filter(job => job.status === STATUS.RUNNING);
+
+	if (index >= JobList.length) index = 0;
+	const targetJob = JobList[index++];
+	if (!targetJob) return null;
+
+	const job = JOBS.get(targetJob.id);
 
 	const action = job.actions[job.cursor++];
 	if (!action) {
@@ -142,8 +134,6 @@ function FetchNextAction() {
 		UpdateJobCache(job);
 
 		ACTIVE_RESTORE_GUILDS.delete(job.guildID);
-
-		JOB_LIST = JOB_LIST.filter(j => j.id !== job.id);
 		return null;
 	}
 
@@ -170,15 +160,12 @@ async function RestoreJob() {
 	}
 
 	index = 0;
-	JOB_LIST = JOB_LIST.filter(job => job.status === STATUS.RUNNING);
-	restoreRunning = JOB_LIST.length > 0;
+	restoreRunning = Array.from(JOBS.values()).some(job => job.status === STATUS.RUNNING);
 
 	if (restoreRunning) setImmediate(RestoreJob);
 }
 
 function UpdateJobCache(job) {
-	const index = JOB_LIST.findIndex(j => j.id === job.id);
-	if (index !== -1) JOB_LIST[index] = job;
 	JOBS.set(job.id, job, SECONDS.HOUR * 1000);
 }
 

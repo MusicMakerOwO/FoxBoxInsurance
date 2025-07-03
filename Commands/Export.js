@@ -3,6 +3,7 @@ const { COLOR, FORMAT, RandomLoadingEmbed } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
 const ProcessMessages = require('../Utils/Processing/Messages');
 const UserCanExport = require('../Utils/UserCanExport');
+const { GetGuildTOS } = require('../Utils/Caching/TOS');
 
 const DISCORD_EPOCH_OFFSET = 1420070400000;
 const DISCORD_ID_FILLING = BigInt( 0b1_1111_11111111_11111111 );
@@ -42,8 +43,8 @@ module.exports = {
 			return interaction.editReply({ embeds: [NoExport] });
 		}
 
-		const serverTerms = Database.prepare('SELECT accepted_terms FROM Guilds WHERE id = ?').pluck().get(interaction.guild.id);
-		if (serverTerms === 0) {
+		const serverAcceptedTOS = GetGuildTOS(interaction.guild.id);
+		if (!serverAcceptedTOS) {
 			return interaction.editReply({
 				embeds: [ ServerTOSEmbed ]
 			});

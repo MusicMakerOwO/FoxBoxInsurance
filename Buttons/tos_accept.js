@@ -1,5 +1,5 @@
+const { SetGuildTOS, SetUserTOS } = require("../Utils/Caching/TOS");
 const { COLOR } = require("../Utils/Constants");
-const Database = require("../Utils/Database");
 
 const USER_EMBED = {
 	color: COLOR.PRIMARY,
@@ -28,10 +28,10 @@ module.exports = {
 
 		let embed = USER_EMBED;
 
-		Database.prepare(`UPDATE Users SET accepted_terms = 1 WHERE id = ?`).run(interaction.user.id);
+		SetUserTOS(interaction.user.id, true);
 		if (interaction.user.id === guild.ownerId) {
 			// if the user is the server owner, update the server as well
-			Database.prepare(`UPDATE Guilds SET accepted_terms = 1 WHERE id = ?`).run(guildID);
+			SetGuildTOS(guildID, true);
 			embed = SERVER_EMBED;
 		}
 

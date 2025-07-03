@@ -9,6 +9,7 @@ const ErrorParse = require('../Utils/FindError');
 const { FANCY_ERRORS } = require('../config.json');
 const { COLOR } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
+const { GetGuildTOS } = require('../Utils/Caching/TOS');
 
 module.exports = {
 	name: 'interactionCreate',
@@ -144,8 +145,8 @@ async function InteractionHandler(client, interaction, type, cache) {
 		+interaction.user.bot
 	);
 
-	const guildAccepted = Database.prepare(`SELECT accepted_terms FROM Guilds WHERE id = ?`).pluck().get(interaction.guildId);
-	const userAccepted = Database.prepare(`SELECT accepted_terms FROM Users WHERE id = ?`).pluck().get(interaction.user.id);
+	const guildAccepted = GetGuildTOS(interaction.guildId);
+	const userAccepted = GetUserTOS(interaction.user.id);
 	if (guildAccepted === 0 && component.bypass !== true) {
 		if (interaction.user.id !== interaction.guild.ownerId) {
 			// warn user that the server owner has not accepted TOS

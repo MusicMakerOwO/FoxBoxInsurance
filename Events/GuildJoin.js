@@ -1,7 +1,7 @@
+const { SetGuildTOS } = require("../Utils/Caching/TOS");
 const { COLOR } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
 const { success, error } = require("../Utils/Logs");
-const { AcceptedCache } = require("./Messages");
 
 module.exports = {
 	name: 'guildCreate',
@@ -12,12 +12,11 @@ module.exports = {
 			INSERT INTO Guilds (id, name, accepted_terms)
 			VALUES (?, ?, 0)
 			ON CONFLICT(id) DO
-			UPDATE SET
-				name = excluded.name,
-				accepted_terms = 0;
+			UPDATE SET name = excluded.name
 		`).run(guild.id, guild.name);
-		
-		AcceptedCache.set(guild.id, false);
+
+		// Set the guild's TOS to false in the cache
+		SetGuildTOS(guild.id, false);
 
 		const WelcomeEmbed = {
 			color: COLOR.PRIMARY,

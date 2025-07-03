@@ -91,6 +91,13 @@ const CHANGELOG = {
 		changes: [
 			"Fixed a bug with stale data in cache"
 		]
+	},
+	"v2.4.6": {
+		date: "2025 July 1st",
+		changes: [
+			"Little changes for (slightly) better performance",
+			"Fixed a bug where accepting the TOS would have no effect"
+		]
 	}
 }
 

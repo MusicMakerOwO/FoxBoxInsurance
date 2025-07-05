@@ -46,6 +46,18 @@ function GenerateExportID(attempts = 5) {
 	return exists ? GenerateExportID(attempts - 1) : idString;
 }
 
+function SimplifyMessage(message) {
+	// Simplify message object to only include necessary fields
+	return {
+		id: message.id,
+		user_id: message.user_id,
+		content: message.content || null,
+		sticker_id: message.sticker_id,
+		created_at: message.created_at,
+		reply_to: message.reply_to || null // assuming reply_to is a field in the message
+	};
+}
+
 module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	
 	const Context = {
@@ -185,6 +197,9 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	];
 
 	Context.Assets = BatchCache(AssetIDs, 'id', 'Assets', 'asset_id');
+
+	// strip out sensitive or useless data
+	Context.Messages = Context.Messages.map(SimplifyMessage);
 
 	let fileData = Buffer.from(''); // empty buffer
 	switch (options.format) {

@@ -202,6 +202,11 @@ module.exports = {
 		}
 
 		if (restoreOptions & RESTORE_OPTIONS.ROLES) {
+			// full copy of roles from guild
+			const simulatedRoles = new Map(GuildRoles.map(role => [ role.id, SimplifyRole(role) ]));
+
+			const botRole = interaction.guild.roles.cache.find(role => role.tags?.botId === client.user.id);
+
 			// deletions
 			for (const role of GuildRoles) {
 				const simpleRole = SimplifyRole(role);
@@ -209,6 +214,7 @@ module.exports = {
 				if (simpleRole.id === interaction.guild.id) continue; // Skip @everyone role
 				simplifiedCache.roles.set(simpleRole.id, simpleRole);
 				if (!SnapshotData.roles.has(simpleRole.id)) {
+					simulatedRoles.delete(simpleRole.id); // Remove from simulated roles
 					modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_DELETE, data: simpleRole });
 				}
 			}
@@ -218,20 +224,50 @@ module.exports = {
 			for (const [id, role] of SnapshotData.roles) {
 				if (role.managed) continue; // Skip bot roles
 				if (simplifiedCache.roles.has(id)) continue; // Role already exists
+				let data, type, key;
 				if (id === SnapshotData.guild_id) {
-					modifications.roles.set(id, { type: API_TYPES.ROLE_UPDATE, data: { id: interaction.guild.id, permissions: role.permissions } });
+					key = interaction.guild.id;
+					type = API_TYPES.ROLE_UPDATE;
+					data = { id: interaction.guild.id, permissions: role.permissions };
 				} else {
-					modifications.roles.set(id, { type: API_TYPES.ROLE_CREATE, data: role });
+					key = id;
+					type = API_TYPES.ROLE_CREATE;
+					data = SimplifyRole(role);
 				}
+				simplifiedCache.roles.set(key, data);
+				modifications.roles.set(key, { type, data });
+				simulatedRoles.set(key, data); // Add to simulated roles
 			}
 
 			// updates
-			for (const role of simplifiedCache.roles.values()) {
-				const snapshotRole = SnapshotData.roles.get(role.id);
+			for (const role of GuildRoles) {
+				if (role.managed) continue; // Skip bot roles
+				const simpleRole = SimplifyRole(role);
+
+				const snapshotRole = SnapshotData.roles.get(simpleRole.id);
 				if (!snapshotRole) continue; // Role does not exist in snapshot
-				if ( HashObject(role) === snapshotRole.hash ) continue; // No changes detected
-				modifications.roles.set(role.id, { type: API_TYPES.ROLE_UPDATE, data: snapshotRole });
+				
+				if ( HashObject(simpleRole) === snapshotRole.hash ) continue; // No changes detected
+				modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_UPDATE, data: snapshotRole });
 			}
+
+			const sortedRoles = SortRoles( Array.from(simulatedRoles.values()) );
+			
+			// find the bot role and force it to the top
+			for (let i = 0; i < sortedRoles.length; i++) {
+				if (sortedRoles[i].id === botRole.id) {
+					sortedRoles[i].position = sortedRoles.length;
+				}
+			}
+
+			modifications.roles.set(API_TYPES.ROLE_ORDER, {
+				type: API_TYPES.ROLE_ORDER,
+				data: sortedRoles.map(role => ({
+					id: role.id,
+					name: role.name,
+					position: role.position
+				}))
+			});
 		}
 		
 		if (restoreOptions & RESTORE_OPTIONS.BANS) {

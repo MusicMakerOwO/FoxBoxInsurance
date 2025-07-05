@@ -446,6 +446,7 @@ module.exports = {
 				case API_TYPES.ROLE_DELETE: executionStats.roles.deleted++; break;
 				case API_TYPES.BAN_CREATE: executionStats.bans.created++; break;
 				case API_TYPES.BAN_DELETE: executionStats.bans.deleted++; break;
+				case API_TYPES.ROLE_ORDER: break; // dont care lol
 				default:
 					Log.warn(`Unknown action type: ${action.type} in restore job for ${interaction.guild.name} (${interaction.guild.id})`);
 					continue; // Skip unknown actions

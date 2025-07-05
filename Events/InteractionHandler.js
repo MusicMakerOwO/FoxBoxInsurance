@@ -9,7 +9,7 @@ const ErrorParse = require('../Utils/FindError');
 const { FANCY_ERRORS } = require('../config.json');
 const { COLOR } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
-const { GetGuildTOS } = require('../Utils/Caching/TOS');
+const { GetGuildTOS, GetUserTOS } = require('../Utils/Caching/TOS');
 
 module.exports = {
 	name: 'interactionCreate',

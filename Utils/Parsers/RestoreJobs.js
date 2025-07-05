@@ -18,7 +18,8 @@ const API_TYPES = {
 	CHANNEL_UPDATE: 'channel-update',
 	CHANNEL_DELETE: 'channel-delete',
 	BAN_CREATE: 'ban-create',
-	BAN_DELETE: 'ban-delete'
+	BAN_DELETE: 'ban-delete',
+	ROLE_ORDER: 'role-order'
 }
 const API_TYPES_SET = new Set(Object.values(API_TYPES));
 
@@ -315,6 +316,30 @@ async function executeAction(job, action) {
 		case API_TYPES.BAN_DELETE: {
 			await guild.bans.remove(action.data.id ?? action.data.user_id).catch(err => {
 				HandleDiscordError(err, `unban user with ID ${action.data.id ?? action.data.user_id}`);
+			});
+			break;
+		}
+		case API_TYPES.ROLE_ORDER: {
+			if (!Array.isArray(action.data)) {
+				throw new Error(`Role order action data must be an array of { id, position }`);
+			}
+			for (let i = 0; i < action.data.length; i++) {
+				if (typeof action.data.id !== 'string') {
+					throw new Error(`Role order action data at index ${i} must have a string 'id' property`);
+				}
+				if (typeof action.data.position !== 'number') {
+					throw new Error(`Role order action data at index ${i} must have a number 'position' property`);
+				}
+				if (action.data.position < 0) {
+					throw new Error(`Role position at index ${i} must be a non-negative number`);
+				}
+				if (action.data.id === job.botRoleID && action.data.position !== action.data.length - 1) {
+					action.data.position = action.data.length - 1; // bot role should always be at the top
+				}
+				action.data[i].role = action.data[i].id; // for backwards compatibility
+			}
+			await guild.roles.setPositions(action.data).catch(err => {
+				HandleDiscordError(err, `set role positions in guild ${job.guildID}`);
 			});
 			break;
 		}

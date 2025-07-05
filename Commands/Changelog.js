@@ -98,6 +98,12 @@ const CHANGELOG = {
 			"Little changes for (slightly) better performance",
 			"Fixed a bug where accepting the TOS would have no effect"
 		]
+	},
+	"v2.4.7": {
+		date: "2025 July 5th",
+		changes: [
+			"Security patch that exposes encryption tags in JSON exports"
+		]
 	}
 }
 

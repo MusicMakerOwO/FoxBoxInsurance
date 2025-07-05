@@ -67,4 +67,20 @@ module.exports = class TTLCache {
 		clearInterval(this.interval);
 		this.cache.clear();
 	}
+
+	keys() {
+		return Array.from(this.cache.keys()).filter(key => this.has(key));
+	}
+
+	values() {
+		return Array.from(this.cache.values())
+			.filter(item => !this.#isExpired(item))
+			.map(item => item.value);
+	}
+
+	entries() {
+		return Array.from(this.cache.entries())
+			.filter(([key, item]) => !this.#isExpired(item))
+			.map(([key, item]) => [key, item.value]);
+	}
 }

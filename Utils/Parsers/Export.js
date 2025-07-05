@@ -58,6 +58,17 @@ function SimplifyMessage(message) {
 	};
 }
 
+function SimplifyUser(user) {
+	// Simplify user object to only include necessary fields
+	return {
+		id: user.id,
+		username: user.username,
+		bot: !!user.bot,
+		asset_id: user.asset_id,
+		created_at: user.created_at
+	}
+}
+
 module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	
 	const Context = {
@@ -200,6 +211,9 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 
 	// strip out sensitive or useless data
 	Context.Messages = Context.Messages.map(SimplifyMessage);
+	for (const [userID, user] of Context.Users) {
+		Context.Users.set(userID, SimplifyUser(user));
+	}
 
 	let fileData = Buffer.from(''); // empty buffer
 	switch (options.format) {

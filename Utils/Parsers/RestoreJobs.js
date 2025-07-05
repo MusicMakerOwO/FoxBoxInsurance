@@ -324,17 +324,17 @@ async function executeAction(job, action) {
 				throw new Error(`Role order action data must be an array of { id, position }`);
 			}
 			for (let i = 0; i < action.data.length; i++) {
-				if (typeof action.data.id !== 'string') {
+				if (typeof action.data[i].id !== 'string') {
 					throw new Error(`Role order action data at index ${i} must have a string 'id' property`);
 				}
-				if (typeof action.data.position !== 'number') {
+				if (typeof action.data[i].position !== 'number') {
 					throw new Error(`Role order action data at index ${i} must have a number 'position' property`);
 				}
-				if (action.data.position < 0) {
+				if (action.data[i].position < 0) {
 					throw new Error(`Role position at index ${i} must be a non-negative number`);
 				}
-				if (action.data.id === job.botRoleID && action.data.position !== action.data.length - 1) {
-					action.data.position = action.data.length - 1; // bot role should always be at the top
+				if (action.data[i].id === job.botRoleID && action.data[i].position !== action.data.length) {
+					action.data[i].position = action.data.length; // bot role should always be at the top
 				}
 				action.data[i].role = action.data[i].id; // for backwards compatibility
 			}

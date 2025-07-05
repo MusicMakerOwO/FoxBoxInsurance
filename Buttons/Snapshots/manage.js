@@ -133,7 +133,7 @@ module.exports = {
 					type: 2,
 					style: 3,
 					label: 'Restore',
-					custom_id: `restore-options_${snapshotData.snapshotID ?? snapshotData.id}`,
+					custom_id: `restore-options_${snapshotData.importID ?? snapshotData.id}`,
 					emoji: '🔄'
 				},
 				{

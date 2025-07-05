@@ -39,7 +39,7 @@ const ALLOWED_CHANNEL_TYPES = [
 	ChannelType.GuildMedia
 ];
 
-const channelCache = new TTLCache(); // guildID -> { channelName : channelID }
+const channelCache = new TTLCache(); // guildID -> Map<channelName, channelID[]>
 
 module.exports = {
 	customID: 'export-channel',

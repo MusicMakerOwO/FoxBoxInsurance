@@ -327,7 +327,8 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 							UPDATE Messages
 							SET channel_id = ?
 							WHERE channel_id = ?
-						`).run(newID, oldID);
+							AND guild_id = ?
+						`).run(newID, oldID, interaction.guild.id);
 					}
 
 					for (const [oldID, newID] of job.role_lookups) {

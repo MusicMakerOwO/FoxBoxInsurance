@@ -349,8 +349,6 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 					}
 
 					await UpdateHashes(snapshotID);
-				} else {
-					await CreateSnapshot(interaction.guild, SNAPSHOT_TYPE.AUTOMATIC);
 				}
 
 				await new Promise(resolve => setTimeout(resolve, 1000));

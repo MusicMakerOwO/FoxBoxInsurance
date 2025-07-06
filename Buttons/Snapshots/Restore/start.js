@@ -307,6 +307,8 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 
 			clearInterval(interval);
 
+			ClearCache( CACHE_TYPE.BAN );
+
 			if (job.status === STATUS.COMPLETED) {
 				updateMessage.edit({
 					content: '',

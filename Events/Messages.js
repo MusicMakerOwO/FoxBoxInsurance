@@ -1,5 +1,5 @@
 const { GetGuildTOS } = require('../Utils/Caching/TOS');
-const SimplifyMessage = require('../Utils/Parsers/SimplifyMessage');
+const SimplifyMessage = require('../Utils/Parsers/ParseMessage');
 const { DownloadQueue, ASSET_TYPE } = require('../Utils/Processing/Images');
 
 module.exports = {

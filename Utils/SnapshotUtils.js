@@ -313,7 +313,7 @@ async function FetchAllBans(guild) {
 		if (fetchedBans.size === 0) break;
 
 		for (const [userID, ban] of fetchedBans) {
-			bans.set(userID, ban);
+			bans.set(userID, { user: ban.user, reason: ban.reason ?? 'No reason provided' });
 		}
 
 		offset = fetchedBans.last()?.user.id;

@@ -5,9 +5,9 @@ const { CreateSnapshot } = require('../Utils/SnapshotUtils');
 const { isGuildRestoring } = require('../Utils/Parsers/RestoreJobs');
 const https = require('node:https');
 const crypto = require('node:crypto');
-const ParseFunctions = require('../Utils/SnapshotImport/ParseFunctions');
 const { SNAPSHOT_ERRORS } = require('../Utils/SnapshotImport/errors');
 const Log = require('../Utils/Logs');
+const { ParseFunctions } = require('../Utils/SnapshotImport/ParseFunctions');
 
 const noPermissionEmbed = {
 	color: COLOR.ERROR,
@@ -239,8 +239,8 @@ Please proceed with caution and only if you know what you're doing ...`
 					});
 				}
 
-				if (metadata.version !== snapshotData.version) {
-					console.log(`Snapshot version mismatch: expected ${metadata.version}, got ${snapshotData.version}`);
+				if (exportMetadata.version !== snapshotData.version) {
+					console.log(`Snapshot version mismatch: expected ${exportMetadata.version}, got ${snapshotData.version}`);
 					return interaction.editReply({
 						embeds: [ FileMismatchEmbed ]
 					});
@@ -254,10 +254,10 @@ Please proceed with caution and only if you know what you're doing ...`
 				}
 
 				if (
-					metadata.length !== fileContent.length ||
-					crypto.createHash(metadata.algorithm).update(fileContent).digest('hex') !== metadata.hash
+					exportMetadata.length !== fileContent.length ||
+					crypto.createHash(exportMetadata.algorithm).update(fileContent).digest('hex') !== exportMetadata.hash
 				) {
-					console.log(`Snapshot file length or hash mismatch: expected ${metadata.length} bytes, got ${fileContent.length} bytes`);
+					console.log(`Snapshot file length or hash mismatch: expected ${exportMetadata.length} bytes, got ${fileContent.length} bytes`);
 
 					Database.prepare(`
 						UPDATE SnapshotExports

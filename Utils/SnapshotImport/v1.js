@@ -1,5 +1,3 @@
-const Database = require("../Database");
-const crypto = require("node:crypto");
 const { SimplifyChannel, SimplifyRole, SimplifyBan, SimplifyPermission } = require("../SnapshotUtils");
 const { SNAPSHOT_ERRORS } = require("./errors");
 

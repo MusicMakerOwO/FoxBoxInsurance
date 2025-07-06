@@ -15,4 +15,6 @@ while (true) {
 	i++;
 }
 
-module.exports = ParseFunctions;
+module.exports = {
+	ParseFunctions
+}

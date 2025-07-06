@@ -1,10 +1,13 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE, SECONDS } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
-const { CreateSnapshot, SimplifyChannel, SimplifyRole, SimplifyPermission, SimplifyBan } = require('../Utils/SnapshotUtils');
+const { CreateSnapshot } = require('../Utils/SnapshotUtils');
 const { isGuildRestoring } = require('../Utils/Parsers/RestoreJobs');
 const https = require('node:https');
 const crypto = require('node:crypto');
+const ParseFunctions = require('../Utils/SnapshotImport/ParseFunctions');
+const { SNAPSHOT_ERRORS } = require('../Utils/SnapshotImport/errors');
+const Log = require('../Utils/Logs');
 
 const noPermissionEmbed = {
 	color: COLOR.ERROR,
@@ -34,6 +37,18 @@ const FileMismatchEmbed = {
 	color: COLOR.ERROR,
 	title: 'File Mismatch',
 	description: 'The uploaded file does not match the expected snapshot format. Please create a new export and try again.'
+}
+
+const BadVersionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Unsupported Snapshot',
+	description: `The snapshot is outdated or not supported at the current moment\nPlease export the snapshot again or contact support`
+}
+
+const ImportErrorEmbed = {
+	color: COLOR.ERROR,
+	title: 'Snapshot Import Error',
+	description: 'An unknown error occurred while importing the snapshot\nPlease try again or contact support if continued 💔'
 }
 
 module.exports = {
@@ -224,29 +239,25 @@ Please proceed with caution and only if you know what you're doing ...`
 					});
 				}
 
-				// make sure there are no additional fields
-				const requiredFields = new Set(['id', 'version', 'channels', 'roles', 'permissions', 'bans']);
-				for (const field of Object.keys(snapshotData)) {
-					if (!requiredFields.has(field)) {
-						console.log(`Snapshot data contains unexpected field: ${field}`);
-						return interaction.editReply({
-							embeds: [ CorruptedSnapshotEmbed ]
-						});
-					}
-				}
-
-				if (exportMetadata.version !== snapshotData.version) {
-					console.log(`Snapshot version mismatch: expected ${exportMetadata.version}, got ${snapshotData.version}`);
-					return interaction.editReply({ 
+				if (metadata.version !== snapshotData.version) {
+					console.log(`Snapshot version mismatch: expected ${metadata.version}, got ${snapshotData.version}`);
+					return interaction.editReply({
 						embeds: [ FileMismatchEmbed ]
 					});
 				}
 
+				if (!ParseFunctions.has(snapshotData.version)) {
+					console.log(`Unsupported snapshot version: ${snapshotData.version}`);
+					return interaction.editReply({
+						embeds: [ BadVersionEmbed ]
+					});
+				}
+
 				if (
-					exportMetadata.length !== fileContent.length ||
-					crypto.createHash(exportMetadata.algorithm).update(fileContent).digest('hex') !== exportMetadata.hash
+					metadata.length !== fileContent.length ||
+					crypto.createHash(metadata.algorithm).update(fileContent).digest('hex') !== metadata.hash
 				) {
-					console.log(`Snapshot file length or hash mismatch: expected ${exportMetadata.length} bytes, got ${fileContent.length} bytes`);
+					console.log(`Snapshot file length or hash mismatch: expected ${metadata.length} bytes, got ${fileContent.length} bytes`);
 
 					Database.prepare(`
 						UPDATE SnapshotExports
@@ -254,32 +265,29 @@ Please proceed with caution and only if you know what you're doing ...`
 						WHERE id = ?
 					`).run(exportID);
 
-					return interaction.editReply({ 
+					return interaction.editReply({
 						embeds: [ CorruptedSnapshotEmbed ]
 					});
 				}
 
-				const Parse = (entry, simplify) => {
-					if (!(entry in snapshotData) || !Array.isArray(snapshotData[entry])) {
-						return interaction.editReply({
-							embeds: [ CorruptedSnapshotEmbed ]
-						});
-					}
-
-					for (let i = 0; i < snapshotData[entry].length; i++) {
-						if (typeof snapshotData[entry][i] !== 'object' || !snapshotData[entry][i]) {
+				const parse = ParseFunctions.get(snapshotData.version);
+				try {
+					// mutates the snapshot data in place
+					parse(exportMetadata, snapshotData);
+				} catch (error) {
+					switch (error) {
+						case SNAPSHOT_ERRORS.CORRUPTED:
+						case SNAPSHOT_ERRORS.UNEXPECTED_FIELD:
 							return interaction.editReply({
 								embeds: [ CorruptedSnapshotEmbed ]
 							});
-						}
-						snapshotData[entry][i] = simplify(snapshotData[entry][i]);
+						default:
+							Log.error(error);
+							return interaction.editReply({
+								embeds: [ ImportErrorEmbed ]
+							});
 					}
 				}
-
-				Parse('channels',	 SimplifyChannel	);
-				Parse('roles', 		 SimplifyRole		);
-				Parse('permissions', (p) => SimplifyPermission(p.channel_id, p) );
-				Parse('bans', 		 SimplifyBan		);
 
 				client.ttlcache.set(`import-${exportID}`, {
 					metadata: exportMetadata,

@@ -767,13 +767,15 @@ function GenerateExportID(attempts = 5) {
 	return exists ? GenerateExportID(attempts - 1) : idString;
 }
 
+const SNAPSHOT_VERSION = 1;
+
 function ExportSnapshot(snapshotID) {
 	const snapshotData = FetchSnapshot(snapshotID);
 	if (!snapshotData) return null;
 
 	return {
 		id: GenerateExportID(),
-		version: 1,
+		version: SNAPSHOT_VERSION,
 		channels: Array.from(snapshotData.channels.values()),
 		roles: Array.from(snapshotData.roles.values()),
 		permissions: Array.from(snapshotData.permissions.values()),

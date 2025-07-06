@@ -3,7 +3,7 @@ const Database = require("../../../Utils/Database");
 const { CreateJob, GetJob, STATUS, isGuildRestoring, API_TYPES, isRateLimited } = require("../../../Utils/Parsers/RestoreJobs");
 const Permissions = require("../../../Utils/Permissions");
 const ProgressBar = require("../../../Utils/ProgressBar");
-const { UpdateHashes, ClearCache, CreateSnapshot, ALLOWED_CHANNEL_TYPES } = require("../../../Utils/SnapshotUtils");
+const { UpdateHashes, ClearCache, ALLOWED_CHANNEL_TYPES, CACHE_TYPE } = require("../../../Utils/SnapshotUtils");
 
 const RolePositionError = {
 	color: COLOR.ERROR,
@@ -39,7 +39,6 @@ In Discord terms, this allows for things like threads, announcements, and forums
 4) Click "Get Started" in the middle of the screen
 5) Follow the prompts to enable community features`
 }
-
 
 const MissingMemberError = {
 	color: COLOR.ERROR,
@@ -101,6 +100,8 @@ const PRIVATE_PERMS_ALLOW = Permissions.ViewChannel | Permissions.SendMessages |
 // only text and voice channels are public
 const COMMUNITY_CHANNEL_TYPES = new Set(Array.from(ALLOWED_CHANNEL_TYPES).filter(x => x !== 0 && x !== 2)); // 0 = GUILD_TEXT, 2 = GUILD_VOICE
 
+const COOLDOWN = SECONDS.HOUR * 1000;
+
 module.exports = {
 	customID: 'restore-start',
 	execute: async function(interaction, client, args) {
@@ -118,6 +119,23 @@ module.exports = {
 		if (isGuildRestoring(interaction.guild.id)) {
 			return interaction.editReply({
 				embeds: [AlreadyRunningEmbed],
+				components: []
+			});
+		}
+
+		const lastRestore = Database.prepare(`
+			SELECT last_restore
+			FROM Guilds
+			WHERE id = ?
+		`).pluck().get(interaction.guild.id) ?? 0;
+		if (lastRestore > Date.now() - COOLDOWN) {
+			const remaining = Math.ceil((COOLDOWN - (Date.now() - lastRestore)) / 1000);
+			return interaction.editReply({
+				embeds: [{
+					color: COLOR.ERROR,
+					title: 'Restore Cooldown',
+					description: `You can only restore once every hour. Please wait ${ConvertTimeToText(remaining)} before starting a new restore.`
+				}],
 				components: []
 			});
 		}
@@ -295,6 +313,14 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 					embeds: [ CleaningUpEmbed ],
 					components: []
 				});
+
+				if (job.actions.length > 50) {
+					Database.prepare(`
+						UPDATE Guilds
+						SET last_restore = ?
+						WHERE id = ?
+					`).run(Date.now(), interaction.guild.id);
+				}
 
 				if (job.snapshot_type !== SNAPSHOT_TYPE.IMPORT) {
 					// update the ids in the snapshots

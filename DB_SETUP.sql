@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS Guilds (
 	accepted_terms INTEGER NOT NULL DEFAULT 0, -- 1 if the guild has accepted the terms
 	asset_id INTEGER,
 	snapshots_enabled INTEGER NOT NULL DEFAULT 1, -- 1 if the guild has snapshots enabled
+	last_restore INTEGER NOT NULL DEFAULT 0, -- The last time the guild was (successfully) restored
 	-- {{...}} denotes an external macro, see Utils/Database for available macros
 	created_at TEXT GENERATED ALWAYS AS ( {{SNOWFLAKE_DATE}} ) VIRTUAL
 ) STRICT;

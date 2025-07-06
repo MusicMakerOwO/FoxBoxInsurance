@@ -5,6 +5,7 @@ const { minify } = require("html-minifier");
 const crypto = require("crypto");
 const { promisify } = require("util");
 const ResolveUserKey = require("../ResolveUserKey");
+const { SimplifyMessage, SimplifyUser, SimplifyGuild } = require("./Simplify");
 
 const missingAsset = readFileSync(`${__dirname}/../../missing.png`);
 
@@ -44,29 +45,6 @@ function GenerateExportID(attempts = 5) {
 	const idString = id.join('');
 	const exists = Database.prepare('SELECT * FROM Exports WHERE id = ?').get(idString);
 	return exists ? GenerateExportID(attempts - 1) : idString;
-}
-
-function SimplifyMessage(message) {
-	// Simplify message object to only include necessary fields
-	return {
-		id: message.id,
-		user_id: message.user_id,
-		content: message.content || null,
-		sticker_id: message.sticker_id,
-		created_at: message.created_at,
-		reply_to: message.reply_to || null // assuming reply_to is a field in the message
-	};
-}
-
-function SimplifyUser(user) {
-	// Simplify user object to only include necessary fields
-	return {
-		id: user.id,
-		username: user.username,
-		bot: !!user.bot,
-		asset_id: user.asset_id,
-		created_at: user.created_at
-	}
 }
 
 module.exports = async function Export(options = DEFAULT_OPTIONS) {
@@ -211,6 +189,7 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 
 	// strip out sensitive or useless data
 	Context.Messages = Context.Messages.map(SimplifyMessage);
+	Context.Guild = SimplifyGuild(Context.Guild);
 	for (const [userID, user] of Context.Users) {
 		Context.Users.set(userID, SimplifyUser(user));
 	}

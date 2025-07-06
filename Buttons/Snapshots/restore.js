@@ -1,5 +1,6 @@
 const { COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE, RESTORE_OPTIONS } = require("../../Utils/Constants");
-const { FetchSnapshot, FetchAllBans, SimplifyChannel, ALLOWED_CHANNEL_TYPES, SimplifyRole, SimplifyBan, HashObject, SimplifyPermission, PermKey } = require("../../Utils/SnapshotUtils");
+const { FetchSnapshot, FetchAllBans, ALLOWED_CHANNEL_TYPES, PermKey } = require("../../Utils/SnapshotUtils");
+const { SimplifyChannel, SimplifyRole, SimplifyPermission, SimplifyBan } = require("../../Utils/Parsers/Simplify");
 const { API_TYPES } = require("../../Utils/Parsers/RestoreJobs");
 const Log = require("../../Utils/Logs");
 const SortRoles = require("../../Utils/Sort/SortRoles");

@@ -1,10 +1,11 @@
-const { Guild, GuildChannel, Role, GuildBan, PermissionOverwrites } = require('discord.js');
+const { Guild } = require('discord.js');
 const crypto = require('crypto');
 const Database = require('./Database');
 const Log = require('./Logs');
 const { SNAPSHOT_TYPE, SECONDS } = require('./Constants');
 const client = require('../client.js');
 const TTLCache = require('./Caching/TTLCache.js');
+const { SimplifyRole, SimplifyChannel, SimplifyPermission, SimplifyBan } = require('./Parsers/Simplify.js');
 
 function HashObject(obj) {
 	if (Object.values(obj).some(v => typeof v === 'object' && v !== null)) {
@@ -21,101 +22,6 @@ function HashObject(obj) {
 function PermKey(channelID, roleID) {
 	return `${channelID}-${roleID}`;
 }
-
-function SimplifyChannel(channel) {
-	if (channel instanceof GuildChannel) return {
-		id: channel.id,
-		type: channel.type,
-		name: channel.name,
-		position: channel.rawPosition,
-		topic: channel.topic ?? null,
-		nsfw: channel.nsfw ? 1 : 0,
-		parent_id: channel.parentId ?? null
-	}
-
-	if (typeof channel.id !== 'string' || channel.id.length === 0) {
-		throw new Error('Channel ID must be a non-empty string');
-	}
-
-	return {
-		id: channel.id,
-		type: channel.type ?? 0,
-		name: channel.name ?? 'Unknown',
-		position: channel.position ?? 0,
-		topic: channel.topic ?? null,
-		nsfw: channel.nsfw ? 1 : 0,
-		parent_id: channel.parent_id ?? null
-	}
-}
-
-function SimplifyRole(role) {
-	if (role instanceof Role) return {
-		id: role.id,
-		name: role.name,
-		color: role.color,
-		hoist: +role.hoist || 0,
-		position: role.rawPosition,
-		permissions: String(role.permissions.bitfield),
-		managed: +role.managed || 0
-	}
-
-	if (typeof role.id !== 'string' || role.id.length === 0) {
-		throw new Error('Role ID must be a non-empty string');
-	}
-
-	return {
-		id: role.id,
-		name: role.name ?? 'Unknown',
-		color: role.color ?? 0,
-		hoist: +role.hoist || 0,
-		position: role.position ?? 0,
-		permissions: role.permissions ?? '0',
-		managed: +role.managed || 0
-	}
-}
-
-function SimplifyPermission(channelID, permission) {
-	if (permission instanceof PermissionOverwrites) return {
-		id: PermKey(channelID, permission.id),
-		channel_id: channelID,
-		role_id: permission.id,
-		allow: permission.allow.bitfield,
-		deny: permission.deny.bitfield,
-	}
-
-	if (typeof channelID !== 'string' || channelID.length === 0) {
-		throw new Error('Channel ID must be a non-empty string');
-	}
-
-	if (typeof permission.role_id !== 'string' || permission.role_id.length === 0) {
-		throw new Error('Role ID must be a non-empty string');
-	}
-
-	return {
-		id: PermKey(channelID, permission.role_id),
-		channel_id: channelID,
-		role_id: permission.role_id,
-		allow: permission.allow ?? 0n,
-		deny: permission.deny ?? 0n
-	}
-}
-
-function SimplifyBan(ban) {
-	if (ban instanceof GuildBan) return {
-		user_id: ban.user.id,
-		reason: ban.reason ?? 'No reason provided',
-	}
-
-	if (typeof ban.user_id !== 'string' || ban.user_id.length === 0) {
-		throw new Error('User ID must be a non-empty string');
-	}
-
-	return {
-		user_id: ban.user_id,
-		reason: ban.reason ?? 'No reason provided',
-	}
-}
-
 
 const statCache = new TTLCache();
 const stateCache = new TTLCache();

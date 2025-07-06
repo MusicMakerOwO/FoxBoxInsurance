@@ -1,4 +1,4 @@
-const { SimplifyChannel, SimplifyRole, SimplifyBan, SimplifyPermission } = require("../SnapshotUtils");
+const { SimplifyChannel, SimplifyRole, SimplifyBan, SimplifyPermission } = require("../Parsers/Simplify.js");
 const { SNAPSHOT_ERRORS } = require("./errors");
 
 module.exports = function ParseV1(metadata, snapshotData) {

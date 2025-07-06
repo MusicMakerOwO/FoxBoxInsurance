@@ -3,6 +3,7 @@ const https = require('https');
 const Logs = require('./Logs');
 const CRC32 = require('./CRC32');
 const { InteractionContextType } = require('discord.js');
+const { SimplifyCommand } = require('./Parsers/Simplify');
 
 // This is all that the Routes.applicationCommands() method does, but we don't need the extra dependency if it's literally just a string lmao
 // https://discord.com/developers/docs/tutorials/upgrading-to-application-commands#registering-commands
@@ -99,17 +100,6 @@ function StringifyFunction(key, value) {
 			return value === null ? 'null' : value;
 	}
 	return value;
-}
-
-function SimplifyCommand(command) {
-	return {
-		name: command.name ?? '',
-		description: command.description ?? '',
-		type: command.type ?? 1,
-		options: command.options ?? [],
-		contexts: command.contexts ?? DEFAULT_COMMAND_ACCESS,
-		nsfw: command.nsfw ?? false
-	}
 }
 
 function TokenizeCommand(command) {

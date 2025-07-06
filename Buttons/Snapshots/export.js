@@ -3,6 +3,7 @@ const Database = require("../../Utils/Database");
 const { ExportSnapshot } = require("../../Utils/SnapshotUtils");
 const crypto = require('node:crypto');
 const UploadCDN = require("../../Utils/UploadCDN");
+const { ParseFunctions } = require("../../Utils/SnapshotImport/ParseFunctions");
 
 const NoSnapshotEmbed = {
 	color: COLOR.ERROR,
@@ -40,6 +41,10 @@ module.exports = {
 		}
 
 		const data = ExportSnapshot(snapshotID, interaction.guild.id);
+		if (!ParseFunctions.has(data.version)) {
+			// sanity check, should never happen
+			throw new Error(`No parse function registered for snapshot version ${data.version}`);
+		}
 
 		function JSONReplacer(key, value) {
 			return (typeof value === 'bigint') ? value.toString() + 'n' : value;

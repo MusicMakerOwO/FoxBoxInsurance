@@ -1,6 +1,5 @@
 const { COLOR, EMOJI } = require("../../../Utils/Constants");
 const { FetchSnapshot } = require("../../../Utils/SnapshotUtils");
-const RemoveFormatting = require("../../../Utils/RemoveFormatting");
 
 const banCache = new Map(); // snapshot_id -> { user_id, reason }[]
 

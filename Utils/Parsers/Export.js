@@ -3,7 +3,6 @@ const Database = require("../Database");
 const { readFileSync } = require("fs");
 const { minify } = require("html-minifier");
 const crypto = require("crypto");
-const { promisify } = require("util");
 const ResolveUserKey = require("../ResolveUserKey");
 const { SimplifyMessage, SimplifyUser, SimplifyGuild } = require("./Simplify");
 

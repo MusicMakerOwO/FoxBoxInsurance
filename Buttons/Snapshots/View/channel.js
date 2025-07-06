@@ -1,6 +1,5 @@
 const { COLOR, EMOJI } = require("../../../Utils/Constants");
 const { FetchSnapshot } = require("../../../Utils/SnapshotUtils");
-const SortChannels = require("../../../Utils/Sort/SortChannels");
 const RemoveFormatting = require("../../../Utils/RemoveFormatting");
 
 const channelCache = new Map(); // snapshot_id -> string[]

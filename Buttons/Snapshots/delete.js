@@ -1,5 +1,4 @@
 const { COLOR, EMOJI } = require("../../Utils/Constants");
-const Database = require("../../Utils/Database");
 const { SnapshotStats, DeleteSnapshot } = require("../../Utils/SnapshotUtils");
 
 const ownerEmbed = {

@@ -418,7 +418,7 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 		for (const ban of guildBans) {
 			const simpleBan = SimplifyBan(ban);
 			const hash = HashObject(simpleBan);
-			processedBans.add(ban.user.id);
+			processedBans.add(ban.user_id);
 			if (snapshotData.bans.has(simpleBan.user_id)) {
 				if (snapshotData.bans.get(simpleBan.user_id).hash !== hash) {
 					bans.push({

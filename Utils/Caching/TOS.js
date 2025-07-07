@@ -21,7 +21,7 @@ function SetGuildTOS(id, value) {
 		UPDATE guilds
 		SET tos = ?
 		WHERE id = ?
-	`).run(value, +id);
+	`).run(+value, id);
 }
 
 function GetGuildTOS(id) {
@@ -56,7 +56,7 @@ function SetUserTOS(id, value) {
 		UPDATE users
 		SET accepted_terms = ?
 		WHERE id = ?
-	`).run(value, +id);
+	`).run(+value, id);
 }
 
 function GetUserTOS(id) {

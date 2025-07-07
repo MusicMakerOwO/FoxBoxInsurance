@@ -1,5 +1,9 @@
 const { GuildChannel, Role, GuildBan, PermissionOverwrites, InteractionContextType } = require('discord.js');
 
+function PermKey(channelID, roleID) {
+	return `${channelID}-${roleID}`;
+}
+
 function SimplifyChannel(channel) {
 	if (channel instanceof GuildChannel) return {
 		id: channel.id,
@@ -141,6 +145,8 @@ function SimplifyGuild(guild) {
 }
 
 module.exports = {
+	PermKey,
+
 	SimplifyChannel,
 	SimplifyRole,
 	SimplifyPermission,

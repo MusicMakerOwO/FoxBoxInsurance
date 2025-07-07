@@ -19,10 +19,6 @@ function HashObject(obj) {
 	return crypto.createHash('sha1').update(flatString).digest('hex');
 }
 
-function PermKey(channelID, roleID) {
-	return `${channelID}-${roleID}`;
-}
-
 const statCache = new TTLCache();
 const stateCache = new TTLCache();
 
@@ -763,7 +759,6 @@ module.exports = {
 	ExportSnapshot,
 
 	HashObject,
-	PermKey,
 	FetchAllBans,
 
 	isSnapshotDeletable,

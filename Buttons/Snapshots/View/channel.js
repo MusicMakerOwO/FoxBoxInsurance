@@ -4,11 +4,25 @@ const RemoveFormatting = require("../../../Utils/RemoveFormatting");
 
 const channelCache = new Map(); // snapshot_id -> string[]
 
-const PAGE_SIZE = 25; // Not used here, but can be useful for pagination in the future
+const PAGE_SIZE = 25;
+
+const NoPermissionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'You must be a server administrator for this'
+}
 
 module.exports = {
 	customID: 'snapshot-view-channels',
 	execute: async function(interaction, client, args) {
+
+		if (!interaction.member.permissions.has('Administrator')) {
+			return interaction.editReply({
+				embeds: [NoPermissionEmbed],
+				components: []
+			});
+		}
+
 		const snapshotID = parseInt(args[0]);
 		if (isNaN(snapshotID) || snapshotID <= 0) throw new Error('Invalid snapshot ID provided.');
 

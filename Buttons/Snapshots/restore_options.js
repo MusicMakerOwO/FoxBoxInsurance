@@ -12,6 +12,12 @@ const NoSnapshotEmbed = {
 	description: `Snapshot not found or already deleted\nCreate one using \`/snapshot create\``
 }
 
+const OwnerEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'Only the server owner can restore snapshots'
+}
+
 function ResolveSnapshot(client, guildID, id) {
 
 	const availableImports = client.ttlcache.get(`guild-imports-${guildID}`);
@@ -49,6 +55,13 @@ function ResolveSnapshot(client, guildID, id) {
 module.exports = {
 	customID: 'restore-options',
 	execute: async function(interaction, client, args) {
+
+		if (interaction.guild.ownerId !== interaction.user.id) {
+			return interaction.update({
+				embeds: [OwnerEmbed],
+				components: []
+			});
+		}
 
 		const snapshot = args[0];
 		const snapshotData = ResolveSnapshot(client, interaction.guild.id, snapshot);

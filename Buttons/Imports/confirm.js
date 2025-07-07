@@ -6,12 +6,25 @@ const NoImportEmbed = {
 	description: 'The import does not exist or has expired.\nPlease import the file and try again.'
 }
 
+const NoPermissionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'You must be a server administrator for this'
+}
+
 module.exports = {
 	customID: 'import-confirm',
 	execute: async function(interaction, client, args) {
 		const importID = args[0];
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+
+		if (!interaction.member.permissions.has('Administrator')) {
+			return interaction.editReply({
+				embeds: [NoPermissionEmbed],
+				components: []
+			});
+		}
 
 		if (!client.ttlcache.has(`import-${importID}`)) {
 			return interaction.editReply({

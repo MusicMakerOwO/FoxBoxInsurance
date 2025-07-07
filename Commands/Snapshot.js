@@ -51,6 +51,32 @@ const ImportErrorEmbed = {
 	description: 'An unknown error occurred while importing the snapshot\nPlease try again or contact support if continued 💔'
 }
 
+const RestoreWarningEmbed = {
+	color: COLOR.ERROR,
+	title: 'Restore in Progress',
+	description: `
+Managing snapshots while a restore is in progress can be dangerous!
+Please proceed with caution and only if you know what you're doing ...`
+}
+
+const RestoreInProgressEmbed = {
+	color: COLOR.ERROR,
+	title: 'Restore in Progress',
+	description: 'You cannot create a snapshot while a restore is in progress.'
+}
+
+const InvalidFileEmbed = {
+	color: COLOR.ERROR,
+	title: 'Invalid File',
+	description: 'Please upload a valid snapshot file in JSON format.'
+}
+
+const InvalidJSONEmbed = {
+	color: COLOR.ERROR,
+	title: 'Invalid JSON',
+	description: 'The uploaded file is not a valid JSON snapshot.'
+}
+
 module.exports = {
 	aliases: ['backup'],
 	examples: [
@@ -130,13 +156,7 @@ module.exports = {
 			if (isGuildRestoring(interaction.guild.id)) {
 				// give a warning and ask for confirmation
 				return interaction.reply({
-					embeds: [{
-						color: COLOR.ERROR,
-						title: 'Restore in Progress',
-						description: `
-Managing snapshots while a restore is in progress can be dangerous!
-Please proceed with caution and only if you know what you're doing ...`
-					}],
+					embeds: [ RestoreWarningEmbed ],
 					components: [{
 						type: 1,
 						components: [{
@@ -148,7 +168,7 @@ Please proceed with caution and only if you know what you're doing ...`
 						}]
 					}],
 					ephemeral: true
-				}).catch(console.error);
+				});
 			}
 
 			const button = client.buttons.get('snapshot-list');
@@ -158,11 +178,7 @@ Please proceed with caution and only if you know what you're doing ...`
 		if (subcommand === 'create') {
 			if (isGuildRestoring(interaction.guild.id)) {
 				return interaction.reply({
-					embeds: [{
-						color: COLOR.ERROR,
-						title: 'Restore in Progress',
-						description: 'You cannot create a snapshot while a restore is in progress.'
-					}],
+					embeds: [ RestoreInProgressEmbed ],
 					ephemeral: true
 				});
 			}
@@ -185,11 +201,7 @@ Please proceed with caution and only if you know what you're doing ...`
 			const attachment = interaction.options.getAttachment('file');
 			if (!attachment || !attachment.name.endsWith('.json')) {
 				return interaction.editReply({ 
-					embeds: [{
-						color: COLOR.ERROR,
-						title: 'Invalid File',
-						description: 'Please upload a valid snapshot file in JSON format.'
-					}]
+					embeds: [ InvalidFileEmbed ],
 				});
 			}
 
@@ -198,11 +210,7 @@ Please proceed with caution and only if you know what you're doing ...`
 				var snapshotData = JSON.parse(fileContent);
 			} catch (error) {
 				return interaction.editReply({ 
-					embeds: [{
-						color: COLOR.ERROR,
-						title: 'Invalid JSON',
-						description: 'The uploaded file is not a valid JSON snapshot.'
-					}]
+					embeds: [ InvalidJSONEmbed ],
 				});
 			}
 

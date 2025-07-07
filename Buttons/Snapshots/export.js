@@ -13,9 +13,23 @@ const NoSnapshotEmbed = {
 
 const HASH_ALGORITHM = 'sha256';
 
+const NoPermissionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'You must be a server administrator for this'
+}
+
 module.exports = {
 	customID: 'snapshot-export',
 	execute: async function (interaction, client, args) {
+
+		if (!interaction.member.permissions.has('Administrator')) {
+			return interaction.editReply({
+				embeds: [NoPermissionEmbed],
+				components: []
+			});
+		}
+
 		const snapshotID = parseInt(args[0]);
 		if (isNaN(snapshotID) || snapshotID < 1) throw new Error(`Invalid snapshot ID provided: ${args[0]}`);
 

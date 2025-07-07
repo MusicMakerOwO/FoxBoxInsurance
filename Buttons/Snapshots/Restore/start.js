@@ -40,6 +40,12 @@ In Discord terms, this allows for things like threads, announcements, and forums
 5) Follow the prompts to enable community features`
 }
 
+const OwnerEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'Only the server owner can restore snapshots'
+}
+
 const MissingMemberError = {
 	color: COLOR.ERROR,
 	description: 'Something went wrong ... \nPlease try again later or contact support 💔'
@@ -107,6 +113,13 @@ module.exports = {
 	execute: async function(interaction, client, args) {
 
 		await interaction.deferUpdate();
+
+		if (interaction.guild.ownerId !== interaction.user.id) {
+			return interaction.editReply({
+				embeds: [OwnerEmbed],
+				components: []
+			});
+		}
 
 		const RestoreJob = client.ttlcache.get(`restore-job-${interaction.guild.id}`);
 		if (!RestoreJob) {

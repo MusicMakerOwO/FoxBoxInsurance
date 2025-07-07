@@ -10,6 +10,11 @@ const NoImportEmbed = {
 	description: 'Import has expired - Please re-import the snapshot'
 }
 
+const NoPermissionEmbed = {
+	color: COLOR.ERROR,
+	title: 'Missing Permissions',
+	description: 'You must be a server administrator for this'
+}
 
 function ShortText(text = '', maxLength = 100) {
 	if (text.length <= maxLength) return text;
@@ -26,6 +31,13 @@ module.exports = {
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+
+		if (!interaction.member.permissions.has('Administrator')) {
+			return interaction.editReply({
+				embeds: [NoPermissionEmbed],
+				components: []
+			});
+		}
 
 		const importData = client.ttlcache.get(`import-${importID}`);
 		if (!importData) {

@@ -6,6 +6,7 @@ const Log = require("../../Utils/Logs");
 const SortRoles = require("../../Utils/Sort/SortRoles");
 const SortChannels = require("../../Utils/Sort/SortChannels");
 const Database = require("../../Utils/Database");
+const { writeFileSync } = require('node:fs');
 
 const LOADING_STEPS = [
 	'Loading snapshot data ...', // fetch snapshot
@@ -396,6 +397,8 @@ module.exports = {
 		Filter(modifications.roles, API_TYPES.ROLE_DELETE, (...args) => SortRoles(...args, 'data'));
 		Filter(modifications.channels, API_TYPES.CHANNEL_DELETE, (...args) => SortChannels(...args, 'data'));
 		Filter(modifications.bans, API_TYPES.BAN_DELETE);
+
+		writeFileSync(`./execution-plan.json`, JSON.stringify(executionPlan, null, 2));
 
 		const botMember = interaction.guild.members.cache.get(client.user.id) ?? await interaction.guild.members.fetch(client.user.id).catch(() => null);
 		if (!botMember) {

@@ -104,6 +104,16 @@ const CHANGELOG = {
 		changes: [
 			"Security patch that exposes encryption tags in JSON exports"
 		]
+	},
+	"v3.0.0": {
+		date: "2025 July 8th",
+		changes: [
+			"Huge update to the bot, lots of stuff changed lol",
+			"Added snapshots for full server backups - See /snapshot",
+			"Backup roles, channels, permissions, and bans with one click",
+			"Snapshots can be exported and shared around, allowing server cloning",
+			"Messages are not restored (coming soon) and will never be exported in snapshots"
+		]
 	}
 }
 

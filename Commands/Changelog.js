@@ -112,7 +112,8 @@ const CHANGELOG = {
 			"Added snapshots for full server backups - See /snapshot",
 			"Backup roles, channels, permissions, and bans with one click",
 			"Snapshots can be exported and shared around, allowing server cloning",
-			"Messages are not restored (coming soon) and will never be exported in snapshots"
+			"Messages are not restored (coming soon)",
+			"Messages will never be exported in snapshots"
 		]
 	}
 }

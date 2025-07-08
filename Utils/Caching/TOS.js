@@ -19,9 +19,9 @@ function SetGuildTOS(id, value) {
 	guildCache.set(id, value);
 	Database.prepare(`
 		UPDATE guilds
-		SET tos = ?
+		SET accepted_terms = ?
 		WHERE id = ?
-	`).run(+value, id);
+	`).run(value, +id);
 }
 
 function GetGuildTOS(id) {
@@ -56,7 +56,7 @@ function SetUserTOS(id, value) {
 		UPDATE users
 		SET accepted_terms = ?
 		WHERE id = ?
-	`).run(+value, id);
+	`).run(value, +id);
 }
 
 function GetUserTOS(id) {

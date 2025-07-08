@@ -121,6 +121,7 @@ const OLDEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => a.localeCompare(b))
 const LATEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => b.localeCompare(a))[0];
 
 module.exports = {
+	LATEST_VERSION,
 	bypass: true,
 	data: new SlashCommandBuilder()
 		.setName('changelog')

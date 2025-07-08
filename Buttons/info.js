@@ -1,6 +1,8 @@
 const { COLOR, SECONDS } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
 
+const { LATEST_VERSION } = require('../Commands/Changelog');
+
 function CalculateUptime (seconds) {
 	return {
 		days: ~~(seconds / SECONDS.DAY),
@@ -41,6 +43,7 @@ module.exports = {
 			title: 'Fox Bot Insurance',
 			description: `
 **Owner** : @musicmaker
+**Version** : ${LATEST_VERSION}
 
 **Servers** : ${guilds}
 **Channels** : ${channels}

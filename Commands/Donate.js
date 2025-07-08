@@ -19,7 +19,7 @@ const button = {
 		type: 2,
 		style: 5,
 		label: 'Donate ❤️',
-		url: 'https://ko-fi.com/fbi'
+		url: 'https://ko-fi.com/musicmaker'
 	}]
 }
 

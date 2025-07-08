@@ -13,6 +13,7 @@ config.json
 *.sqlite-wal
 
 # Logs
+execution-plan.json
 logs
 *.log
 npm-debug.log*

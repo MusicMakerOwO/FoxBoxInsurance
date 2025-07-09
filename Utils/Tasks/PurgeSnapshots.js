@@ -47,6 +47,8 @@ GROUP BY guild_id
 		}
 	}
 
+	if (deleteCount === 0) return; // nothing to log lol
+
 	const end = Date.now();
 	const duration = end - start;
 	Log.custom(`Purged ${deleteCount} snapshots from ${purgedGuilds} guilds in ${duration}ms`, 0x7946ff);

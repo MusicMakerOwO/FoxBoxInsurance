@@ -99,6 +99,17 @@ async function InteractionHandler(client, interaction, type, cache) {
 	const args = interaction.customId?.split("_") ?? [];
 	const name = args.shift() ?? interaction.commandName;
 
+	Database.prepare(`
+		INSERT INTO InteractionLogs (guild_id, channel_id, user_id, type, name)
+		VALUES (?, ?, ?, ?, ?)
+	`).run(
+		interaction.guildId,
+		interaction.channelId,
+		interaction.user.id,
+		type,
+		name
+	);
+
 	const component = cache.get(name);
 	if (!component) {
 		interaction.reply({
@@ -126,17 +137,6 @@ async function InteractionHandler(client, interaction, type, cache) {
 	}
 
 	interaction.deferUpdate ??= interaction.deferReply;
-
-	Database.prepare(`
-		INSERT INTO InteractionLogs (guild_id, channel_id, user_id, type, name)
-		VALUES (?, ?, ?, ?, ?)
-	`).run(
-		interaction.guildId,
-		interaction.channelId,
-		interaction.user.id,
-		type,
-		name
-	);
 
 	// add the user to the database if they don't exist
 	InsertUser.run(

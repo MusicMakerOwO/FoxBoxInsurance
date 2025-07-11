@@ -115,6 +115,14 @@ const CHANGELOG = {
 			"Messages are not restored (coming soon)",
 			"Messages will never be exported in snapshots"
 		]
+	},
+	"v3.0.1": {
+		date: "2025 July 11th",
+		changes: [
+			"Bunch of little bug fixes",
+			"Latest version now shows in /info command",
+			"Minor touches to internal logs, nothing to note"
+		]
 	}
 }
 

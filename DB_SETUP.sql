@@ -183,8 +183,8 @@ CREATE INDEX IF NOT EXISTS exports_user_id ON Exports (user_id);
 
 -- No primary key, every single row is a different interaction
 CREATE TABLE IF NOT EXISTS InteractionLogs (
-	guild_id TEXT NOT NULL,
-	channel_id TEXT NOT NULL,
+	guild_id TEXT,
+	channel_id TEXT,
 	user_id TEXT NOT NULL,
 	type TEXT NOT NULL, -- type of interaction
 	name TEXT NOT NULL, -- The name/customID of the component

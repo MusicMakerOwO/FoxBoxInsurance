@@ -127,7 +127,8 @@ const CHANGELOG = {
 	"v3.0.2": {
 		date: "2025 July 12th",
 		changes: [
-			"Fixed a bug where TOS could not be accepted from DMs (credit to @titsou.js)"
+			"Fixed a bug where TOS could not be accepted from DMs (credit to @titsou.js)",
+			"Fixed a display issue allowing you to accept the TOS twice (credit to @titsou.js)",
 		]
 	}
 }

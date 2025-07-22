@@ -123,6 +123,12 @@ const CHANGELOG = {
 			"Latest version now shows in /info command",
 			"Minor touches to internal logs, nothing to note"
 		]
+	},
+	"v3.0.2": {
+		date: "2025 July 12th",
+		changes: [
+			"Fixed a bug where TOS could not be accepted from DMs (credit to @titsou.js)"
+		]
 	}
 }
 
@@ -147,7 +153,7 @@ module.exports = {
 		),
 	execute: async function(interaction, client) {
 		const input = interaction.options.getString('version') || 'latest';
-		
+
 		if (input === 'all') {
 			// show all versions
 			const embed = {
@@ -165,7 +171,7 @@ module.exports = {
 				embeds: [embed]
 			});
 		}
-			
+
 		const version = input === 'latest' ? LATEST_VERSION : input;
 
 		const data = CHANGELOG[version];

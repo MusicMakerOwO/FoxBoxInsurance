@@ -6,16 +6,17 @@ module.exports = async function PushStats() {
 	const messageCount = Database.prepare('SELECT COUNT(*) FROM messages').pluck().get();
 	const guildCount = Database.prepare('SELECT COUNT(*) FROM guilds').pluck().get();
 	const userCount = Database.prepare('SELECT COUNT(*) FROM users').pluck().get();
+	const snapshotCount = Database.prepare('SELECT COUNT(*) FROM snapshots').pluck().get();
 
 	try {
-		await UploadStats(guildCount, messageCount, userCount);
+		await UploadStats(guildCount, messageCount, userCount, snapshotCount);
 		Log.success(`Uploaded stats to API: ${guildCount} guilds, ${messageCount} messages, ${userCount} users`);
 	} catch (error) {
 		Log.error(error);
 	}
 }
 
-function UploadStats(guilds, messages, users) {
+function UploadStats(guilds, messages, users, snapshots) {
 	return new Promise((resolve, reject) => {
 		const request = https.request('https://api.notfbi.dev/stats', {
 			method: 'POST',
@@ -43,7 +44,8 @@ function UploadStats(guilds, messages, users) {
 			shardID: 0, // I'll add sharding later lol
 			guilds: guilds,
 			messages: messages,
-			users: users
+			users: users,
+			snapshots: snapshots
 		}));
 		request.end();
 	});

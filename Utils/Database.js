@@ -1,7 +1,14 @@
 const fs = require('node:fs');
-const BetterSqlite3 = require('better-sqlite3');
+const MariaDB = require('mariadb');
 const { ROOT_FOLDER } = require('./Constants');
 const { DB_SETUP_FILE, DB_FILE } = require('./Constants.js');
+const Log = require('./Logs');
+
+const connection_pool = MariaDB.createPool({
+	host: process.env.MARIADB_HOST,
+	user: process.env.MARIADB_USER,
+	password: process.env.MARIADB_PASSWORD
+});
 
 function ParseQueries(fileContent) {
 	const queries = [];
@@ -56,54 +63,71 @@ const FileContent = fs.readFileSync(DB_SETUP_FILE, 'utf8');
 
 const NoComments = FileContent.replace(/\-\-.*\n/g, '');
 
-const MACROS = {
-	ROOT_FOLDER: ROOT_FOLDER,
-	SNOWFLAKE_DATE: `strftime('%Y-%m-%dT%H:%M:%fZ', ((CAST(id AS INTEGER) >> 22) + 1420070400000) / 1000, 'unixepoch')`,
-	ISO_DATE: `strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`,
-};
+const DBQueries = ParseQueries(NoComments);
 
-const WithMacros = NoComments.replace(/{{(.*?)}}/g, (match, macro) => {
-	if (MACROS[macro]) return MACROS[macro];
-	console.error(`Unknown macro: ${macro}`);
-	return match;
-});
+const connection_warning = new WeakMap(); // Connection => timeoutID
+const connection_location = new WeakMap(); // Connection => stack trace
 
-const DBQueries = ParseQueries(WithMacros);
+class Database {
 
-const Database = new BetterSqlite3(DB_FILE);
-
-Database.pragma('foreign_keys = OFF'); // Faster inserts but data integrity across tables is manual
-Database.pragma('journal_mode = WAL');
-Database.pragma('synchronous = NORMAL'); // Sacrifice some durability for speed
-Database.pragma('cache_size = -16384');  // ~16MB cache
-Database.pragma('temp_store = MEMORY'); // Use memory for temporary tables
-Database.pragma('wal_autocheckpoint = 0');
-Database.pragma('wal_checkpoint = TRUNCATE'); // Use truncate mode for checkpointing
-Database.pragma('locking_mode = EXCLUSIVE'); // Use exclusive locking mode
-Database.pragma('mmap_size = 268435456'); // 256MB memory map
-
-for (let i = 0; i < DBQueries.length; i++) {
-	try {
-		Database.exec( DBQueries[i] );
-	} catch (error) {
-		console.error( DBQueries[i] );
-		console.error(error);
-		process.exit(1);
+	static async Initialize() {
+		const connection = await Database.getConnection();
+		await connection.query('USE FBI;');
+		for (let i = 0; i < DBQueries.length; i++) {
+			try {
+				connection.query( DBQueries[i] );
+			} catch (error) {
+				console.error( DBQueries[i] );
+				console.error(error);
+				Database.releaseConnection(connection);
+				process.exit(1);
+			}
+		}
+		Database.releaseConnection(connection);
 	}
-}
 
-Database.tables = new Set( Database.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).pluck().all() );
+	static async getConnection() {
+		const connection = await connection_pool.getConnection();
+		const timeoutID = setTimeout(() => {
+			const stack = connection_location.get(connection);
+			Log.error(`A database connection has been checked out for over 10 seconds. Did you forget to release it?${stack ? '\n' + stack : ''}`);
+		}, 10_000);
+		connection_warning.set(connection, timeoutID);
+		connection_location.set(connection, new Error().stack.split('\n').slice(1).join('\n'));
+		return connection;
+	}
 
-const queryCache = new Map(); // query -> prepared_statement
+	static releaseConnection(connection) {
+		// no await because we don't care about the result
+		connection.release();
 
-const originalPrepare = Database.prepare.bind(Database);
-Database.prepare = function (query, force = false) {
-	if (!force && queryCache.has(query)) return queryCache.get(query);
+		clearTimeout( connection_warning.get(connection) );
+		connection_warning.delete(connection);
+	}
 
-	const preparedStatement = originalPrepare(query);
-	if (!force) queryCache.set(query, preparedStatement);
+	static async query(sql, params = []) {
+		const connection = await connection_pool.getConnection();
+		await connection.query(sql, params);
+		Database.releaseConnection(connection);
+	}
 
-	return preparedStatement;
+	static async batch(sql, paramsArray = [[]]) {
+		const connection = await connection_pool.getConnection();
+		await connection.batch(sql, paramsArray);
+		Database.releaseConnection(connection);
+	}
+
+	static async transaction(callback) {
+		const connection = await connection_pool.getConnection();
+		await connection.beginTransaction();
+		await callback(connection);
+		await connection.commit();
+		Database.releaseConnection(connection);
+	}
+
+	static async destroy() {
+		await connection_pool.end();
+	}
 }
 
 module.exports = Database;

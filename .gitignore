@@ -1,3 +1,7 @@
+# IDE Files
+.idea/
+.vscode/
+
 # Cache Files
 DownloadCache/
 UploadCache/

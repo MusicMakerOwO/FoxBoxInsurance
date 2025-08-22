@@ -130,6 +130,12 @@ const CHANGELOG = {
 			"Fixed a bug where TOS could not be accepted from DMs (credit to @titsou.js)",
 			"Fixed a display issue allowing you to accept the TOS twice (credit to @titsou.js)",
 		]
+	},
+	"v3.0.3": {
+		date: "2025 August 1st",
+		changes: [
+			"Updated server costs in /donate with the addition of email hosting"
+		]
 	}
 }
 

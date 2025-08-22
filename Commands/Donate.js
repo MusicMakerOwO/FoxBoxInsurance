@@ -8,7 +8,7 @@ Thank you for using FBI - We are dedicated to providing free and safe moderation
 If you'd like to support us, consider donating to our ☕ Ko-fi page. \
 __All donations go directly to server costs.__
 
-**Current server costs** : $12.17/month`
+**Current server costs** : $13.69/month`
 }
 
 // heart emoji: '❤️'

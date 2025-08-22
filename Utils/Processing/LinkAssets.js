@@ -9,25 +9,22 @@ const LinkTables = [
 	'Attachments'
 ]
 
-for (let i = 0; i < LinkTables.length; i++) {
-	const table = LinkTables[i];
-	if (!Database.tables.has(table)) throw new Error(`Table ${table} does not exist in the database`);
-	LinkTables[i] = Database.prepare(`
-		UPDATE ${table} as asset
-		SET asset_id = (
-			SELECT asset_id
-			FROM Assets
-			WHERE discord_id = asset.id
-		)
-		WHERE asset_id IS NULL	
-	`, true);
-}
-
-module.exports = function LinkAssets () {
+module.exports = async function LinkAssets () {
+	const connection = await Database.getConnection();
 	const start = process.hrtime.bigint();
 	for (let i = 0; i < LinkTables.length; i++) {
-		LinkTables[i].run();
+		const targetTable = LinkTables[i];
+		connection.query(`
+			UPDATE ${targetTable} as asset
+			SET asset_id = (
+				SELECT asset_id
+				FROM Assets
+				WHERE discord_id = asset.id
+			)
+			WHERE asset_id IS NULL	
+		`);
 	}
 	const end = process.hrtime.bigint();
+	Database.releaseConnection(connection);
 	Log.debug(`Linked assets in ${(Number(end - start) / 1e6).toFixed(3)}ms`);
 }

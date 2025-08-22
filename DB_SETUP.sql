@@ -1,39 +1,39 @@
+USE FBI;
+
 -- NodeJS can only make timers so long
 -- For long running tasks like channel purging we need a more permanent solution
 -- This will keep the run time data even on restart
 CREATE TABLE IF NOT EXISTS Timers (
-	id TEXT NOT NULL PRIMARY KEY,
-	last_run INTEGER NOT NULL DEFAULT ( UNIXEPOCH('now', 'localtime') )
+	id VARCHAR(64) NOT NULL PRIMARY KEY,
+	last_run INT NOT NULL DEFAULT 0
 );
 
 -- This is a lookup for every single stored asset in the system
 -- Things like icons, images, videos, stickers/emojis, etc
 -- If a user or guild has an icon it will show up in here with an ID
 CREATE TABLE IF NOT EXISTS Assets (
-	asset_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	discord_id TEXT NOT NULL, -- Discord ID of whatever this asset represents
-	type INTEGER NOT NULL,
+	asset_id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	discord_id TEXT NOT NULL UNIQUE, -- Discord ID of whatever this asset represents
+	type TINYINT NOT NULL,
 
 	-- The URL to the asset on Discord's servers, may return 404 if they delete it
-	-- For long term retrievale use the cdn server and lookup by hash
+	-- For long term retrieval, use the cdn server and lookup by hash
 	discord_url TEXT NOT NULL UNIQUE,
 
-	name TEXT NOT NULL, -- Original file name
-	extension TEXT NOT NULL,
-	fileName TEXT GENERATED ALWAYS AS (name || '.' || extension) VIRTUAL, -- The file name of the asset
+	name VARCHAR(255) NOT NULL, -- Original file name
+	extension VARCHAR(255) NOT NULL,
+	fileName VARCHAR(512) GENERATED ALWAYS AS (name || '.' || extension) VIRTUAL, -- The file name of the asset
 
-	width INTEGER,
-	height INTEGER,
-	size INTEGER, -- in bytes
+	width SMALLINT UNSIGNED,
+	height SMALLINT UNSIGNED,
+	size INTEGER UNSIGNED, -- in bytes
 
 	hash TEXT, -- this will be set after uploading to the cdn server
-	created_at TEXT NOT NULL DEFAULT ({{ISO_DATE}}), -- The date the asset was created
-	uploaded INTEGER NOT NULL DEFAULT 0 -- 1 if the file is uploaded to the storage
-) STRICT;
-CREATE INDEX IF NOT EXISTS assets_hash 		 ON Assets (hash) WHERE hash IS NOT NULL;
+	uploaded TINYINT NOT NULL DEFAULT 0 -- 1 if the asset has been uploaded to the cdn server
+);
+CREATE INDEX IF NOT EXISTS assets_hash 		 ON Assets (hash);
 CREATE INDEX IF NOT EXISTS assets_url 		 ON Assets (discord_url);
-CREATE INDEX IF NOT EXISTS assets_uploaded 	 ON Assets (uploaded) WHERE uploaded = 0;
-CREATE UNIQUE INDEX IF NOT EXISTS assets_discord_id ON Assets (discord_id);
+CREATE INDEX IF NOT EXISTS assets_uploaded 	 ON Assets (uploaded);
 
 CREATE TABLE IF NOT EXISTS Guilds (
 	id TEXT NOT NULL PRIMARY KEY,

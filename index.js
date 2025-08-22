@@ -185,7 +185,7 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 
 	ComponentLoader(`${__dirname}/${componentFolder}`, cache);
 	Log.debug(`Loaded ${cache.size} ${componentFolder.split('/')[1]}`);
-	
+
 	// Check by reference, not by cache contents
 	if (cache == client.commands && existsSync(filePath)) {
 		const newComponent = require(filePath);
@@ -203,7 +203,7 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 
 function PresetFile(componentFolder, callback, filePath, type = 0) {
 	if (type !== 0) return; // 0 = file, 1 = directory, 2 = symlink
-	
+
 	const presetData = PRESET_FILES[componentFolder];
 	if (!presetData) return;
 
@@ -223,20 +223,26 @@ client.login(client.config.TOKEN);
 client.on('ready', async function () {
 	Log.custom(`Logged in as ${client.user.tag}!`, 0x7946ff);
 
+	await Database.Initialize();
+	Log.custom('Database initialized', 0x7946ff);
+
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
 
-	const savedGuilds = new Set( Database.prepare('SELECT id FROM Guilds').pluck().all() );
+	const guildsToInsert = [];
+	const connection = await Database.getConnection();
+
+	const savedGuilds = new Set( (await connection.query('SELECT id FROM Guilds')).map(g => g.id) )
 	for (const guild of client.guilds.cache.values()) {
 		if (savedGuilds.has(guild.id)) continue; // already saved
-		Database.prepare(`
-			INSERT INTO Guilds (id, name)
-			VALUES (?, ?)
-			ON CONFLICT(id) DO UPDATE SET name = excluded.name
-		`).run(guild.id, guild.name);
+		guildsToInsert.push([guild.id, guild.name]);
 	}
 
 	StartTasks();
 	UploadFiles();
+	connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name', guildsToInsert);
+
+	Database.releaseConnection(connection);
+
 
 	if (!config.HOT_RELOAD) {
 		Log.warn('Hot reload is disabled in config.json');

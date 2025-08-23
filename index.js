@@ -227,18 +227,19 @@ client.on('ready', async function () {
 
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
 
-	const guildsToInsert = [];
 	const connection = await Database.getConnection();
+	const savedGuilds = new Set((await connection.query('SELECT id FROM Guilds')).map(g => g.id))
 
-	const savedGuilds = new Set( (await connection.query('SELECT id FROM Guilds')).map(g => g.id) )
-	for (const guild of client.guilds.cache.values()) {
-		if (savedGuilds.has(guild.id)) continue; // already saved
-		guildsToInsert.push([guild.id, guild.name]);
+	if (savedGuilds.size !== client.guilds.cache.size) {
+		const guildsToInsert = [];
+
+		for (const guild of client.guilds.cache.values()) {
+			if (savedGuilds.has(guild.id)) continue; // already saved
+			guildsToInsert.push([guild.id, guild.name]);
+		}
+
+		await connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name', guildsToInsert);
 	}
-
-	StartTasks();
-	UploadFiles();
-	connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name', guildsToInsert);
 
 	Database.releaseConnection(connection);
 

@@ -3,16 +3,16 @@ const Database = require("../Utils/Database");
 
 const PAGE_SIZE = 5;
 
-const History = Database.prepare(`SELECT * FROM Exports WHERE user_id = ? ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET (? * ${PAGE_SIZE})`);
-
 module.exports = {
 	customID: 'history',
 	execute: async function(interaction, client, args) {
 		let page = args[0];
-		
+
 		await interaction.deferUpdate().catch(() => {});
-		
-		const exportCount = Database.prepare(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`).pluck().get(interaction.user.id);
+
+		const connection = await Database.getConnection();
+
+		const exportCount = await connection.query(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`, [interaction.user.id]);
 
 		if (page === 'first') {
 			page = 0;
@@ -23,7 +23,9 @@ module.exports = {
 			if (isNaN(page) || page < 0) page = 0;
 		}
 
-		const exports = History.all(interaction.user.id, page); // 0-5, 6-10, 11-15, etc.
+		const exports = await connection.query(`SELECT * FROM Exports WHERE user_id = ? ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET (? * ${PAGE_SIZE})`, [interaction.user.id, page]); // 0-5, 6-10, 11-15, etc.
+
+		Database.releaseConnection(connection);
 
 		const embed = {
 			color: COLOR.PRIMARY,

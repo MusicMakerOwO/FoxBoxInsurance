@@ -75,7 +75,7 @@ class Database {
 		const connection = await Database.getConnection();
 		for (let i = 0; i < DBQueries.length; i++) {
 			try {
-				connection.query( DBQueries[i] );
+				await connection.query( DBQueries[i] );
 			} catch (error) {
 				console.error( DBQueries[i] );
 				console.error(error);

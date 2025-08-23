@@ -146,6 +146,7 @@ for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 	}
 	
 	ComponentLoader(fullPath, cache);
+
 	Log.debug(`Loaded ${cache.size} ${fullPath.split('/').pop()}`);
 }
 
@@ -163,7 +164,7 @@ async function HotReload(cache, componentFolder, filePath, type = 0) {
 	if (type !== 0) return; // 0 = file, 1 = directory, 2 = symlink
 
 	const isEvent = cache === null;
-	
+
 	const oldComponent = require(filePath);
 
 	// repopulate the cache, register commands if needed

@@ -52,7 +52,7 @@ module.exports = {
 
 		ProcessMessages(client.messageCache); // save messages
 
-		const channelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?").pluck().get(interaction.channel.id);
+		const [{ "COUNT(*)": channelMessageCount }] = await Database.query("SELECT COUNT(*) FROM Messages WHERE channel_id = ?", [interaction.channel.id]);
 		if (channelMessageCount === 0) {
 			return interaction.editReply({
 				embeds: [ NoMessagesEmbed ]

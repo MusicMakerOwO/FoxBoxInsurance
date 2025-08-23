@@ -1,0 +1,13 @@
+{
+	"APP_ID": "1089343117142020319",
+	"DEV_GUILD_ID": "",
+
+	"PREFIX": "!",
+
+	"HOT_RELOAD": true,
+	"PROCESS_HANDLERS": true,
+	"CHECK_INTENTS": true,
+	"CHECK_EVENT_NAMES": true,
+	"REGISTER_COMMANDS": true,
+	"FANCY_ERRORS": false
+}

@@ -39,7 +39,7 @@ module.exports = {
 		await interaction.reply({ embeds: [RandomLoadingEmbed()], ephemeral: true });
 		await new Promise(r => setTimeout(r, 2000));
 
-		if (!UserCanExport(interaction.member, interaction.channel.id)) {
+		if ( ! await UserCanExport(interaction.member, interaction.channel.id)) {
 			return interaction.editReply({ embeds: [NoExport] });
 		}
 

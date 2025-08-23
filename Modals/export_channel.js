@@ -141,16 +141,16 @@ module.exports = {
 			return interaction.reply({ embeds: [IncompatibleChannelEmbed], ephemeral: true });
 		}
 
-		if (!UserCanExport(interaction.member, targetID)) {
+		if ( ! await UserCanExport(interaction.member, targetID)) {
 			return interaction.reply({ embeds: [NoExport], ephemeral: true });
 		}
-		
+
 		const channelMessageCount = Database.prepare('SELECT COUNT(*) FROM messages WHERE channel_id = ?').pluck().get(targetID);
-		
+
 		exportOptions.channelID = targetID;
 		exportOptions.messageCount = Math.min(channelMessageCount, 100);
 		exportOptions.lastMessageID = String( (BigInt(Date.now() - 1420070400000) << 22n) | BigInt(0b1_1111_11111111_11111111) );
-		
+
 		client.ttlcache.set(
 			`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`,
 			exportOptions

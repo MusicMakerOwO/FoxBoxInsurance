@@ -43,7 +43,7 @@ module.exports = {
 			return interaction.editReply({ embeds: [NoExport] });
 		}
 
-		const serverAcceptedTOS = GetGuildTOS(interaction.guild.id);
+		const serverAcceptedTOS = await GetGuildTOS(interaction.guild.id);
 		if (!serverAcceptedTOS) {
 			return interaction.editReply({
 				embeds: [ ServerTOSEmbed ]

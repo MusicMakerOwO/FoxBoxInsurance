@@ -145,8 +145,8 @@ async function InteractionHandler(client, interaction, type, cache) {
 		+interaction.user.bot
 	);
 
-	const guildAccepted = GetGuildTOS(interaction.guildId);
-	const userAccepted = GetUserTOS(interaction.user.id);
+	const guildAccepted = await GetGuildTOS(interaction.guildId);
+	const userAccepted = await GetUserTOS(interaction.user.id);
 	if (guildAccepted === 0 && component.bypass !== true) {
 		if (interaction.user.id !== interaction.guild.ownerId) {
 			// warn user that the server owner has not accepted TOS
@@ -179,9 +179,9 @@ async function InteractionHandler(client, interaction, type, cache) {
 		if (component.botPerms || component.userPerms) {
 			if (!interaction.guild) throw ['This command cannot be used in DMs', 'DMs'];
 			if (!interaction.user) throw ['This command cannot be used in DMs', 'DMs'];
-			const botMember = interaction.guild 
+			const botMember = interaction.guild
 				? interaction.guild.members.cache.get(client.user.id)
-					?? await interaction.guild.members.fetch(client.user.id).catch(() => null) 
+					?? await interaction.guild.members.fetch(client.user.id).catch(() => null)
 				: null;
 			if (botMember !== null) {
 				// This code will only trigger if

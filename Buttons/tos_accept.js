@@ -37,7 +37,7 @@ module.exports = {
 		let embed;
 		if (interaction.user.id === guild.ownerId) {
 			// owner path accepts entire guild
-			if (GetGuildTOS(guild.id)) {
+			if (await GetGuildTOS(guild.id)) {
 				embed = ALREADY_ACCEPTED;
 			} else {
 				SetGuildTOS(guild.id, true);

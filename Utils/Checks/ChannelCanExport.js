@@ -27,4 +27,4 @@ async function RefreshChannels () {
 	BlacklistedChannels.add( ... channels.map(c => c.id) );
 }
 
-Task.schedule(RefreshChannels, SECONDS.HOUR); // refresh every hour
+Task.schedule(RefreshChannels, SECONDS.HOUR * 1000); // refresh every hour

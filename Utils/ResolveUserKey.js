@@ -5,11 +5,11 @@ const Tasks = require('./TaskScheduler');
 const MAX_CACHE_SIZE = 1000; // max size of the cache
 
 const cache = new Map(); // userID -> key
-module.exports = function ResolveUserKey(userID) {
+module.exports = async function ResolveUserKey(userID) {
 	if (cache.has(userID)) return cache.get(userID); // buffer
-	
+
 	// blob
-	const savedKey = Database.prepare('SELECT key FROM users WHERE id = ?').pluck().get(userID);
+	const savedKey = await Database.query('SELECT tag FROM Users WHERE id = ?', [userID]);
 	if (savedKey) {
 		cache.set(userID, savedKey);
 		return savedKey;
@@ -17,7 +17,7 @@ module.exports = function ResolveUserKey(userID) {
 
 	const key = crtypto.scryptSync(userID, process.env.SALT, 32);
 	cache.set(userID, key);
-	Database.prepare('UPDATE users SET key = ? WHERE id = ?').run(key, userID);
+	Database.query('UPDATE Users SET tag = ? WHERE id = ?').run(key, userID);
 
 	return key;
 }

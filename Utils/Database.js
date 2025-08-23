@@ -7,7 +7,8 @@ const Log = require('./Logs');
 const connection_pool = MariaDB.createPool({
 	host: process.env.MARIADB_HOST,
 	user: process.env.MARIADB_USER,
-	password: process.env.MARIADB_PASSWORD
+	password: process.env.MARIADB_PASSWORD,
+	database: 'FBI'
 });
 
 function ParseQueries(fileContent) {
@@ -72,7 +73,6 @@ class Database {
 
 	static async Initialize() {
 		const connection = await Database.getConnection();
-		await connection.query('USE FBI;');
 		for (let i = 0; i < DBQueries.length; i++) {
 			try {
 				connection.query( DBQueries[i] );

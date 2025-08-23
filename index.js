@@ -10,7 +10,6 @@ if (!process.env.CDN_KEY) {
 const config = require('./config.json');
 
 const ConfigTemplate = {
-	TOKEN: 'string',
 	APP_ID: 'string',
 	DEV_GUILD_ID: 'string',
 

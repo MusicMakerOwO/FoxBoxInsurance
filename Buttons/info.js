@@ -26,16 +26,18 @@ const statsButton = {
 module.exports = {
 	customID: 'bot-info',
 	execute: async function(interaction, client, args) {
-	
+
 		await interaction.deferUpdate().catch(() => {});
-		
+
 		const processUptime = process.uptime(); // seconds
 		const uptime = CalculateUptime(processUptime);
 
-		const guilds = Database.prepare(`SELECT COUNT(*) FROM Guilds`).pluck().get();
+		const connection = await Database.getConnection();
+
+		const [{ "COUNT(*)": guilds }] = await connection.query(`SELECT COUNT(*) FROM Guilds`);
 		const channels = Array.from( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.channels.cache.size, 0);
 		const users = Array.from( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.memberCount, 0);
-		const messages = Database.prepare(`SELECT COUNT(*) FROM Messages`).pluck().get();
+		const [{ "COUNT(*)": messages }] = await connection.query(`SELECT COUNT(*) FROM Messages`);
 
 		const embed = {
 			color: COLOR.PRIMARY,

@@ -1,14 +1,10 @@
 {
 	"dependencies": {
-		"better-sqlite3": "^11.8.1",
 		"discord.js": "14.16",
 		"html-minifier": "^4.0.0",
 		"mariadb": "^3.4.5"
 	},
 	"scripts": {
 		"start": "node index.js"
-	},
-	"devDependencies": {
-		"@types/better-sqlite3": "^7.6.12"
 	}
 }

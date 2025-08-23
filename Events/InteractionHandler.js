@@ -88,27 +88,21 @@ The server owner has not accepted the Terms of Service yet.
 Please notify an admin to finish the setup process.`
 }
 
-const InsertUser = Database.prepare(`
-	INSERT INTO Users (id, username, bot)
-	VALUES (?, ?, ?)
-	ON CONFLICT (id) DO NOTHING
-`);
-
 async function InteractionHandler(client, interaction, type, cache) {
 
 	const args = interaction.customId?.split("_") ?? [];
 	const name = args.shift() ?? interaction.commandName;
 
-	Database.prepare(`
+	Database.query(`
 		INSERT INTO InteractionLogs (guild_id, channel_id, user_id, type, name)
 		VALUES (?, ?, ?, ?, ?)
-	`).run(
+	`, [
 		interaction.guildId,
 		interaction.channelId,
 		interaction.user.id,
 		type,
 		name
-	);
+	]);
 
 	const component = cache.get(name);
 	if (!component) {
@@ -139,11 +133,15 @@ async function InteractionHandler(client, interaction, type, cache) {
 	interaction.deferUpdate ??= interaction.deferReply;
 
 	// add the user to the database if they don't exist
-	InsertUser.run(
+	Database.query(`
+		INSERT INTO Users (id, username, bot)
+		VALUES (?, ?, ?)
+		ON CONFLICT (id) DO NOTHING
+	`, [
 		interaction.user.id,
 		interaction.user.username,
 		+interaction.user.bot
-	);
+	]);
 
 	const guildAccepted = await GetGuildTOS(interaction.guildId);
 	const userAccepted = await GetUserTOS(interaction.user.id);

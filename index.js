@@ -239,7 +239,7 @@ client.on('ready', async function () {
 			guildsToInsert.push([guild.id, guild.name]);
 		}
 
-		await connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name', guildsToInsert);
+		await connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)', guildsToInsert);
 	}
 
 	Database.releaseConnection(connection);

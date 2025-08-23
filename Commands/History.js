@@ -12,7 +12,7 @@ module.exports = {
 		.setName('history')
 		.setDescription('View your recent export history'),
 	execute: async function(interaction, client) {
-		const count = Database.prepare(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`).pluck().get(interaction.user.id);
+		const [{ "COUNT(*)": count }] = await Database.query(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`, [interaction.user.id]);
 		if (count === 0) {
 			return interaction.reply({
 				embeds: [NoExportsEmbed],

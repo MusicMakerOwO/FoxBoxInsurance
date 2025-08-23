@@ -107,8 +107,9 @@ class Database {
 
 	static async query(sql, params = []) {
 		const connection = await connection_pool.getConnection();
-		await connection.query(sql, params);
+		const result = await connection.query(sql, params);
 		Database.releaseConnection(connection);
+		return result;
 	}
 
 	static async batch(sql, paramsArray = [[]]) {

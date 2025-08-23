@@ -11,27 +11,27 @@ function ResolveValue(tos) {
 	return tos === 1 || tos === true; // 1 = true, 0 = false, undefined = false
 }
 
-function SetGuildTOS(id, value) {
+async function SetGuildTOS(id, value) {
 	CheckType(id, 'string', 'id');
 	CheckType(value, 'boolean', 'value');
 	if (guildCache.get(id) === value) return; // no change, skip update
 
 	guildCache.set(id, value);
-	Database.prepare(`
-		UPDATE guilds
+	Database.query(`
+		UPDATE Guilds
 		SET accepted_terms = ?
 		WHERE id = ?
-	`).run(+value, id);
+	`, [+value, id]);
 }
 
-function GetGuildTOS(id) {
+async function GetGuildTOS(id) {
 	if (guildCache.has(id)) return guildCache.get(id);
 
-	const tos = Database.prepare(`
+	const [{ accepted_terms: tos }] = await Database.query(`
 		SELECT accepted_terms
-		FROM guilds
+		FROM Guilds
 		WHERE id = ?
-	`).pluck().get(id);
+	`, [id]);
 
 	if (tos === undefined) {
 		// If the guild does not exist, initialize it with false
@@ -46,27 +46,27 @@ function GetGuildTOS(id) {
 	return value;
 }
 
-function SetUserTOS(id, value) {
+async function SetUserTOS(id, value) {
 	CheckType(id, 'string', 'id');
 	CheckType(value, 'boolean', 'value');
 	if (userCache.get(id) === value) return; // no change, skip update
 
 	userCache.set(id, value);
-	Database.prepare(`
-		UPDATE users
+	Database.query(`
+		UPDATE Users
 		SET accepted_terms = ?
 		WHERE id = ?
-	`).run(+value, id);
+	`, [+value, id]);
 }
 
-function GetUserTOS(id) {
+async function GetUserTOS(id) {
 	if (userCache.has(id)) return userCache.get(id);
 
-	const tos = Database.prepare(`
+	const [{ accepted_terms: tos }] = Database.query(`
 		SELECT accepted_terms
-		FROM users
+		FROM Users
 		WHERE id = ?
-	`).pluck().get(id);
+	`, [id]);
 
 	if (tos === undefined) {
 		// If the user does not exist, initialize it with false

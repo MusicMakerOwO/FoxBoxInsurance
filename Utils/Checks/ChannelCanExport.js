@@ -2,8 +2,6 @@ const Task = require('../TaskScheduler');
 const Database = require('../Database');
 const { SECONDS } = require('../Constants');
 
-const GetBlacklistChannels = Database.prepare('SELECT id FROM Channels WHERE block_exports = 1');
-
 // Using a Set because lookup is O(1) and prevents duplicates
 // Arrays have O(n) lookup and can have duplicates, generally slower for large datasets
 const BlacklistedChannels = new Set(); // string[]

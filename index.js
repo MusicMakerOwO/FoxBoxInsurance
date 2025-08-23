@@ -218,7 +218,7 @@ function PresetFile(componentFolder, callback, filePath, type = 0) {
 }
 
 Log.info(`Logging in...`);
-client.login(client.config.TOKEN);
+client.login(process.env.TOKEN);
 client.on('ready', async function () {
 	Log.custom(`Logged in as ${client.user.tag}!`, 0x7946ff);
 

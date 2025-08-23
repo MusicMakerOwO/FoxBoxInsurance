@@ -36,10 +36,10 @@ module.exports = {
 		const guildId = interaction.guild.id;
 		const userId = user.id;
 
-		Database.prepare(`
+		Database.query(`
 			DELETE FROM GuildBlocks
 			WHERE guild_id = ? AND user_id = ?
-		`).run(guildId, userId);
+		`, [guildId, userId]);
 
 		const embed = {
 			color: COLOR.SUCCESS,
@@ -47,7 +47,7 @@ module.exports = {
 **Status**: ${EMOJI.SUCCESS} Unblocked 
 <@${userId}> can now export messages in this server`
 		}
-		
+
 		interaction.editReply({ embeds: [embed] });
 	}
 }

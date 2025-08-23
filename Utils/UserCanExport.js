@@ -14,6 +14,6 @@ module.exports = async function CanUserExportChannel(member, channelID) {
 	if (isDisabled) return false;
 
 	// banned users are blocked from using exports
-	const [isBlocked] = await Database.query("SELECT user_id FROM GuildBlocks WHERE guild_id = ? AND user_id = ?", [member.guild.id, channelID]);
+	const [isBlocked] = await Database.query("SELECT user_id FROM GuildBlocks WHERE guild_id = ? AND user_id = ?", [member.guild.id, member.user.id]);
 	return isBlocked === undefined;
 }

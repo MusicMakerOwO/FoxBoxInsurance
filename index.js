@@ -240,6 +240,8 @@ client.on('ready', async function () {
 		}
 
 		await connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)', guildsToInsert);
+
+		Log.success(`Inserted ${guildsToInsert.length} new guilds into the database`);
 	}
 
 	Database.releaseConnection(connection);

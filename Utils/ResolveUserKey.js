@@ -1,4 +1,4 @@
-const crtypto = require('crypto');
+const crypto = require('crypto');
 const Database = require('./Database');
 const Tasks = require('./TaskScheduler');
 
@@ -15,7 +15,7 @@ module.exports = async function ResolveUserKey(userID) {
 		return savedKey;
 	}
 
-	const key = crtypto.scryptSync(userID, process.env.SALT, 32);
+	const key = crypto.scryptSync(userID, process.env.SALT, 32);
 	cache.set(userID, key);
 	Database.query('UPDATE Users SET tag = ? WHERE id = ?').run(key, userID);
 

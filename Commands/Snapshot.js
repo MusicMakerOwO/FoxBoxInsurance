@@ -136,17 +136,17 @@ module.exports = {
 			const emoji = subcommand === 'enable' ? EMOJI.SUCCESS : EMOJI.ERROR;
 			const guildId = interaction.guild.id;
 
-			Database.prepare('UPDATE Guilds SET snapshots_enabled = ? WHERE id = ?').run(enabled, guildId);
+			Database.query('UPDATE Guilds SET snapshots_enabled = ? WHERE id = ?', [enabled, guildId]);
 
 			const embed = {
 				color: COLOR.PRIMARY,
 				description: `${emoji} Automatic snapshots have been ${enabled ? 'enabled' : 'disabled'}.`,
 			}
-			
+
 			return interaction.reply({ embeds: [embed], ephemeral: true });
 		}
 
-		const enabled = Database.prepare('SELECT snapshots_enabled FROM Guilds WHERE id = ?').pluck().get(interaction.guild.id);
+		const [{ snapshots_enabled: enabled }] = await Database.query('SELECT snapshots_enabled FROM Guilds WHERE id = ?', [interaction.guild.id]);
 		if (!enabled) {
 			return interaction.reply({ embeds: [disabledEmbed], ephemeral: true });
 		}
@@ -200,7 +200,7 @@ module.exports = {
 
 			const attachment = interaction.options.getAttachment('file');
 			if (!attachment || !attachment.name.endsWith('.json')) {
-				return interaction.editReply({ 
+				return interaction.editReply({
 					embeds: [ InvalidFileEmbed ],
 				});
 			}
@@ -209,7 +209,7 @@ module.exports = {
 			try {
 				var snapshotData = JSON.parse(fileContent);
 			} catch (error) {
-				return interaction.editReply({ 
+				return interaction.editReply({
 					embeds: [ InvalidJSONEmbed ],
 				});
 			}
@@ -218,20 +218,20 @@ module.exports = {
 			const EXPORT_REGEX = /^[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/i;
 			if (typeof exportID !== 'string' || !EXPORT_REGEX.test(exportID)) {
 				console.log(`Invalid export ID format: ${exportID}`);
-				return interaction.editReply({ 
+				return interaction.editReply({
 					embeds: [ CorruptedSnapshotEmbed ]
 				});
 			}
 
 			if (!client.ttlcache.has(`import-${exportID}`)) {
-				const exportMetadata = Database.prepare(`
+				const [exportMetadata] = await Database.query(`
 					SELECT id, snapshot_id, guild_id, hash, algorithm, length, version
 					FROM SnapshotExports
 					WHERE id = ?
-				`).get(exportID);
+				`, [exportID]);
 				if (!exportMetadata || exportMetadata.revoked === 1) {
 					console.log(`Snapshot export not found or revoked: ${exportID}`);
-					return interaction.editReply({ 
+					return interaction.editReply({
 						embeds: [ FileMismatchEmbed ]
 					});
 				}
@@ -242,7 +242,7 @@ module.exports = {
 					typeof snapshotData.id !== 'string'
 				) {
 					console.log(`Snapshot data is not a valid object or missing root fields`);
-					return interaction.editReply({ 
+					return interaction.editReply({
 						embeds: [ CorruptedSnapshotEmbed ]
 					});
 				}
@@ -267,11 +267,11 @@ module.exports = {
 				) {
 					console.log(`Snapshot file length or hash mismatch: expected ${exportMetadata.length} bytes, got ${fileContent.length} bytes`);
 
-					Database.prepare(`
+					Database.query(`
 						UPDATE SnapshotExports
 						SET revoked = 1
 						WHERE id = ?
-					`).run(exportID);
+					`, [exportID]);
 
 					return interaction.editReply({
 						embeds: [ CorruptedSnapshotEmbed ]

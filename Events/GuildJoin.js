@@ -8,12 +8,12 @@ module.exports = {
 	execute: async function(client, guild) {
 		success(`Joined new guild: ${guild.name} (${guild.id})`);
 
-		Database.prepare(`
+		Database.query(`
 			INSERT INTO Guilds (id, name, accepted_terms)
 			VALUES (?, ?, 0)
 			ON CONFLICT(id) DO
 			UPDATE SET name = excluded.name
-		`).run(guild.id, guild.name);
+		`, [guild.id, guild.name]);
 
 		// Set the guild's TOS to false in the cache
 		SetGuildTOS(guild.id, false);
@@ -59,7 +59,7 @@ By agreeing to the Terms you are agreeing to the following:
 			error(`Could not find owner of guild ${guild.name} (${guild.id})`);
 			return;
 		}
-		
+
 		try {
 			await owner.send({
 				embeds: [WelcomeEmbed],

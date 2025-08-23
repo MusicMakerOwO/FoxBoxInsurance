@@ -8,9 +8,6 @@ UploadCache/
 FailedMessages/
 DatabaseBackups/
 
-# Config files
-config.json
-
 # Database Files
 *.sqlite
 *.sqlite-shm

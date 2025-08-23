@@ -19,13 +19,15 @@ function DiscordIDToDate(id = 0n) {
 
 let lastOutput = {};
 let lastRun = 0;
-function CalcuateMessageStats() {
+async function CalcuateMessageStats() {
 	// only compute every 30 minutes
 	if (Date.now() - lastRun < SECONDS.MINUTE * 1000 * 30) {
 		return lastOutput;
 	}
 
-	const MessageStats = Database.prepare(`
+	const connection = await Database.getConnection();
+
+	const [MessageStats] = await connection.query(`
 		WITH selected_messages AS (
 			SELECT id, user_id, guild_id, channel_id, content, sticker_id, length
 			FROM Messages
@@ -41,9 +43,9 @@ function CalcuateMessageStats() {
 
 			ROUND(AVG(length), 2) AS avg_length
 		FROM selected_messages
-	`).get();
+	`);
 
-	const FileStats = Database.prepare(`
+	const [FileStats] = await connection.query(`
 		WITH selected_files AS (
 			SELECT Messages.id as message_id, Assets.size as size, Assets.asset_id as file_id
 			FROM Messages
@@ -59,9 +61,9 @@ function CalcuateMessageStats() {
 			MIN(size) as min_file
 		FROM selected_files
 		WHERE size IS NOT NULL
-	`).get();
+	`);
 
-	const EmojiStats = Database.prepare(`
+	const [EmojiStats] = await connection.query(`
 		WITH selected_emojis AS (
 			SELECT
 				Messages.id as message_id,
@@ -78,9 +80,9 @@ function CalcuateMessageStats() {
 			COUNT(DISTINCT message_id) as messages
 		FROM selected_emojis
 		WHERE emoji_id IS NOT NULL
-	`).get();
+	`);
 
-	const topEmoji = Database.prepare(`
+	const [topEmoji] = await connection.query(`
 		WITH selected_emojis AS (
 			SELECT
 				Messages.id AS message_id,
@@ -104,9 +106,9 @@ function CalcuateMessageStats() {
 		SELECT MAX(emoji_count) AS 'max'
 		FROM emoji_counts
 		WHERE emoji_count IS NOT NULL
-	`).get();
+	`);
 
-	const timespan = Database.prepare(`
+	const [timespan] = await connection.query(`
 		WITH selected_messages AS (
 			SELECT id, length
 			FROM Messages
@@ -118,7 +120,7 @@ function CalcuateMessageStats() {
 			MIN(id) as min_id,
 			COUNT(*) as "count"
 		FROM selected_messages
-	`).get();
+	`);
 
 	const maxDate = DiscordIDToDate(BigInt(timespan.max_id));
 	const minDate = DiscordIDToDate(BigInt(timespan.min_id));
@@ -171,7 +173,7 @@ module.exports = {
 		if (!interaction.deferred) await interaction.deferUpdate().catch(() => {});
 
 		const start = process.hrtime.bigint();
-		const stats = CalcuateMessageStats();
+		const stats = await CalcuateMessageStats();
 		const end = process.hrtime.bigint();
 		const elapsed = Number(end - start) / 1e6;
 

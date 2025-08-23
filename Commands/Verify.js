@@ -44,7 +44,7 @@ module.exports = {
 
 		await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
-		const storedHash = Database.prepare(`SELECT hash FROM Exports WHERE id = ?`).pluck().get(exportID);
+		const [{ hash: storedHash }] = await Database.query(`SELECT hash FROM Exports WHERE id = ?`, [exportID]);
 		if (!storedHash) {
 			return interaction.editReply({ embeds: [NoExportEmbed] });
 		}

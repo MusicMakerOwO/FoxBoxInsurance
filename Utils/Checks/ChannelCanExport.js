@@ -20,10 +20,11 @@ module.exports = function ShouldSaveMessage(channelID) {
 module.exports.BlacklistedChannels = BlacklistedChannels;
 module.exports.RefreshChannels = RefreshChannels;
 
-function RefreshChannels () {
+async function RefreshChannels () {
 	// Load the blacklisted channels from the database
 	BlacklistedChannels.clear();
-	BlacklistedChannels.add(...GetBlacklistChannels.pluck().all());
+	const channels = await Database.query('SELECT id FROM Channels WHERE block_exports = 1');
+	BlacklistedChannels.add( ... channels.map(c => c.id) );
 }
 
 Task.schedule(RefreshChannels, SECONDS.HOUR); // refresh every hour

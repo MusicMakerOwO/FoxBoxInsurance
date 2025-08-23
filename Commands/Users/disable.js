@@ -48,11 +48,11 @@ module.exports = {
 		const guildId = interaction.guild.id;
 		const userId = user.id;
 
-		Database.prepare(`
+		Database.query(`
 			INSERT INTO GuildBlocks (guild_id, user_id, moderator_id)
 			VALUES (?, ?, ?)
 			ON CONFLICT(guild_id, user_id) DO NOTHING
-		`).run(guildId, userId, interaction.user.id);
+		`, [guildId, userId, interaction.user.id]);
 
 		const embed = {
 			color: COLOR.PRIMARY,

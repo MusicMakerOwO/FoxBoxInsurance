@@ -35,6 +35,14 @@ module.exports = {
 		if (!guild) throw new Error('Guild not found');
 
 		let embed;
+
+		if (await GetUserTOS(interaction.user.id)) {
+			embed = ALREADY_ACCEPTED;
+		} else {
+			SetUserTOS(interaction.user.id, true);
+			embed = USER_EMBED;
+		}
+
 		if (interaction.user.id === guild.ownerId) {
 			// owner path accepts entire guild
 			if (await GetGuildTOS(guild.id)) {
@@ -42,14 +50,6 @@ module.exports = {
 			} else {
 				SetGuildTOS(guild.id, true);
 				embed = SERVER_EMBED;
-			}
-		} else {
-			// user path accepts only themselves
-			if (GetUserTOS(interaction.user.id)) {
-				embed = ALREADY_ACCEPTED;
-			} else {
-				SetUserTOS(interaction.user.id, true);
-				embed = USER_EMBED;
 			}
 		}
 

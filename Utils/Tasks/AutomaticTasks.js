@@ -11,7 +11,6 @@ const TASK = {
 	UPLOAD_FILES: 'upload_files',
 	ENCRYPT_MESSAGES: 'encrypt_messages',
 	UPLOAD_STATS: 'upload_stats',
-	BACKUP_DATABASE: 'backup_database',
 	SERVER_SNAPSHOT: 'server_snapshot',
 	// PURGE_SNAPSHOTS: 'purge_snapshots',
 }
@@ -23,7 +22,6 @@ const TaskFunctions = {
 	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
 	// [ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
 	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
-	[ TASK.BACKUP_DATABASE	]: require("./BackupDatabase"),
 	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
 }
 
@@ -34,7 +32,6 @@ const TASK_INTERVAL = {
 	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
 	// [TASK.PURGE_SNAPSHOTS]: SECONDS.DAY,
 	[TASK.CLEAN_DATABASE]: SECONDS.DAY,
-	[TASK.BACKUP_DATABASE]: SECONDS.DAY,
 	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
 }
 

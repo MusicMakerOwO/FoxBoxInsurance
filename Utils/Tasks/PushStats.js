@@ -3,16 +3,21 @@ const Database = require('../Database');
 const Log = require('../Logs');
 
 module.exports = async function PushStats() {
-	const messageCount = Database.prepare('SELECT COUNT(*) FROM messages').pluck().get();
-	const guildCount = Database.prepare('SELECT COUNT(*) FROM guilds').pluck().get();
-	const userCount = Database.prepare('SELECT COUNT(*) FROM users').pluck().get();
-	const snapshotCount = Database.prepare('SELECT COUNT(*) FROM snapshots').pluck().get();
+
+	const connection = await Database.getConnection();
+
+	const messageCount = await connection.query('SELECT COUNT(*) FROM Messages');
+	const guildCount = await connection.query('SELECT COUNT(*) FROM Guilds');
+	const userCount = await connection.query('SELECT COUNT(*) FROM Users');
+	const snapshotCount = await connection.query('SELECT COUNT(*) FROM Snapshots');
 
 	try {
 		await UploadStats(guildCount, messageCount, userCount, snapshotCount);
 		Log.success(`Uploaded stats to API: ${guildCount} guilds, ${messageCount} messages, ${userCount} users`);
 	} catch (error) {
 		Log.error(error);
+	} finally {
+		Database.releaseConnection(connection);
 	}
 }
 

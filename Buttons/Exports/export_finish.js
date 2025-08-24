@@ -1,11 +1,10 @@
 const GetExportCache = require("../../Utils/Caching/GetExportCache");
 const { COLOR, RandomLoadingEmbed } = require("../../Utils/Constants");
 const Export = require("../../Utils/Parsers/Export");
-const { DownloadAssets } = require("../../Utils/Processing/Images");
+// const { DownloadAssets } = require("../../Utils/Processing/Images");
 const LinkAssets = require("../../Utils/Processing/LinkAssets");
 const Crypto = require("crypto");
 
-const ProcessMessages = require("../../Utils/Processing/Messages");
 const UploadFiles = require("../../Utils/Tasks/UploadFiles");
 const UploadCDN = require("../../Utils/UploadCDN");
 const Database = require("../../Utils/Database");
@@ -37,7 +36,7 @@ module.exports = {
 	execute: async function(interaction, client, args) {
 		const exportOptions = await GetExportCache(client, interaction);
 		if (!exportOptions) return;
-		
+
 		// this could take a while...
 		await interaction.deferUpdate().catch(() => {});
 		await interaction.editReply({ embeds: [RandomLoadingEmbed()], components: [] });
@@ -80,19 +79,19 @@ module.exports = {
 		clearInterval(loadingInterval);
 
 		await interaction.editReply({ embeds: [RandomLoadingEmbed()] });
-		
+
 		const [name, extension] = file.name.split('.');
-		
+
 		// upload to the cdn server for easy access
 		const lookup = await UploadCDN(name, extension, file.data, 1); // 1 url = 1 download
 
 		const hash = Crypto.createHash('sha1').update(file.data).digest('hex');
 
 		// insert the export into the database
-		Database.prepare(`
+		await Database.query(`
 			INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash, lookup)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		`).run(
+		`, [
 			file.id,
 			exportOptions.guildID,
 			exportOptions.channelID,
@@ -101,7 +100,7 @@ module.exports = {
 			exportOptions.format,
 			hash,
 			lookup
-		);
+		]);
 
 		const downloadButton = {
 			type: 1,

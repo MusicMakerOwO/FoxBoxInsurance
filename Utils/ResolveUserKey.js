@@ -3,19 +3,25 @@ const Database = require('./Database');
 const Tasks = require('./TaskScheduler');
 
 const MAX_CACHE_SIZE = 1000; // max size of the cache
+const SALT_LENGTH = 32; // bytes
+
+function BuildNewKey(userID) {
+	const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
+	return crypto.scryptSync(userID, salt, 32);
+}
 
 const cache = new Map(); // userID -> key
-module.exports = async function ResolveUserKey(userID) {
+
+async function ResolveUserKey(userID) {
 	if (cache.has(userID)) return cache.get(userID); // buffer
 
-	// blob
 	const savedKey = await Database.query('SELECT tag FROM Users WHERE id = ?', [userID]);
 	if (savedKey) {
 		cache.set(userID, savedKey);
 		return savedKey;
 	}
 
-	const key = crypto.scryptSync(userID, process.env.SALT, 32);
+	const key = BuildNewKey(userID);
 	cache.set(userID, key);
 	Database.query('UPDATE Users SET tag = ? WHERE id = ?').run(key, userID);
 

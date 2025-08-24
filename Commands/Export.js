@@ -50,9 +50,9 @@ module.exports = {
 			});
 		}
 
-		ProcessMessages(client.messageCache); // save messages
+		await ProcessMessages(client.messageCache); // save messages
 
-		const [{ "COUNT(*)": channelMessageCount }] = await Database.query("SELECT COUNT(*) FROM Messages WHERE channel_id = ?", [interaction.channel.id]);
+		const [{ "count": channelMessageCount }] = await Database.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [interaction.channel.id]);
 		if (channelMessageCount === 0) {
 			return interaction.editReply({
 				embeds: [ NoMessagesEmbed ]
@@ -64,7 +64,7 @@ module.exports = {
 			channelID: interaction.channel.id,
 			userID: interaction.user.id,
 			format: FORMAT.HTML,
-			messageCount: Math.min(channelMessageCount, 100),
+			messageCount: Math.min(Number(channelMessageCount), 100),
 			lastMessageID: String( (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING )
 		}
 

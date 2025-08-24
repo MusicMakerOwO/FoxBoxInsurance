@@ -66,11 +66,11 @@ module.exports = {
 		}
 
 		if (!confirm) {
-			const pinnedCount = Database.prepare(`
-				SELECT COUNT(*)
+			const [{ count: pinnedCount }] = await Database.query(`
+				SELECT COUNT(*) as count
 				FROM Snapshots
 				WHERE guild_id = ? AND pinned = 1
-			`).pluck().get(interaction.guild.id);
+			`, [interaction.guild.id])
 
 			const maxSnapshots = MaxSnapshots(interaction.guild.id);
 
@@ -81,11 +81,11 @@ module.exports = {
 				});
 			}
 
-			const currentPinned = Database.prepare(`
+			const [{ pinned: currentPinned }] = await Database.query(`
 				SELECT pinned
 				FROM Snapshots
 				WHERE id = ?
-			`).get(snapshotID);
+			`, [snapshotID]);
 
 			const buttons = {
 				type: 1,
@@ -120,11 +120,11 @@ module.exports = {
 			});
 		}
 
-		Database.prepare(`
+		Database.query(`
 			UPDATE Snapshots
 			SET pinned = 1
 			WHERE id = ?
-		`).run(snapshotID);
+		`, [snapshotID]);
 
 		await interaction.editReply({
 			embeds: [ args[2] ? unpinSuccess : pinSuccess ],

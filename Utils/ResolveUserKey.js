@@ -28,6 +28,37 @@ async function ResolveUserKey(userID) {
 	return key;
 }
 
+async function ResolveUserKeyBulk(userIDs = []) {
+	let needsFetch = false;
+	const results = Object.fromEntries( userIDs.map(id => [id, cache.get(id) ?? (needsFetch = true, null)]) );
+	if (!needsFetch) return results; // all in cache
+
+	const connection = await Database.getConnection();
+
+	for (const [userID, key] of Object.entries(results)) {
+		if (key) continue; // already in cache
+
+		const { tag } = (await connection.query('SELECT tag FROM Users WHERE id = ?', [userID]))[0] ?? {};
+		if (tag) {
+			cache.set(userID, tag);
+			results[userID] = tag;
+			continue;
+		}
+
+		const newTag = BuildNewKey(userID);
+		cache.set(userID, newTag);
+		results[userID] = newTag;
+
+		connection.query('UPDATE Users SET tag = ? WHERE id = ?').run(newTag, userID);
+	}
+
+	Database.releaseConnection(connection);
+
+	return results;
+}
+
+module.exports = { ResolveUserKey, ResolveUserKeyBulk };
+
 Tasks.schedule(() => {
 	if (cache.size < MAX_CACHE_SIZE) return;
 	const keysToDelete = cache.size - MAX_CACHE_SIZE + (MAX_CACHE_SIZE * 0.25); // Leave 25% of space free

@@ -144,7 +144,7 @@ for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 		delete PRESET_FILES[fullPath];
 		continue;
 	}
-	
+
 	ComponentLoader(fullPath, cache);
 
 	Log.debug(`Loaded ${cache.size} ${fullPath.split('/').pop()}`);
@@ -265,14 +265,14 @@ async function Shutdown() {
 	console.log();
 
 	Log.warn('Shutting down...');
-	client.destroy();
+	await client.destroy();
 	client.ttlcache.destroy();
 
 	Log.warn('Stopping tasks...');
 	Task.destroy();
 
 	Log.warn('Clearing caches...');
-	ProcessMessages(client.messageCache);	
+	await ProcessMessages(client.messageCache);
 
 	Log.warn('Downloading assets...');
 	await DownloadAssets();
@@ -285,12 +285,9 @@ async function Shutdown() {
 
 	Log.warn('Pushing stats...');
 	await PushStats();
-	
-	Log.warn('Optimising database...');
-	Database.pragma('analysis_limit = 8000');
-	Database.exec('ANALYZE'); // Optimise the database and add indecies
-	Database.exec('VACUUM'); // Clear dead space to reduce file size
-	Database.close();
+
+	Log.warn('Closing database connection...');
+	await Database.destroy();
 
 	process.exit(0);
 }

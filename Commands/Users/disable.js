@@ -51,7 +51,7 @@ module.exports = {
 		Database.query(`
 			INSERT INTO GuildBlocks (guild_id, user_id, moderator_id)
 			VALUES (?, ?, ?)
-			ON CONFLICT(guild_id, user_id) DO NOTHING
+			ON DUPLICATE KEY UPDATE user_id = user_id -- do nothing
 		`, [guildId, userId, interaction.user.id]);
 
 		const embed = {

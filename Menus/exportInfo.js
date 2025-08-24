@@ -11,14 +11,19 @@ module.exports = {
 	execute: async function(interaction, client, args) {
 		await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
+		const connection = await Database.getConnection();
+
 		const exportID = interaction.values[0];
-		const exportData = Database.prepare(`SELECT * FROM Exports WHERE id = ?`).get(exportID);
+		const [exportData] = await connection.query(`SELECT * FROM Exports WHERE id = ?`, [exportID]);
 		if (!exportData) {
+			Database.releaseConnection(connection);
 			return interaction.editReply({ embeds: [NoExportEmbed], components: [] });
 		}
 
-		const guild = Database.prepare(`SELECT name FROM Guilds WHERE id = ?`).pluck().get(exportData.guild_id);
-		const channel = Database.prepare(`SELECT name FROM Channels WHERE id = ?`).pluck().get(exportData.channel_id);
+		const guild = await connection.query(`SELECT name FROM Guilds WHERE id = ?`, [exportData.guild_id]);
+		const channel = await connection.query(`SELECT name FROM Channels WHERE id = ?`, [exportData.channel_id]);
+
+		Database.releaseConnection(connection);
 
 		const embed = {
 			color: COLOR.PRIMARY,

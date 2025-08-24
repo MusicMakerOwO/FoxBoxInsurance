@@ -15,7 +15,7 @@ module.exports = {
 
 		const [{ "COUNT(*)": channelMessageCount }] = await Database.query('SELECT COUNT(*) FROM Messages WHERE channel_id = ?', [exportOptions.channelID]);
 
-		exportOptions.messageCount = Math.min(inputNumber, channelMessageCount);
+		exportOptions.messageCount = Math.min(inputNumber, Number(channelMessageCount));
 
 		client.ttlcache.set(
 			`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`,

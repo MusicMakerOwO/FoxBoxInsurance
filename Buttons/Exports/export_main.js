@@ -52,7 +52,7 @@ module.exports = {
 		const channel = interaction.guild.channels.cache.get(exportOptions.channelID);
 		const channelName = channel
 			? '<#' + channel.id + '>'
-			: Database.prepare("SELECT '#' || name FROM Channels WHERE id = ?").pluck().get(exportOptions.channelID)
+			: (await Database.query("SELECT '#' || name as name FROM Channels WHERE id = ?", [exportOptions.channelID]))[0]?.name
 				?? 'Unknown Channel';
 
 		const embed = {

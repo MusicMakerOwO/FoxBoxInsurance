@@ -11,8 +11,7 @@ module.exports = {
 		Database.query(`
 			INSERT INTO Guilds (id, name, accepted_terms)
 			VALUES (?, ?, 0)
-			ON CONFLICT(id) DO
-			UPDATE SET name = excluded.name
+			ON DUPLICATE KEY UPDATE name = VALUES(name)
 		`, [guild.id, guild.name]);
 
 		// Set the guild's TOS to false in the cache

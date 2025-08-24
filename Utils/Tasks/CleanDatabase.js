@@ -6,63 +6,65 @@ module.exports = async function CleanDatabase() {
 
 	const start = process.hrtime.bigint();
 
-	let didDelete = 0;
-	
-	Database.exec('BEGIN TRANSACTION');
+	const connection = await Database.getConnection();
 
-	Database.exec(`
-		CREATE TEMP TABLE IF NOT EXISTS temp_messages AS SELECT id, sticker_id FROM Messages;
-		CREATE TEMP TABLE IF NOT EXISTS temp_embeds AS SELECT DISTINCT id FROM Embeds;
-	`);
-
-	didDelete |= Database.prepare(`
-		DELETE FROM MessageEmojis
-		WHERE message_id NOT IN ( SELECT id FROM temp_messages )
-	`).run().changes;
-
-	// delete emojis that are not used in any message
-	didDelete |= Database.prepare(`
-		DELETE FROM Emojis
-		WHERE id NOT IN (
-			SELECT DISTINCT emoji_id FROM MessageEmojis
-		)
-	`).run().changes;
-
-	didDelete |= Database.prepare(`
-		DELETE FROM Stickers
-		WHERE id NOT IN ( SELECT sticker_id FROM temp_messages )
-	`).run().changes;
-
-	didDelete |= Database.prepare(`
-		DELETE FROM Attachments
-		WHERE message_id NOT IN ( SELECT id FROM temp_messages )
-	`).run().changes;
-
-	didDelete |= Database.prepare(`
-		DELETE FROM Embeds
-		WHERE message_id NOT IN ( SELECT id FROM temp_messages )
-	`).run().changes;
-
-	didDelete |= Database.prepare(`
-		DELETE FROM EmbedFields
-		WHERE embed_id NOT IN ( SELECT DISTINCT id FROM temp_embeds)
-	`).run().changes;
-
-	// delete interaction logs older than 30 days
+	// 30 days ago
 	const isoDate = new Date(Date.now() - SECONDS.DAY * 30 * 1000).toISOString();
-	didDelete |= Database.prepare(`
-		DELETE FROM InteractionLogs
-		WHERE created_at < ?
-	`).run(isoDate).changes;
 
-	Database.exec(`
-		DROP TABLE IF EXISTS temp_messages;
-		DROP TABLE IF EXISTS temp_embeds;
-	`);
+	await connection.beginTransaction();
 
-	Database.exec('COMMIT TRANSACTION');
+	await connection.query(`CREATE TEMPORARY TABLE IF NOT EXISTS temp_messages AS SELECT id, sticker_id FROM Messages`);
+	await connection.query(`CREATE TEMPORARY TABLE IF NOT EXISTS temp_embeds AS SELECT DISTINCT id FROM Embeds`);
 
-	if (didDelete > 0) Database.exec('VACUUM');
+	const transactionQueries = [
+		connection.query(`
+			DELETE FROM MessageEmojis
+			WHERE message_id NOT IN ( SELECT id FROM temp_messages )
+		`),
+
+		// delete emojis that are not used in any message
+		connection.query(`
+			DELETE FROM Emojis
+			WHERE id NOT IN (
+				SELECT DISTINCT emoji_id FROM MessageEmojis
+			)
+		`),
+
+		connection.query(`
+			DELETE FROM Stickers
+			WHERE id NOT IN ( SELECT sticker_id FROM temp_messages )
+		`),
+
+		connection.query(`
+			DELETE FROM Attachments
+			WHERE message_id NOT IN ( SELECT id FROM temp_messages )
+		`),
+
+		connection.query(`
+			DELETE FROM Embeds
+			WHERE message_id NOT IN ( SELECT id FROM temp_messages )
+		`),
+
+		connection.query(`
+			DELETE FROM EmbedFields
+			WHERE embed_id NOT IN ( SELECT DISTINCT id FROM temp_embeds)
+		`),
+
+		// delete interaction logs older than 30 days
+		connection.query(`
+			DELETE FROM InteractionLogs
+			WHERE created_at < ?
+		`, [isoDate])
+	];
+
+	await Promise.all(transactionQueries);
+
+	await connection.query('DROP TABLE IF EXISTS temp_messages');
+	await connection.query('DROP TABLE IF EXISTS temp_embeds');
+
+	await connection.commit();
+
+	Database.releaseConnection(connection);
 
 	const end = process.hrtime.bigint();
 	const duration = Number(end - start) / 1e6;

@@ -3,7 +3,7 @@ const Database = require("../Database");
 const { readFileSync } = require("fs");
 const { minify } = require("html-minifier");
 const crypto = require("crypto");
-const ResolveUserKey = require("../ResolveUserKey");
+const { ResolveUserKeyBulk } = require("../ResolveUserKey");
 const { SimplifyMessage, SimplifyUser, SimplifyGuild } = require("./Simplify");
 
 const missingAsset = readFileSync(`${__dirname}/../../missing.png`);
@@ -17,21 +17,20 @@ const DEFAULT_OPTIONS = {
 	lastMessageID: ''
 }
 
-function BatchCache(list = [{}], property = '', table = '', column = '') {
+async function BatchCache(connection, list = [{}], property = '', table = '', column = '') {
 	if (typeof list[0] === 'object') list = list.map(m => m?.[property]);
 	if (list.length === 0) return new Map();
-	const IDs = new Set(list);
-	const dbData = Database.prepare(`
+	const IDs = Array.from( new Set(list) );
+	const dbData = await connection.query(`
 		SELECT *
 		FROM ${table}
 		WHERE ${column} IN ( ${'?,'.repeat(IDs.size - 1)}? )
-	`).all(...IDs);
-	const result = new Map( dbData.map(x => [x[column], x]) );
-	return result;
+	`, IDs);
+	return new Map(dbData.map(x => [x[column], x]));
 }
 
 const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';
-function GenerateExportID(attempts = 5) {
+async function GenerateExportID(connection, attempts = 5) {
 	if (attempts <= 0) throw new Error('Failed to generate export ID');
 	// XXXX-XXXX-XXXX-XXXX
 	const id = [];
@@ -42,18 +41,22 @@ function GenerateExportID(attempts = 5) {
 		if (i !== 3) id.push('-');
 	}
 	const idString = id.join('');
-	const exists = Database.prepare('SELECT * FROM Exports WHERE id = ?').get(idString);
-	return exists ? GenerateExportID(attempts - 1) : idString;
+	const [exists] = await connection.query('SELECT id FROM Exports WHERE id = ?', [idString]);
+	return exists ? GenerateExportID(connection, attempts - 1) : idString;
 }
 
 module.exports = async function Export(options = DEFAULT_OPTIONS) {
-	
+
+	if (options.messageCount < 1) throw new Error('Cannot export 0 messages');
+
+	const connection = await Database.getConnection();
+
 	const Context = {
-		Owner: Database.prepare('SELECT * FROM Users WHERE id = ?').get(options.userID),
-		ID: GenerateExportID(),
-		Guild: Database.prepare('SELECT * FROM Guilds WHERE id = ?').get(options.guildID),
-		Channel: Database.prepare('SELECT * FROM Channels WHERE id = ?').get(options.channelID),
-		
+		Owner: (await connection.query('SELECT * FROM Users WHERE id = ?', [options.userID]))[0],
+		ID: await GenerateExportID(connection),
+		Guild: (await connection.query('SELECT * FROM Guilds WHERE id = ?', [options.guildID]))[0],
+		Channel: (await connection.query('SELECT * FROM Channels WHERE id = ?', [options.channelID]))[0],
+
 		Users: new Map(),
 		Emojis: new Map(),
 		Stickers: new Map(),
@@ -67,8 +70,6 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		Messages: new Array( options.messageCount ).fill({})
 	}
 
-	if (options.messageCount < 1) throw new Error('Cannot export 0 messages');
-
 	/*
 	{
 		id: '1353442409295384640',
@@ -80,21 +81,25 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		created_at: '2025-03-23T18:56:56.000Z'
 	}
 	*/
-	const messages = Database.prepare(`
+
+	const selectedMessageIDs = await connection.query(`
+		SELECT id
+		FROM Messages
+		WHERE channel_id = ?
+		ORDER BY id DESC
+		LIMIT ?
+	`, [options.channelID, options.messageCount]);
+
+	const messages = await connection.query(`
 		SELECT *
 		FROM Messages
-		WHERE id IN (
-			SELECT id
-			FROM Messages
-			WHERE
-				channel_id = ? AND
-				id <= ?
-			ORDER BY id DESC
-			LIMIT ?
-		)
-	`).all(options.channelID, String(options.lastMessageID), options.messageCount);
+		WHERE id IN ( ${'?,'.repeat(selectedMessageIDs.length - 1)}? )
+	`, selectedMessageIDs.map(m => m.id) );
 
 	console.log(`Decrypting ${messages.length} messages...`);
+
+	const userIDs = [ ... new Set(messages.filter(m => m.encrypted === 1 && m.content !== null).map(m => m.user_id)) ];
+	const keys = await ResolveUserKeyBulk(userIDs);
 
 	const decryptStart = process.hrtime.bigint();
 	for (let i = 0; i < messages.length; i++) {
@@ -102,16 +107,14 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		if (message.encrypted === 0) continue;
 		if (message.content === null) continue;
 
-		const key = ResolveUserKey(message.user_id);
+		const key = keys[message.user_id];
 		if (!key) throw new Error(`Failed to get key for user ${message.user_id}`);
-	
+
 		const iv = crypto.createHash('sha256').update(`${message.id}${message.user_id}`).digest('hex').slice(0, 16);
-		const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-		decipher.setAuthTag(Buffer.from(message.tag, 'base64'));
-		
-		const decrypted = decipher.update(message.content, 'base64', 'utf8') + decipher.final('utf8');
-		
-		message.content = decrypted;
+		const decrypt = crypto.createDecipheriv('aes-256-gcm', key, iv);
+		decrypt.setAuthTag(Buffer.from(message.tag, 'base64'));
+
+		message.content = decrypt.update(message.content, 'base64', 'utf8') + decrypt.final('utf8');
 	}
 	const decryptEnd = process.hrtime.bigint();
 	const decryptTime = Number(decryptEnd - decryptStart) / 1e6;
@@ -119,23 +122,25 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 
 	Context.Messages = messages;
 
-	Context.Users 	 = BatchCache(messages, 'user_id', 'Users', 'id');
-	Context.Stickers = BatchCache(messages, 'sticker_id', 'Stickers', 'id');
+	Context.Users 	 = await BatchCache(connection, messages, 'user_id', 'Users', 'id');
+	Context.Stickers = await BatchCache(connection, messages, 'sticker_id', 'Stickers', 'id');
 
-	const EmojiIDs = Database.prepare(`
+	const messageIDs = messages.map(m => m.id);
+
+	const EmojiIDs = await connection.query(`
 		SELECT emoji_id
 		FROM MessageEmojis
 		WHERE message_id IN ( ${'?,'.repeat(messages.length - 1)}? )
-	`).all(...messages.map(m => m.id));
-	Context.Emojis 	= BatchCache(EmojiIDs, 'emoji_id', 'Emojis', 'id');
+	`, messageIDs);
+	Context.Emojis 	= await BatchCache(connection, EmojiIDs, 'emoji_id', 'Emojis', 'id');
 
-	const AttachmentIDs = Database.prepare(`
+	const AttachmentIDs = await connection.query(`
 		SELECT id
 		FROM Attachments
 		WHERE message_id IN ( ${'?,'.repeat(messages.length - 1)}? )
-	`).all(...messages.map(m => m.id));
+	`, messageIDs);
 
-	const Files = BatchCache(AttachmentIDs, 'id', 'Attachments', 'id'); // fileID -> file
+	const Files = await BatchCache(connection, AttachmentIDs, 'id', 'Attachments', 'id'); // fileID -> file
 	for (const file of Files.values()) {
 		if (!Context.Files.has(file.message_id)) {
 			Context.Files.set(file.message_id, [file]);
@@ -144,12 +149,12 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		}
 	}
 
-	const EmbedIDs = Database.prepare(`
+	const EmbedIDs = await connection.query(`
 		SELECT id
 		FROM Embeds
 		WHERE message_id IN ( ${'?,'.repeat(messages.length - 1)}? )
-	`).all(...messages.map(m => m.id));
-	const Embeds = BatchCache(EmbedIDs, 'id', 'Embeds', 'id');
+	`, messageIDs);
+	const Embeds = await BatchCache(connection, EmbedIDs, 'id', 'Embeds', 'id');
 	for (const embed of Embeds.values()) {
 		// Map() : message_id -> embed[]
 		if (!Context.Embeds.has(embed.message_id)) {
@@ -160,12 +165,12 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	}
 
 	if (EmbedIDs.length > 0) {
-		const EmbedFieldIDs = Database.prepare(`
+		const EmbedFieldIDs = await connection.query(`
 			SELECT id
 			FROM EmbedFields
 			WHERE embed_id IN ( ${'?,'.repeat(EmbedIDs.length - 1)}? )
-		`).all(...EmbedIDs.map(m => m.id));
-		const Fields = BatchCache(EmbedFieldIDs, 'id', 'EmbedFields', 'id');
+		`, EmbedIDs.map(m => m.id) );
+		const Fields = await BatchCache(connection, EmbedFieldIDs, 'id', 'EmbedFields', 'id');
 		for (const field of Fields.values()) {
 			// Map() : embed_id -> field[]
 			if (!Context.EmbedFields.has(field.embed_id)) {
@@ -184,7 +189,7 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		... Array.from(Context.Files.values()	).map(x => x.map(f => f.asset_id)).flat()
 	];
 
-	Context.Assets = BatchCache(AssetIDs, 'id', 'Assets', 'asset_id');
+	Context.Assets = await BatchCache(connection, AssetIDs, 'id', 'Assets', 'asset_id');
 
 	// strip out sensitive or useless data
 	Context.Messages = Context.Messages.map(SimplifyMessage);
@@ -204,6 +209,8 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 
 	// memes_export.txt
 	const fileName = Context.Channel.name + '_export.' + options.format.toLowerCase();
+
+	Database.releaseConnection(connection);
 
 	return {
 		id: Context.ID,
@@ -341,7 +348,7 @@ function ExportHTML(Context) {
 	}
 
 	let page = readFileSync(`${__dirname}/page.html`, 'utf-8');
-	
+
 	// {{name}}
 	const templateRegex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
 	const templatesUsed = page.match(templateRegex) ?? [];

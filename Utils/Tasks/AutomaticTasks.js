@@ -62,7 +62,7 @@ for (const [name, callback] of Object.entries(TaskFunctions)) {
 	TASK_INTERVAL[name] *= 1000; // convert to milliseconds
 }
 
-module.exports.StartTasks = function StartTasks() {
+module.exports.StartTasks = async function StartTasks() {
 	const totalTasks = Object.keys(TaskFunctions).length;
 	if (totalTasks === 0) {
 		warn("No tasks to manage - nothing to do!");
@@ -70,6 +70,8 @@ module.exports.StartTasks = function StartTasks() {
 	} else {
 		success(`Starting ${totalTasks} automatic tasks...`);
 	}
+
+	const connection = await Database.getConnection();
 
 	let i = -1;
 	for (const [name, callback] of Object.entries(TaskFunctions)) {
@@ -80,7 +82,7 @@ module.exports.StartTasks = function StartTasks() {
 			continue;
 		}
 
-		const lastRun = Database.prepare("SELECT last_run FROM Timers WHERE id = ?").pluck().get(name) || 0;
+		const { lastRun } = (await connection.query("SELECT last_run FROM Timers WHERE id = ?", [name]))[0] ?? { last_run: 0};
 
 		const now = Date.now();
 		const timeSinceLastRun = Math.max(0, now - lastRun);
@@ -91,13 +93,13 @@ module.exports.StartTasks = function StartTasks() {
 		TaskScheduler.schedule(() => {
 			try {
 				callback();
-				Database.prepare("INSERT OR REPLACE INTO Timers (id, last_run) VALUES (?, ?)").run(name, Date.now());
+				connection.query("INSERT OR REPLACE INTO Timers (id, last_run) VALUES (?, ?)", [name, Date.now()]);
 			} catch (err) {
 				error(err);
 			}
 		}, delay, interval);
 
-		// success(`Scheduled task "${name}" to run every ${interval / 1000} seconds (delayed by ${delay / 1000 / 60} minutes)`);
+		Database.releaseConnection(connection);
 
 		success(`[TASKS] - "${name}"${' '.repeat(longestName - name.length)} : delayed ${(delay / 1000 / 60).toFixed(2)} minutes`);
 	}

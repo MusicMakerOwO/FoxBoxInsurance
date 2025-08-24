@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const MariaDB = require('mariadb');
-const { ROOT_FOLDER } = require('./Constants');
+const { ROOT_FOLDER, SECONDS } = require('./Constants');
 const { DB_SETUP_FILE, DB_FILE } = require('./Constants.js');
 const Log = require('./Logs');
 
@@ -8,7 +8,11 @@ const connection_pool = MariaDB.createPool({
 	host: process.env.MARIADB_HOST,
 	user: process.env.MARIADB_USER,
 	password: process.env.MARIADB_PASSWORD,
-	database: 'FBI'
+	database: 'FBI',
+
+	connectionLimit: 10,
+	minimumIdle: 2, // always keep 2 connections open
+	idleTimeout: SECONDS.MINUTE * 40, // close after 40 minutes of inactivity
 });
 
 function ParseQueries(fileContent) {

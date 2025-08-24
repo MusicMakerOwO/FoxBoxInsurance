@@ -27,19 +27,19 @@ async function SetGuildTOS(id, value) {
 async function GetGuildTOS(id) {
 	if (guildCache.has(id)) return guildCache.get(id);
 
-	const [{ accepted_terms: tos }] = await Database.query(`
+	const { accepted_terms } = (await Database.query(`
 		SELECT accepted_terms
 		FROM Guilds
 		WHERE id = ?
-	`, [id]);
+	`, [id]))[0] ?? { accepted_terms: undefined };
 
-	if (tos === undefined) {
+	if (accepted_terms === undefined) {
 		// If the guild does not exist, initialize it with false
 		guildCache.set(id, false);
 		return false;
 	}
 
-	const value = ResolveValue(tos);
+	const value = ResolveValue(accepted_terms);
 
 	guildCache.set(id, value);
 
@@ -62,19 +62,19 @@ async function SetUserTOS(id, value) {
 async function GetUserTOS(id) {
 	if (userCache.has(id)) return userCache.get(id);
 
-	const [{ accepted_terms: tos }] = Database.query(`
+	const { accepted_terms } = (await Database.query(`
 		SELECT accepted_terms
 		FROM Users
 		WHERE id = ?
-	`, [id]);
+	`, [id]))[0] ?? { accepted_terms: undefined };
 
-	if (tos === undefined) {
+	if (accepted_terms === undefined) {
 		// If the user does not exist, initialize it with false
 		userCache.set(id, false);
 		return false;
 	}
 
-	const value = ResolveValue(tos);
+	const value = ResolveValue(accepted_terms);
 
 	userCache.set(id, value);
 

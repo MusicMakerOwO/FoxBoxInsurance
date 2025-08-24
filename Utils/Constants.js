@@ -7,7 +7,6 @@ const DB_FILE = `${ROOT_FOLDER}/fbi.sqlite`;
 const DOWNLOAD_CACHE = `${ROOT_FOLDER}/DownloadCache`;
 const UPLOAD_CACHE = `${ROOT_FOLDER}/UploadCache`;
 const FAILED_MESSAGES = `${ROOT_FOLDER}/FailedMessages`;
-const DATABASE_BACKUPS = `${ROOT_FOLDER}/DatabaseBackups`;
 
 const SECONDS = {
 	MINUTE: 60,
@@ -97,7 +96,7 @@ const LOADING_MESSAGES = [
 	'Solving P vs NP ...',
 	'Scanning for illegal cat pictures ...',
 	'Uploading your secrets ... (oops)',
-	'Reading the database a bedtime story. ..', 
+	'Reading the database a bedtime story ...',
 	'Feeding hamsters in the server room ...',
 	'Petting the internet for good luck ...',
 	'Waiting for a discord outage ...',
@@ -138,7 +137,6 @@ module.exports = {
 	DOWNLOAD_CACHE,
 	UPLOAD_CACHE,
 	FAILED_MESSAGES,
-	DATABASE_BACKUPS,
 
 	SECONDS,
 	COLOR,

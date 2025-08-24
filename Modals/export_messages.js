@@ -13,7 +13,7 @@ module.exports = {
 		const exportOptions = await GetExportCache(client, interaction);
 		if (!exportOptions) return;
 
-		const channelMessageCount = Database.prepare('SELECT COUNT(*) FROM Messages WHERE channel_id = ?').pluck().get(exportOptions.channelID);
+		const [{ "COUNT(*)": channelMessageCount }] = await Database.query('SELECT COUNT(*) FROM Messages WHERE channel_id = ?', [exportOptions.channelID]);
 
 		exportOptions.messageCount = Math.min(inputNumber, channelMessageCount);
 

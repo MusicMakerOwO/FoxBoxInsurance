@@ -6,13 +6,13 @@ const TaskScheduler = require("../TaskScheduler");
 const TIME_BETWEEN_TASKS = SECONDS.MINUTE * 10; // 10 minutes
 
 const TASK = {
+	SERVER_SNAPSHOT: 'server_snapshot',
+	UPLOAD_FILES: 'upload_files',
+	UPLOAD_STATS: 'upload_stats',
+	ENCRYPT_MESSAGES: 'encrypt_messages',
+	PURGE_SNAPSHOTS: 'purge_snapshots',
 	CLEAN_DATABASE: 'clean_database',
 	CHANNEL_PURGE: 'channel_purge',
-	UPLOAD_FILES: 'upload_files',
-	ENCRYPT_MESSAGES: 'encrypt_messages',
-	UPLOAD_STATS: 'upload_stats',
-	SERVER_SNAPSHOT: 'server_snapshot',
-	// PURGE_SNAPSHOTS: 'purge_snapshots',
 }
 
 const TaskFunctions = {
@@ -20,7 +20,7 @@ const TaskFunctions = {
 	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
 	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
 	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
-	// [ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
+	[ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
 	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
 	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
 }

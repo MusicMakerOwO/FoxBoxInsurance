@@ -1,9 +1,7 @@
 const Database = require("../Database");
-const https = require("node:https");
 const fs = require("node:fs");
 const { UPLOAD_CACHE } = require("../Constants");
 const Logs = require("../Logs");
-const TaskScheduler = require("../TaskScheduler");
 const UploadCDN = require("../UploadCDN");
 
 /*
@@ -31,13 +29,16 @@ CREATE TABLE IF NOT EXISTS Assets (
 */
 
 module.exports = async function UploadAssets() {
-	const UploadList = Database.prepare(`SELECT * FROM Assets WHERE uploaded = 0`).all();
+	const UploadList = await Database.query(`SELECT * FROM Assets WHERE uploaded = 0`);
 	if (UploadList.length === 0) {
 		Logs.success('No assets to upload');
 		return;
 	}
 
 	Logs.success(`Uploading ${UploadList.length} assets...`);
+
+	const connection = await Database.getConnection();
+	const promiseQueue = [];
 
 	const start = Date.now();
 
@@ -49,7 +50,7 @@ module.exports = async function UploadAssets() {
 			// something went wrong, we know the asset exists but we dont have the data
 			// Best we can do is delete the asset and hope like hell it will be downloaded again in the future
 			Logs.error(`File not found: ${filePath}`);
-			Database.prepare(`DELETE FROM Assets WHERE asset_id = ?`).run(asset.asset_id);
+			promiseQueue.push( connection.query(`DELETE FROM Assets WHERE asset_id = ?`, [asset.asset_id]) );
 			continue;
 		}
 
@@ -64,7 +65,7 @@ module.exports = async function UploadAssets() {
 			continue;
 		}
 
-		Database.prepare(`UPDATE Assets SET uploaded = 1, hash = ? WHERE asset_id = ?`).run(hash, asset.asset_id);
+		promiseQueue.push( connection.query(`UPDATE Assets SET uploaded = 1, hash = ? WHERE asset_id = ?`, [hash, asset.asset_id]) );
 
 		// delete the file after uploading
 		await fs.promises.unlink(filePath);
@@ -76,7 +77,7 @@ module.exports = async function UploadAssets() {
 		if (failedFiles.has(file)) continue;
 		// check if it was already uploaded
 		const discordID = file.split('.')[0];
-		const asset = Database.prepare(`SELECT asset_id FROM Assets WHERE discord_id = ? AND uploaded = 1`).get(discordID);
+		const asset = (await connection.query(`SELECT asset_id FROM Assets WHERE discord_id = ? AND uploaded = 1`, [discordID]))[0];
 		if (asset) {
 			// if it was uploaded but not deleted for whatever reason, delete the file
 			Logs.warn(`Oprphaned file not deleted: ${file}`);
@@ -85,6 +86,9 @@ module.exports = async function UploadAssets() {
 		}
 		Logs.error(`Orphaned file found: ${file}`);
 	}
+
+	await Promise.all(promiseQueue);
+	Database.releaseConnection(connection);
 
 	const end = Date.now();
 	const duration = end - start;

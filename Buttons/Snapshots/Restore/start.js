@@ -136,11 +136,11 @@ module.exports = {
 			});
 		}
 
-		const lastRestore = Database.prepare(`
+		const lastRestore = (await Database.query(`
 			SELECT last_restore
 			FROM Guilds
 			WHERE id = ?
-		`).pluck().get(interaction.guild.id) ?? 0;
+		`, [interaction.guild.id]))[0] ?? { last_restore: 0 };
 		if (lastRestore > Date.now() - COOLDOWN) {
 			const remaining = Math.ceil((COOLDOWN - (Date.now() - lastRestore)) / 1000);
 			return interaction.editReply({
@@ -329,65 +329,69 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 					components: []
 				});
 
+				const connection = await Database.getConnection();
+
 				if (job.actions.length > 50) {
-					Database.prepare(`
+					connection.query(`
 						UPDATE Guilds
 						SET last_restore = ?
 						WHERE id = ?
-					`).run(Date.now(), interaction.guild.id);
+					`, [Date.now(), interaction.guild.id]);
 				}
 
 				if (job.snapshot_type !== SNAPSHOT_TYPE.IMPORT) {
 					// update the ids in the snapshots
 					for (const [oldID, newID] of job.channel_lookups) {
 						// Snapshot data
-						Database.prepare(`
+						connection.query(`
 							UPDATE SnapshotChannels
 							SET id = ?, needsUpdate = 1
 							WHERE snapshot_id = ?
 							AND id = ?
-						`).run(newID, snapshotID, oldID);
+						`, [newID, snapshotID, oldID]);
 
 						// Channel parents
-						Database.prepare(`
+						connection.query(`
 							UPDATE SnapshotChannels
 							SET parent_id = ?, needsUpdate = 1
 							WHERE snapshot_id = ?
 							AND parent_id = ?
-						`).run(newID, snapshotID, oldID);
+						`, [newID, snapshotID, oldID]);
 
 						// Permission overwrites
-						Database.prepare(`
+						connection.query(`
 							UPDATE SnapshotPermissions
 							SET channel_id = ?, needsUpdate = 1
 							WHERE channel_id = ?
-						`).run(newID, oldID);
+						`, [newID, oldID]);
 
 						// Messages data - No hashing here!
-						Database.prepare(`
+						connection.query(`
 							UPDATE Messages
 							SET channel_id = ?
 							WHERE channel_id = ?
 							AND guild_id = ?
-						`).run(newID, oldID, interaction.guild.id);
+						`, [newID, oldID, interaction.guild.id]);
 					}
 
 					for (const [oldID, newID] of job.role_lookups) {
 						// Snapshot data
-						Database.prepare(`
+						connection.query(`
 							UPDATE SnapshotRoles
 							SET id = ?, needsUpdate = 1
 							WHERE snapshot_id = ?
 							AND id = ?
-						`).run(newID, snapshotID, oldID);
+						`, [newID, snapshotID, oldID]);
 
 						// Permissions data
-						Database.prepare(`
+						connection.query(`
 							UPDATE SnapshotPermissions
 							SET role_id = ?, needsUpdate = 1
 							WHERE role_id = ?
-						`).run(newID, oldID);
+						`, [newID, oldID]);
 					}
+
+					Database.releaseConnection(connection);
 
 					await UpdateHashes(snapshotID);
 				}

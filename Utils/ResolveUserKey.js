@@ -51,7 +51,7 @@ async function ResolveUserKeyBulk(userIDs = []) {
 		cache.set(userID, newTag);
 		results[userID] = newTag;
 
-		connection.query('UPDATE Users SET tag = ? WHERE id = ?').run(newTag, userID);
+		connection.query('UPDATE Users SET tag = ? WHERE id = ?', [newTag, userID]);
 	}
 
 	Database.releaseConnection(connection);

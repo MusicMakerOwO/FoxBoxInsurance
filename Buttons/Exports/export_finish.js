@@ -1,7 +1,7 @@
 const GetExportCache = require("../../Utils/Caching/GetExportCache");
 const { COLOR, RandomLoadingEmbed } = require("../../Utils/Constants");
 const Export = require("../../Utils/Parsers/Export");
-// const { DownloadAssets } = require("../../Utils/Processing/Images");
+const { DownloadAssets } = require("../../Utils/Processing/Images");
 const LinkAssets = require("../../Utils/Processing/LinkAssets");
 const Crypto = require("crypto");
 

@@ -7,48 +7,42 @@
 // 6 months of inactivity: delete all messages and the channel data itself
 
 const Database = require("../Database");
-const Task = require("../TaskScheduler");
 const Log = require("../Logs");
 const { SECONDS } = require("../Constants");
-
-const FindStaleChannels = Database.prepare("SELECT id FROM Channels WHERE last_purge < ?");
-const FindLastMessage = Database.prepare("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY id DESC LIMIT 1");
-
-const UpdatePurgeTime = Database.prepare("UPDATE Channels SET last_purge = ? WHERE id = ?");
-
-const DeleteChannel = Database.prepare("DELETE FROM Channels WHERE id = ?");
-const DeleteMessages = Database.prepare("DELETE FROM Messages WHERE channel_id = ?");
-
-const ChannelMessageCount = Database.prepare("SELECT COUNT(*) FROM Messages WHERE channel_id = ?");
-
-const DeleteOldMessages = Database.prepare("DELETE FROM Messages WHERE channel_id = ? ORDER BY id ASC LIMIT ?");
 
 module.exports = async function ChannelPurge() {
 
 	const start = process.hrtime.bigint();
 
-	const ChannelsToPurge = FindStaleChannels.all( new Date().getSeconds() + SECONDS.WEEK );
-	
+	const connection = await Database.getConnection();
+
 	const now = new Date().getSeconds();
+
+	const ChannelsToPurge = (await connection.query("SELECT id FROM Channels WHERE last_purge < ?", [now + SECONDS.WEEK])).map(c => c.id);
+
+	await connection.query("BEGIN TRANSACTION");
+
+	const promiseQueue = [];
 
 	let messagePurgeCount = 0;
 	let channelPurgeCount = 0;
 	let noopCount = 0;
 	for (const channelID of ChannelsToPurge) {
 		// check when the last message was, if it was in the last 2 weeks, skip
-		const lastMessage = FindLastMessage.get(channelID); // local time string
+		const [lastMessage] = await connection.query("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY id DESC LIMIT 1", [channelID]); // local time string
 
 		const lastMessageDate = new Date(lastMessage.created_at).getSeconds();
 		const diffSeconds = now - lastMessageDate;
 
 		if (diffSeconds > SECONDS.MONTH * 6) {
-			DeleteMessages.run(channelID);
-			DeleteChannel.run(channelID);
+			// delete everything
+			promiseQueue.push( connection.query("DELETE FROM Messages WHERE channel_id = ?", [channelID]) );
+			promiseQueue.push( connection.query("DELETE FROM Channels WHERE id = ?", [channelID]) );
 			channelPurgeCount++;
 			continue;
 		}
-		
-		UpdatePurgeTime.run(now, channelID);
+
+		promiseQueue.push( connection.query("UPDATE Channels SET last_purge = ? WHERE id = ?", [now, channelID]) );
 
 		if (diffSeconds < SECONDS.WEEK * 2) {
 			noopCount++;
@@ -65,7 +59,7 @@ module.exports = async function ChannelPurge() {
 			keepCount = 5000;
 		}
 
-		const storedMessageCount = ChannelMessageCount.pluck().get(channelID);
+		const [{ count: storedMessageCount }] = await connection.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [channelID]);
 
 		const deleteCount = Math.max(0, storedMessageCount - keepCount);
 		if (deleteCount <= 0) {
@@ -76,10 +70,15 @@ module.exports = async function ChannelPurge() {
 		messagePurgeCount += deleteCount;
 
 		// delete the oldest messages first
-		DeleteOldMessages.run(channelID, deleteCount);
+		promiseQueue.push( connection.query("DELETE FROM Messages WHERE channel_id = ? ORDER BY id ASC LIMIT ?", [channelID, deleteCount]) );
 
 		channelPurgeCount++;
 	}
+
+	await Promise.all(promiseQueue);
+
+	connection.query("COMMIT TRANSACTION");
+	Database.releaseConnection(connection);
 
 	const end = process.hrtime.bigint();
 	const duration = Number(end - start) / 1e6;

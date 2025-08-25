@@ -15,7 +15,7 @@ const DEFAULT_COMMAND_ACCESS = [ InteractionContextType.Guild ];
 async function RegisterCommands(client) {
 
 	Logs.info(`Started refreshing application (/) commands`);
-	
+
 	const commands = [];
 	const devCommands = [];
 	const commandNames = [];
@@ -63,7 +63,7 @@ async function MakeRequest(method, route, body) {
 			method,
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bot ${config.TOKEN}`
+				'Authorization': `Bot ${process.env.TOKEN}`
 			}
 		});
 		req.on('error', error => reject(error));
@@ -135,7 +135,7 @@ module.exports = async function DynamicRegister(client, force = false) {
 		Logs.warn('Command registration is disabled in config.json');
 		return;
 	}
-	
+
 	if (force) return RegisterCommands(client);
 
 	if (Date.now() - lastRegister < 1000 * 5) return; // 5 second cooldown

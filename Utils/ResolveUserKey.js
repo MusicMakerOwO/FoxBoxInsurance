@@ -35,10 +35,12 @@ async function ResolveUserKeyBulk(userIDs = []) {
 
 	const connection = await Database.getConnection();
 
+	const fetchQuery = await connection.prepare(`SELECT tag FROM Users WHERE id = ?`);
+
 	for (const [userID, key] of Object.entries(results)) {
 		if (key) continue; // already in cache
 
-		const { tag } = (await connection.query('SELECT tag FROM Users WHERE id = ?', [userID]))[0] ?? {};
+		const { tag } = (await fetchQuery.execute(userID))[0] ?? {};
 		if (tag) {
 			cache.set(userID, tag);
 			results[userID] = tag;

@@ -21,7 +21,7 @@ module.exports = async function EncryptMessages() {
 	const start = process.hrtime.bigint();
 	for (const message of unencryptedMessages) {
 		if (message.content === null) {
-			UpdateStatement.run(null, null, message.id);
+			UpdateStatement.execute([null, null, message.id]);
 			continue;
 		}
 

@@ -45,7 +45,7 @@ module.exports = {
 		// We don't want any missing assets or holes in the data
 		await DownloadAssets(); // download files
 		await UploadFiles(); // upload files to the CDN
-		LinkAssets(); // link tables together
+		await LinkAssets(); // link tables together
 
 		let loadingInterval;
 		let finished = false;

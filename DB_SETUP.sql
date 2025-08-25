@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS Users (
 	bot BOOLEAN NOT NULL DEFAULT 0,
 	asset_id INT UNSIGNED, -- NULL if no avatar
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms
-	tag VARCHAR(32) -- NULL if no key, otherwise the key used to encrypt the user data
+	tag TINYBLOB -- NULL if no key, otherwise the key used to encrypt the user data
 );
 CREATE INDEX IF NOT EXISTS users_username ON Users (username);
 CREATE INDEX IF NOT EXISTS users_asset ON Users (asset_id ASC);

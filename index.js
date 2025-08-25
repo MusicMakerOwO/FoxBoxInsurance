@@ -245,6 +245,8 @@ client.on('ready', async function () {
 
 	Database.releaseConnection(connection);
 
+	StartTasks();
+	UploadFiles();
 
 	if (!config.HOT_RELOAD) {
 		Log.warn('Hot reload is disabled in config.json');

@@ -18,30 +18,30 @@ const OwnerEmbed = {
 	description: 'Only the server owner can restore snapshots'
 }
 
-function ResolveSnapshot(client, guildID, id) {
+async function ResolveSnapshot(client, guildID, id) {
 
 	const availableImports = client.ttlcache.get(`guild-imports-${guildID}`);
 	if (!availableImports || !availableImports.has(id)) {
 		id = parseInt(id) || 0;
 		if (isNaN(id) || id <= 0) throw new Error(`Invalid snapshot ID provided : ${id}`);
 
-		const exists = Database.prepare(`
+		const [exists] = await Database.query(`
 			SELECT 1
 			FROM Snapshots
 			WHERE id = ?
-		`).get(id);
+		`, [id]);
 		if (!exists) return null
 
 		return SnapshotStats(id);
 	}
-	
+
 	const importData = client.ttlcache.get(`import-${id}`);
 	if (!importData) return null;
 
 	return {
 		type: SNAPSHOT_TYPE.IMPORT,
 		expires_at: availableImports.get(id),
-		
+
 		id: importData.metadata.snapshot_id,
 		importID: id,
 
@@ -64,7 +64,7 @@ module.exports = {
 		}
 
 		const snapshot = args[0];
-		const snapshotData = ResolveSnapshot(client, interaction.guild.id, snapshot);
+		const snapshotData = await ResolveSnapshot(client, interaction.guild.id, snapshot);
 		if (!snapshotData) {
 			return interaction.update({
 				embeds: [NoSnapshotEmbed]

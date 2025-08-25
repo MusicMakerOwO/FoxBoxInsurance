@@ -60,7 +60,7 @@ for (const [name, callback] of Object.entries(TaskFunctions)) {
 }
 
 module.exports.StartTasks = async function StartTasks() {
-	const totalTasks = Object.keys(TaskFunctions).length;
+	const totalTasks = Object.keys(TASK).length;
 	if (totalTasks === 0) {
 		warn("No tasks to manage - nothing to do!");
 		return;
@@ -70,16 +70,19 @@ module.exports.StartTasks = async function StartTasks() {
 
 	const connection = await Database.getConnection();
 
+	const selectQuery = await connection.prepare("SELECT id FROM Timers WHERE id = ?");
+
 	let i = -1;
-	for (const [name, callback] of Object.entries(TaskFunctions)) {
+	for (const name of Object.values(TASK)) {
 		i++;
+		const callback = TaskFunctions[name];
 		const interval = TASK_INTERVAL[name];
 		if (interval === undefined) {
 			warn(`Task "${name}" does not have a defined interval, skipping...`);
 			continue;
 		}
 
-		const { lastRun } = (await connection.query("SELECT last_run FROM Timers WHERE id = ?", [name]))[0] ?? { last_run: 0};
+		const { lastRun } = (await selectQuery.execute(name))[0] ?? { lastRun: 0 }; // bigint
 
 		const now = Date.now();
 		const timeSinceLastRun = Math.max(0, now - lastRun);
@@ -90,14 +93,14 @@ module.exports.StartTasks = async function StartTasks() {
 		TaskScheduler.schedule(() => {
 			try {
 				callback();
-				connection.query("INSERT OR REPLACE INTO Timers (id, last_run) VALUES (?, ?)", [name, Date.now()]);
+				connection.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
 			} catch (err) {
 				error(err);
 			}
 		}, delay, interval);
 
-		Database.releaseConnection(connection);
-
-		success(`[TASKS] - "${name}"${' '.repeat(longestName - name.length)} : delayed ${(delay / 1000 / 60).toFixed(2)} minutes`);
+		success(`[TASKS] - "${name}"${' '.repeat(longestName - name.length + 2)} : delayed ${(delay / 1000 / 60).toFixed(2)} minutes`);
 	}
+
+	Database.releaseConnection(connection);
 }

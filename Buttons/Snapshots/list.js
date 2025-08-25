@@ -45,12 +45,12 @@ module.exports = {
 			}
 		}
 
-		const availableSnapshots = Database.prepare(`
+		const availableSnapshots = await Database.query(`
 			SELECT id, type, created_at
 			FROM Snapshots
 			WHERE guild_id = ?
 			ORDER BY id DESC
-		`).all(interaction.guild.id);
+		`, [interaction.guild.id]);
 		for (const snapshot of availableSnapshots) {
 			items.push({ type: 'snapshot', id: snapshot.id, created_at: snapshot.created_at });
 		}
@@ -88,7 +88,7 @@ module.exports = {
 			if (item.type === 'import') {
 				const importData = client.ttlcache.get(`import-${item.id}`);
 				const expiresAt = ~~(item.expires_at / 1000);
-				
+
 				embed.description += `
 > ${EMOJI.IMPORT} **Import #${importData.metadata.snapshot_id}** - Expires <t:${expiresAt}:R>
 > | Channels: ${importData.data.channels.length}

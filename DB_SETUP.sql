@@ -3,7 +3,7 @@
 -- This will keep the run time data even on restart
 CREATE TABLE IF NOT EXISTS Timers (
 	id VARCHAR(64) NOT NULL PRIMARY KEY,
-	last_run INT UNSIGNED NOT NULL DEFAULT 0
+	last_run BIGINT UNSIGNED NOT NULL DEFAULT 0
 );
 
 -- This is a lookup for every single stored asset in the system

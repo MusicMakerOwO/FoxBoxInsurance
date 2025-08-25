@@ -42,12 +42,12 @@ module.exports = {
 
 		await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate some delay for loading, purely cosmetic lol
 
-		const exists = Database.prepare(`
+		const [exists] = await Database.query(`
 			SELECT id
 			FROM Snapshots
 			WHERE id = ?
 			AND guild_id = ?
-		`).get(snapshotID, interaction.guild.id);
+		`, [snapshotID, interaction.guild.id]);
 		if (!exists) {
 			return interaction.editReply({
 				embeds: [NoSnapshotEmbed]
@@ -70,7 +70,7 @@ module.exports = {
 
 		const fileName = 'snapshot-' + snapshotID;
 
-		Database.prepare(`
+		Database.query(`
 			INSERT INTO SnapshotExports (
 				id,
 				snapshot_id, guild_id, user_id,
@@ -78,7 +78,7 @@ module.exports = {
 				hash, algorithm
 			)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		`).run(
+		`, [
 			data.id,
 			snapshotID,
 			interaction.guild.id,
@@ -87,7 +87,7 @@ module.exports = {
 			serializedData.length,
 			hash,
 			HASH_ALGORITHM
-		);
+		]);
 
 		const lookup = await UploadCDN(fileName, 'json', Buffer.from(serializedData, 'utf8'), 1); // 1 url = 1 download
 

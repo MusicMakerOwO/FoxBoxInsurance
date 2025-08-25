@@ -277,7 +277,7 @@ async function Shutdown() {
 	await DownloadAssets();
 
 	Log.warn('Linking assets...');
-	LinkAssets();
+	await LinkAssets();
 
 	Log.warn('Encrypting messages...');
 	await EncryptMessages();

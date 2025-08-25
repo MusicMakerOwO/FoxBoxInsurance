@@ -16,18 +16,6 @@ const ASSET_TYPE = {
 	ATTACHMENT: 4
 }
 
-const ASSET_TABLES = {
-	[ASSET_TYPE.GUILD]: 'Guilds',
-	[ASSET_TYPE.USER]: 'Users',
-	[ASSET_TYPE.EMOJI]: 'Emojis',
-	[ASSET_TYPE.STICKER]: 'Stickers',
-	[ASSET_TYPE.ATTACHMENT]: 'Attachments'
-}
-
-for (const table of Object.values(ASSET_TABLES)) {
-	if (!Database.tables.has(table)) throw new Error(`Table ${table} does not exist in the database`);
-}
-
 const HUNDRED_MEGABYTES = 1024 * 1024 * 100;
 
 const BasicAsset = {
@@ -57,7 +45,7 @@ DownloadQueue.push = function (asset = BasicAsset) {
 }
 
 const MAX_URL_CACHE_SIZE = 1000;
-const RecentURLs = new Set( Database.prepare("SELECT discord_url FROM Assets ORDER BY asset_id DESC LIMIT ?").pluck().all(MAX_URL_CACHE_SIZE) );
+const RecentURLs = new Set(); // recently downloaded urls to avoid redownloading
 
 const REGEX_EXTENSION = /\.(\w+)/g;
 
@@ -84,21 +72,6 @@ CREATE TABLE IF NOT EXISTS Assets (
 	uploaded INTEGER NOT NULL DEFAULT 0 -- 1 if the file is uploaded to the storage
 ) STRICT;
 */
-const InsertAssets = Database.prepare(`
-	INSERT INTO Assets (type, discord_id, discord_url, name, extension, width, height, size)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-
-	-- Already exists, update in place, no need for a delete
-	ON CONFLICT(discord_id) DO UPDATE SET
-		type = excluded.type,
-		discord_id = excluded.discord_id,
-		discord_url = excluded.discord_url,
-		name = excluded.name,
-		extension = excluded.extension,
-		width = excluded.width,
-		height = excluded.height,
-		size = excluded.size
-`);
 
 function LoadFailedDownloads() {
 	const failedAssets = [];
@@ -156,9 +129,13 @@ async function DownloadAssets() {
 		Log.error(`No internet connection, cannot download assets`);
 	}
 
+	const connection = await Database.getConnection();
+
+	const promiseQueue = [];
+
 	const start = Date.now();
 	for (const asset of queue) {
-		// assume duplicate asset, each url *should* be unique unless I am forgetting something 
+		// assume duplicate asset, each url *should* be unique unless I am forgetting something
 		if (RecentURLs.has(asset.url)) {
 			cacheHit++;
 			continue;
@@ -171,7 +148,7 @@ async function DownloadAssets() {
 			Log.warn(`Skipping download due to previous failure : ${asset.url}`);
 			continue;
 		}
-		
+
 		const extension = asset.url.match(REGEX_EXTENSION).pop().slice(1) || 'png';
 
 		const buffer = await DownloadURL(asset.url).catch((err) => {
@@ -196,22 +173,42 @@ async function DownloadAssets() {
 			console.log(`Setting default avatar for ${asset.id} : ${asset.url}`);
 		}
 
-		try {
-			InsertAssets.run(
-				asset.type,
-				asset.id,
-				asset.url,
-				Clean(asset.name),
-				extension,
-				asset.width,
-				asset.height,
-				buffer.length
-			);
-		} catch (err) {
-			Log.error(`Failed to insert asset into database: ${err.message}`);
-			Log.error(asset);
-		}
+		promiseQueue.push( ( async () => {
+			try {
+				connection.query(`
+					INSERT INTO Assets (type, discord_id, discord_url, name, extension, width, height, size)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+
+					-- Already exists, update in place, no need for a delete
+					ON DUPLICATE KEY UPDATE
+						type        = VALUES(type),
+						discord_id  = VALUES(discord_id),
+						discord_url = VALUES(discord_url),
+						name        = VALUES(name),
+						extension   = VALUES(extension),
+						width       = VALUES(width),
+						height      = VALUES(height),
+						size        = VALUES(size)
+				`, [
+					asset.type,
+					asset.id,
+					asset.url,
+					Clean(asset.name),
+					extension,
+					asset.width,
+					asset.height,
+					buffer.length
+				])
+			} catch (err) {
+				Log.error(`Failed to insert asset into database: ${err.message}`);
+				Log.error(asset);
+			}
+		})());
 	}
+
+	await Promise.all(promiseQueue);
+
+	Database.releaseConnection(connection);
 
 	const end = Date.now();
 	const duration = end - start;

@@ -6,8 +6,6 @@ const sampleCache = new CachePool(3);
 
 const Log = require('../Logs');
 const LinkAssets = require('./LinkAssets');
-const { FAILED_MESSAGES } = require('../Constants');
-const { writeFileSync } = require('node:fs');
 
 module.exports = async function ProcessMessages (messageCache = sampleCache) {
 	const messages = messageCache.cache[ messageCache.currentPool ];

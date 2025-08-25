@@ -10,15 +10,19 @@ module.exports = async function SnapshotServers() {
 
 	const snapshotQueue = [];
 
+	const connection = await Database.getConnection();
+
 	for (const guild of client.guilds.cache.values()) {
 		if (BigInt(guild.id) % 24n !== BigInt(currentHour)) continue;
-		const enabled = Database.prepare('SELECT snapshots_enabled FROM Guilds WHERE id = ?').pluck().get(guild.id);
+		const [{ snapshots_enabled: enabled }] = (await connection.query('SELECT snapshots_enabled FROM Guilds WHERE id = ?', [guild.id]))[0] ?? { snapshots_enabled: 0 };
 		if (!enabled || enabled.snapshots_enabled === 0) {
 			Log.custom(`Skipping ${guild.name} (${guild.id}) - Snapshots disabled`, 0x7946ff);
 			continue;
 		}
 		snapshotQueue.push(guild);
 	}
+
+	Database.releaseConnection(connection);
 
 	if (snapshotQueue.length === 0) {
 		Log.custom('No servers to snapshot this hour', 0x7946ff);

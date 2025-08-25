@@ -73,23 +73,23 @@ const SessionExpiredEmbed = {
 	description: 'Your session has expired. Please try again.'
 }
 
-function ResolveSnapshot(client, guildID, id) {
+async function ResolveSnapshot(client, guildID, id) {
 
 	const availableImports = client.ttlcache.get(`guild-imports-${guildID}`);
 	if (!availableImports || !availableImports.has(id)) {
 		id = parseInt(id) || 0;
 		if (isNaN(id) || id <= 0) throw new Error(`Invalid snapshot ID provided : ${id}`);
 
-		const exists = Database.prepare(`
+		const [exists] = await Database.prepare(`
 			SELECT 1
 			FROM Snapshots
 			WHERE id = ?
-		`).get(id);
+		`, [id]);
 		if (!exists) return null
 
 		return FetchSnapshot(id);
 	}
-	
+
 	const importData = client.ttlcache.get(`import-${id}`);
 	if (!importData) return null;
 
@@ -132,7 +132,7 @@ module.exports = {
 		});
 
 		const snapshotStart = Date.now();
-		const SnapshotData = ResolveSnapshot(client, interaction.guild.id, snapshotID);
+		const SnapshotData = await ResolveSnapshot(client, interaction.guild.id, snapshotID);
 		if (!SnapshotData) throw new Error(`Snapshot with ID ${snapshotID} not found.`);
 
 		if (SnapshotData.type === SNAPSHOT_TYPE.IMPORT) {
@@ -248,13 +248,13 @@ module.exports = {
 
 				const snapshotRole = SnapshotData.roles.get(simpleRole.id);
 				if (!snapshotRole) continue; // Role does not exist in snapshot
-				
+
 				if ( HashObject(simpleRole) === snapshotRole.hash ) continue; // No changes detected
 				modifications.roles.set(simpleRole.id, { type: API_TYPES.ROLE_UPDATE, data: snapshotRole });
 			}
 
 			const sortedRoles = SortRoles( Array.from(simulatedRoles.values()) );
-			
+
 			// find the bot role and force it to the top
 			for (let i = 0; i < sortedRoles.length; i++) {
 				if (sortedRoles[i].id === botRole.id) {
@@ -271,7 +271,7 @@ module.exports = {
 				}))
 			});
 		}
-		
+
 		if (restoreOptions & RESTORE_OPTIONS.BANS) {
 			// deletions
 			for (const ban of GuildBans) {
@@ -296,7 +296,7 @@ module.exports = {
 			for (const overwrite of SnapshotData.permissions.values()) {
 				const [channel_id, role_id] = overwrite.id.split('-');
 				if (!modifications.channels.has(channel_id)) continue;
-				
+
 				const targetChannel = modifications.channels.get(channel_id);
 				if (targetChannel.type !== API_TYPES.CHANNEL_CREATE) continue;
 
@@ -485,7 +485,7 @@ Channels will be deleted, roles will be removed, and bans will be applied as per
 		}
 
 		embed.description = embed.description.trim() + '\n\n';
-		
+
 		if (executionStats.roles.created > 0 ||
 			executionStats.roles.updated > 0 ||
 			executionStats.roles.deleted > 0
@@ -501,7 +501,7 @@ Channels will be deleted, roles will be removed, and bans will be applied as per
 				embed.description += `\n\\- **${executionStats.roles.deleted}** role(s) will be deleted`;
 			}
 		}
-		
+
 		embed.description = embed.description.trim() + '\n\n';
 
 		if (executionStats.bans.created > 0 ||

@@ -6,14 +6,16 @@ module.exports = async function PurgeSnapshots() {
 
 	const start = Date.now();
 
-	const GuildSnapshots = Database.prepare(`
-SELECT guild_id, COUNT(*) as snapshot_count
-FROM Snapshots
-GROUP BY guild_id
+	const GuildSnapshots = await Database.query(`
+		SELECT guild_id, COUNT(*) as snapshot_count
+		FROM Snapshots
+		GROUP BY guild_id
 	`).all(); // { guild_id: string, snapshot_count: number }[]
 
 	let deleteCount = 0;
 	let purgedGuilds = 0;
+
+	const connection = await Database.getConnection();
 
 	for (const { guild_id, snapshot_count } of GuildSnapshots) {
 		const maxSnapshots = MaxSnapshots(guild_id);
@@ -21,12 +23,12 @@ GROUP BY guild_id
 
 		purgedGuilds++;
 
-		const availableSnapshots = Database.prepare(`
+		const availableSnapshots = await connection.query(`
 			SELECT id, pinned
 			FROM Snapshots
 			WHERE guild_id = ?
 			ORDER BY pinned DESC, id DESC
-		`).all(guild_id); // number[]
+		`, [guild_id]);
 
 		if (availableSnapshots[ availableSnapshots.length - 1].pinned) {
 			// every single snapshot is pinned, so we can't delete any
@@ -46,6 +48,8 @@ GROUP BY guild_id
 			Log.custom(`Deleted snapshot ${snapshot.id} for guild ${guild_id}`, 0x7946ff);
 		}
 	}
+
+	Database.releaseConnection(connection);
 
 	if (deleteCount === 0) return; // nothing to log lol
 

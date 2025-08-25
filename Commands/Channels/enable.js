@@ -46,7 +46,7 @@ module.exports = {
 		Database.query(`
 			INSERT INTO Channels (id, guild_id, name, type, block_exports)
 			VALUES (?, ?, ?, ?, ?)
-			ON CONFLICT (id) DO UPDATE SET block_exports = excluded.block_exports
+			ON DUPLICATE KEY UPDATE block_exports = 0
 		`, [channel.id, channel.guild.id, channel.name, channel.type, 0]);
 
 		BlacklistedChannels.delete(channel.id);

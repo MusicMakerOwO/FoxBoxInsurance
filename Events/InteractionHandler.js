@@ -136,7 +136,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 	Database.query(`
 		INSERT INTO Users (id, username, bot)
 		VALUES (?, ?, ?)
-		ON CONFLICT (id) DO NOTHING
+		ON DUPLICATE KEY UPDATE username = VALUES(username)
 	`, [
 		interaction.user.id,
 		interaction.user.username,

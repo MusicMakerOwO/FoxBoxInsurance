@@ -8,7 +8,7 @@ module.exports = {
 		await Database.query(`
 			INSERT INTO GuildBlocks (guild_id, user_id, moderator_id)
 			VALUES (?, ?, ?)
-			ON DUPLICATE KEY UPDATE moderator_id = excluded.moderator_id
+			ON DUPLICATE KEY UPDATE moderator_id = moderator_id
 		`, [member.guild.id, member.user.id, null]);
 	}
 }

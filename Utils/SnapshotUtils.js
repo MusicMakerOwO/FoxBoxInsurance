@@ -303,17 +303,19 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 		}
 	}
 
-	const latestSnapshotID = Database.prepare(`
-		SELECT MAX(id)
+	const connection = await Database.getConnection();
+
+	const { id: latestSnapshotID } = (await connection.query(`
+		SELECT MAX(id) as id
 		FROM Snapshots
 		WHERE guild_id = ?
-	`).pluck().get(guild.id) ?? 0;
+	`, [guild.id]))[0] ?? { id: 0 };
 
-	const lastSnapshot = Database.prepare(`
+	const [lastSnapshot] = await connection.query(`
 		SELECT *
 		FROM Snapshots
 		WHERE id = ?
-	`).get(latestSnapshotID);
+	`, [latestSnapshotID]);
 	if (!lastSnapshot) {
 
 		function AddItem(item, arr, simplyFunc) {
@@ -485,49 +487,97 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 
 	let dbStart, dbEnd;
 
-	Database.transaction(async () => {
-		dbStart = process.hrtime.bigint();
-		const snapshotID = Database.prepare(`
-			INSERT INTO Snapshots (guild_id, type)
-			VALUES (?, ?)
-		`).run(guild.id, type).lastInsertRowid;
+	await connection.query('BEGIN TRANSACTION');
 
-		for (const role of roles) {
-			Database.prepare(`
-				INSERT INTO SnapshotRoles (snapshot_id, id, name, color, hoist, position, permissions, managed, hash, deleted)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`).run(snapshotID, role.id, role.name, role.color, role.hoist, role.position, role.permissions, role.managed ? 1 : 0, role.hash, role.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
+	connection.query(`
+		INSERT INTO Snapshots (guild_id, type)
+		VALUES (?, ?)
+	`, [guild.id, type], async (err, result) => {
+		if (err) {
+			connection.query('ROLLBACK');
+			Database.releaseConnection(connection);
+			throw err;
 		}
-		for (const channel of channels) {
-			Database.prepare(`
-				INSERT INTO SnapshotChannels (snapshot_id, id, type, name, position, topic, nsfw, parent_id, hash, deleted)
+		dbStart = process.hrtime.bigint();
+
+		const snapshotID = result.insertId;
+
+		try {
+			connection.bulk(`
+				INSERT INTO SnapshotRoles (
+					snapshot_id,
+					id, name, color, hoist,
+					position, permissions, managed,
+					hash, deleted
+				)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`).run(snapshotID, channel.id, channel.type, channel.name, channel.position, channel.topic, channel.nsfw, channel.parent_id, channel.hash, channel.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
-		}
-		for (const permission of permissions) {
-			Database.prepare(`
-				INSERT INTO SnapshotPermissions (snapshot_id, channel_id, role_id, allow, deny, hash, deleted)
+			`, roles.map(role => [
+				snapshotID,
+				role.id, role.name, role.color, +role.hoist,
+				role.position, role.permissions, +role.managed,
+				role.hash, role.change_type === CHANGE_TYPE.DELETE ? 1 : 0
+			]));
+
+			connection.bulk(`
+				INSERT INTO SnapshotChannels (
+					snapshot_id,
+					id, type, name, position,
+					topic, nsfw, parent_id,
+					hash, deleted
+				)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`, channels.map(channel => [
+				snapshotID,
+				channel.id, channel.type, channel.name, channel.position,
+				channel.topic, +channel.nsfw, channel.parent_id,
+				channel.hash, channel.change_type === CHANGE_TYPE.DELETE ? 1 : 0
+			]));
+
+			connection.bulk(`
+				INSERT INTO SnapshotPermissions (
+					snapshot_id,
+					channel_id, role_id, allow, deny,
+					hash, deleted
+				)
 				VALUES (?, ?, ?, ?, ?, ?, ?)
-			`).run(snapshotID, permission.channel_id, permission.role_id, permission.allow, permission.deny, permission.hash, permission.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
-		}
-		for (const ban of bans) {
-			Database.prepare(`
-				INSERT INTO SnapshotBans (snapshot_id, user_id, reason, hash, deleted)
+			`, permissions.map(permission => [
+				snapshotID,
+				permission.channel_id, permission.role_id, permission.allow, permission.deny,
+				permission.hash, permission.change_type === CHANGE_TYPE.DELETE ? 1 : 0
+			]));
+
+			await connection.bulk(`
+				INSERT INTO SnapshotBans (
+					snapshot_id,
+					user_id, reason,
+					hash, deleted
+				)
 				VALUES (?, ?, ?, ?, ?)
-			`).run(snapshotID, ban.user_id, ban.reason, ban.hash, ban.change_type === CHANGE_TYPE.DELETE ? 1 : 0);
+			`, bans.map(ban => [
+				snapshotID,
+				ban.user_id, ban.reason,
+				ban.hash, ban.change_type === CHANGE_TYPE.DELETE ? 1 : 0
+			]));
+
+			connection.query('COMMIT TRANSACTION');
+		} catch(error) {
+			connection.query('ROLLBACK TRANSACTION');
+			throw error;
+		} finally {
+			dbEnd = process.hrtime.bigint();
+			Database.releaseConnection(connection);
 		}
-		dbEnd = process.hrtime.bigint();
-	})();
+	});
 
 	const banDuration = Number(fetchEnd - fetchStart) / 1e6;
 	const diffDuration = Number(diffEnd - diffStart) / 1e6;
 	const dbDuration = Number(dbEnd - dbStart) / 1e6;
 
-	const snapshotID = Database.prepare(`
-		SELECT MAX(id)
+	const { snapshotID } = (await connection.prepare(`
+		SELECT MAX(id) as id
 		FROM Snapshots
 		WHERE guild_id = ?
-	`).pluck().get(guild.id) ?? 0;
+	`, [guild.id]))[0] ?? { id: 0 };
 	Log.custom(`Snapshot #${snapshotID} created for ${guild.name} (${guild.id})`, 0x7946ff);
 	Log.custom(`Fetching : ${banDuration.toFixed(2)}ms, Diffing : ${diffDuration.toFixed(2)}ms, DB : ${dbDuration.toFixed(2)}ms`, 0x7946ff);
 

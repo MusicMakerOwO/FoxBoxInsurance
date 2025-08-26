@@ -689,13 +689,15 @@ async function UpdateHashes(snapshotID) {
 	const snapshotData = await FetchSnapshot(snapshotID, { cache: false });
 	if (!snapshotData) return;
 
-	const Update = (lookup, table, id, simplify) => {
-		const itemsNeedingUpdate = Database.prepare(`
+	const connection = await Database.getConnection();
+
+	const Update = async (lookup, table, id, simplify) => {
+		const itemsNeedingUpdate = await connection.query(`
 			SELECT *
 			FROM ${table}
 			WHERE snapshot_id = ?
 			AND needsUpdate = 1
-		`).all(snapshotID);
+		`, [snapshotID]);
 
 		for (const item of itemsNeedingUpdate) {
 
@@ -710,19 +712,21 @@ async function UpdateHashes(snapshotID) {
 			const savedItem = lookup.get(simplified[id]);
 
 			if (savedItem.hash !== hash) {
-				Database.prepare(`
+				await connection.query(`
 					UPDATE ${table}
 					SET hash = ?, needsUpdate = 0
 					WHERE snapshot_id = ?
 					AND ${id} = ?
-				`).run(hash, snapshotID, simplified[id]);
+				`, [hash, snapshotID, simplified[id] ]);
 			}
 		}
 	}
 
-	Update(snapshotData.roles, 'SnapshotRoles', 'id', SimplifyRole);
-	Update(snapshotData.channels, 'SnapshotChannels', 'id', SimplifyChannel);
-	Update(snapshotData.permissions, 'SnapshotPermissions', 'id', (permission) => SimplifyPermission(permission.channel_id, permission));
+	await Update(snapshotData.roles, 'SnapshotRoles', 'id', SimplifyRole);
+	await Update(snapshotData.channels, 'SnapshotChannels', 'id', SimplifyChannel);
+	await Update(snapshotData.permissions, 'SnapshotPermissions', 'id', (permission) => SimplifyPermission(permission.channel_id, permission));
+
+	Database.releaseConnection(connection);
 }
 
 const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';

@@ -584,15 +584,15 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 	return snapshotID;
 }
 
-function DeleteSnapshot(snapshotID) {
+async function DeleteSnapshot(snapshotID) {
 	const guildID = ResolveGuildFromSnapshot(snapshotID);
 
-	const availableSnapshots = Database.prepare(`
+	const availableSnapshots = (await Database.query(`
 		SELECT id
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
-	`).pluck().all(guildID) ?? [];
+	`, [guildID]) ?? []).map(row => row?.id);
 	if (!availableSnapshots.includes(snapshotID)) throw new Error('Snapshot not found');
 
 	const tables = [
@@ -614,17 +614,23 @@ function DeleteSnapshot(snapshotID) {
 		}
 	]
 
+	const connection = await Database.getConnection();
+
+	const promiseQueue = [];
+
 	if (availableSnapshots[availableSnapshots.length - 1] === snapshotID) {
 		// if this is the latest snapshot, delete the data immediately
-		Database.prepare(`
+		connection.query(`
 			DELETE FROM Snapshots
 			WHERE id = ?
-		`).run(snapshotID);
+		`, [snapshotID]);
 		for (const table of tables) {
-			Database.prepare(`
-				DELETE FROM ${table.name}
-				WHERE snapshot_id = ?
-			`).run(snapshotID);
+			promiseQueue.push(
+				connection.query(`
+					DELETE FROM ${table.name}
+					WHERE snapshot_id = ?
+				`, [snapshotID])
+			);
 		}
 	} else {
 
@@ -633,41 +639,49 @@ function DeleteSnapshot(snapshotID) {
 		const nextSnapshotID = availableSnapshots[availableSnapshots.indexOf(snapshotID) + 1];
 
 		for (const table of tables) {
-			if (!Database.tables.has(table.name)) {
-				throw new Error(`Table "${table.name}" does not exist in the database`);
-			}
-			Database.prepare(`
-				DELETE FROM ${table.name}
-				WHERE snapshot_id = ?
-				AND EXISTS (
-					SELECT 1
-					FROM ${table.name} AS next
-					WHERE next.snapshot_id = ?
-					AND next.${table.idColumn} = ${table.name}.${table.idColumn}
-				)
-			`).run(snapshotID, nextSnapshotID);
-			Database.prepare(`
-				UPDATE ${table.name}
-				SET snapshot_id = ?
-				WHERE snapshot_id = ?
-				AND NOT EXISTS (
-					SELECT 1
-					FROM ${table.name} AS next
-					WHERE next.snapshot_id = ?
-					AND next.${table.idColumn} = ${table.name}.${table.idColumn}
-				)
-			`).run(nextSnapshotID, snapshotID, nextSnapshotID);
-			Database.prepare(`
-				DELETE FROM ${table.name}
-				WHERE snapshot_id = ?
-			`).run(snapshotID);
+			promiseQueue.push(
+				connection.query(`
+					DELETE FROM ${table.name}
+					WHERE snapshot_id = ?
+					AND EXISTS (
+						SELECT 1
+						FROM ${table.name} AS next
+						WHERE next.snapshot_id = ?
+						AND next.${table.idColumn} = ${table.name}.${table.idColumn}
+					)
+				`, [snapshotID, nextSnapshotID]),
+
+				connection.query(`
+					UPDATE ${table.name}
+					SET snapshot_id = ?
+					WHERE snapshot_id = ?
+					AND NOT EXISTS (
+						SELECT 1
+						FROM ${table.name} AS next
+						WHERE next.snapshot_id = ?
+						AND next.${table.idColumn} = ${table.name}.${table.idColumn}
+					)
+				`, [nextSnapshotID, snapshotID, nextSnapshotID]),
+
+				connection.query(`
+					DELETE FROM ${table.name}
+					WHERE snapshot_id = ?
+				`, [snapshotID])
+			);
 		}
 
-		Database.prepare(`
-			DELETE FROM Snapshots
-			WHERE id = ?
-		`).run(snapshotID);
+		promiseQueue.push(
+			connection.query(`
+				DELETE FROM Snapshots
+				WHERE id = ?
+			`, [snapshotID])
+		);
 	}
+
+	// wait for everything to finish before releasing connection
+	await Promise.all(promiseQueue);
+
+	Database.releaseConnection(connection);
 }
 
 

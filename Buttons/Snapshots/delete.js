@@ -29,7 +29,7 @@ module.exports = {
 
 		if (confirm) {
 
-			DeleteSnapshot(snapshotID);
+			await DeleteSnapshot(snapshotID);
 
 			await interaction.editReply({
 				embeds: [successEmbed],

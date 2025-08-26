@@ -44,7 +44,7 @@ module.exports = async function PurgeSnapshots() {
 
 			deleteCount++;
 
-			DeleteSnapshot(snapshot.id);
+			await DeleteSnapshot(snapshot.id);
 			Log.custom(`Deleted snapshot ${snapshot.id} for guild ${guild_id}`, 0x7946ff);
 		}
 	}

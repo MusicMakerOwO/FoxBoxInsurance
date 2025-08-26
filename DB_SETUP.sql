@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS Assets (
 
 	name VARCHAR(255) NOT NULL, -- Original file name
 	extension VARCHAR(255) NOT NULL,
-	fileName VARCHAR(512) GENERATED ALWAYS AS (name || '.' || extension) VIRTUAL, -- The file name of the asset
+	fileName VARCHAR(512) GENERATED ALWAYS AS ( CONCAT(name, '.', extension) ) VIRTUAL, -- The file name of the asset
 
 	width SMALLINT UNSIGNED,
 	height SMALLINT UNSIGNED,

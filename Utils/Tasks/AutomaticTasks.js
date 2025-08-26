@@ -87,9 +87,11 @@ module.exports.StartTasks = async function StartTasks() {
 		}
 
 		const { last_run } = (await selectQuery.execute(name))[0] ?? { last_run: 0 }; // bigint
+		// rounding errors shouldn't be a concern because the exact second doesn't matter
+		const lastRunNumber = Number(last_run);
 
 		const now = Date.now();
-		const timeSinceLastRun = Math.max(0, now - lastRun);
+		const timeSinceLastRun = Math.max(0, now - lastRunNumber);
 
 		const offset = (TIME_BETWEEN_TASKS * 1000) * i;
 		const delay = Math.max(timeSinceLastRun >= interval ? 0 : interval - timeSinceLastRun, offset);

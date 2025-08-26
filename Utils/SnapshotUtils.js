@@ -487,7 +487,7 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 
 	let dbStart, dbEnd;
 
-	await connection.query('BEGIN TRANSACTION');
+	await connection.query('START TRANSACTION');
 
 	connection.query(`
 		INSERT INTO Snapshots (guild_id, type)

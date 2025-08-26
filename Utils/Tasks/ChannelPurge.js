@@ -77,7 +77,7 @@ module.exports = async function ChannelPurge() {
 
 	await Promise.all(promiseQueue);
 
-	connection.query("COMMIT TRANSACTION");
+	connection.query("COMMIT");
 	Database.releaseConnection(connection);
 
 	const end = process.hrtime.bigint();

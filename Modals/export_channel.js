@@ -1,7 +1,7 @@
 const { ChannelType } = require("discord.js");
 const GetExportCache = require("../Utils/Caching/GetExportCache");
 const ClosestMatch = require("../Utils/ClosestMatch");
-const { COLOR } = require("../Utils/Constants");
+const { COLOR, SECONDS } = require("../Utils/Constants");
 const Database = require("../Utils/Database");
 const UserCanExport = require("../Utils/UserCanExport");
 const TTLCache = require("../Utils/Caching/TTLCache");
@@ -55,12 +55,12 @@ module.exports = {
 		const isID = REGEX_ID.test(input);
 		if (isID) {
 			// check the id exists in the database
-			const channel = Database.prepare('SELECT id FROM channels WHERE id = ? AND guild_id = ?').get(input, interaction.guild.id);
+			const [channel] = await Database.query('SELECT id FROM Channels WHERE id = ? AND guild_id = ?', [input, interaction.guild.id]);
 			if (channel) {
 				targetID = channel.id;
 			} else {
 				// check if the channel exists in the guild
-				const channel = interaction.guild.channels.cache.get(input) ?? Database.prepare('SELECT id FROM channels WHERE id = ?').get(input);
+				const channel = interaction.guild.channels.cache.get(input) ?? (await Database.query('SELECT id FROM channels WHERE id = ?', [input]))[0];
 				if (channel) {
 					targetID = channel.id;
 				} else {
@@ -70,7 +70,7 @@ module.exports = {
 		} else {
 			if (!channelCache.has(interaction.guild.id)) {
 				// { id, name }[]
-				const dbChannels = Database.prepare('SELECT id, name FROM channels WHERE guild_id = ?').all(interaction.guild.id);
+				const dbChannels = await Database.query('SELECT id, name FROM Channels WHERE guild_id = ?', [interaction.guild.id]);
 				// [ id, name ][]
 				const guildChannels = interaction.guild.channels.cache.map(c => [c.id, c.name]);
 
@@ -133,7 +133,7 @@ module.exports = {
 			return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
 		}
 
-		const channelData = targetChannel ?? Database.prepare('SELECT type FROM channels WHERE id = ?').get(targetID);
+		const channelData = targetChannel ?? (await Database.query('SELECT type FROM Channels WHERE id = ?', [targetID]))[0];
 		if (!channelData) {
 			return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
 		}
@@ -145,7 +145,7 @@ module.exports = {
 			return interaction.reply({ embeds: [NoExport], ephemeral: true });
 		}
 
-		const channelMessageCount = Database.prepare('SELECT COUNT(*) FROM messages WHERE channel_id = ?').pluck().get(targetID);
+		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetID])
 
 		exportOptions.channelID = targetID;
 		exportOptions.messageCount = Math.min(channelMessageCount, 100);

@@ -69,7 +69,7 @@ CREATE INDEX IF NOT EXISTS channels_last_purge ON Channels (last_purge DESC);
 
 CREATE TABLE IF NOT EXISTS Users (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
-	username VARCHAR(32) NOT NULL,
+	username VARCHAR(100) NOT NULL,
 	bot BOOLEAN NOT NULL DEFAULT 0,
 	asset_id INT UNSIGNED, -- NULL if no avatar
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms

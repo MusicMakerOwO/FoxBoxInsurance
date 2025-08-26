@@ -70,7 +70,7 @@ module.exports.StartTasks = async function StartTasks() {
 
 	const connection = await Database.getConnection();
 
-	const selectQuery = await connection.prepare("SELECT id FROM Timers WHERE id = ?");
+	const selectQuery = await connection.prepare("SELECT last_run FROM Timers WHERE id = ?");
 
 	let i = -1;
 	for (const name of Object.values(TASK)) {
@@ -86,7 +86,7 @@ module.exports.StartTasks = async function StartTasks() {
 			continue;
 		}
 
-		const { lastRun } = (await selectQuery.execute(name))[0] ?? { lastRun: 0 }; // bigint
+		const { last_run } = (await selectQuery.execute(name))[0] ?? { last_run: 0 }; // bigint
 
 		const now = Date.now();
 		const timeSinceLastRun = Math.max(0, now - lastRun);

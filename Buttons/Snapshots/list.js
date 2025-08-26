@@ -113,7 +113,7 @@ module.exports = {
 				const createdAt = new Date(snapshotStats.created_at).getTime();
 				const emoji = snapshotStats.pinned ? EMOJI.PIN : EMOJI.SNAPSHOT;
 
-				const queuedDeletion = snapshotStats.pinned === 0 && isSnapshotDeletable(item.id);
+				const queuedDeletion = snapshotStats.pinned === 0 && await isSnapshotDeletable(item.id);
 
 				embed.description += `
 ${queuedDeletion ? `**${EMOJI.WARNING} This snapshot is pending deletion**` : ''}

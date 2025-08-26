@@ -25,7 +25,7 @@ const stateCache = new TTLCache();
 async function SnapshotStats(snapshotID) {
 	if (statCache.has(snapshotID)) return statCache.get(snapshotID);
 
-	const guildID = ResolveGuildFromSnapshot(snapshotID);
+	const guildID = await ResolveGuildFromSnapshot(snapshotID);
 
 	const snapshotIDs = (await Database.query(`
 		SELECT id
@@ -113,7 +113,7 @@ const snapshotCache = new TTLCache(); // 1 hour
 async function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 	if (cache && snapshotCache.has(snapshot_id)) return snapshotCache.get(snapshot_id);
 
-	const guildID = ResolveGuildFromSnapshot(snapshot_id);
+	const guildID = await ResolveGuildFromSnapshot(snapshot_id);
 
 	const availableSnapshots = (await Database.query(`
 		SELECT id
@@ -585,7 +585,7 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 }
 
 async function DeleteSnapshot(snapshotID) {
-	const guildID = ResolveGuildFromSnapshot(snapshotID);
+	const guildID = await ResolveGuildFromSnapshot(snapshotID);
 
 	const availableSnapshots = (await Database.query(`
 		SELECT id
@@ -787,17 +787,17 @@ function ClearCache(snapshotID, type = ALL_CACHE) {
 	if (type & CACHE_TYPE.BAN		) banCache.delete(snapshotID);
 }
 
-function isSnapshotDeletable(snapshotID) {
-	const guildID = ResolveGuildFromSnapshot(snapshotID);
+async function isSnapshotDeletable(snapshotID) {
+	const guildID = await ResolveGuildFromSnapshot(snapshotID);
 
 	const snapshotCount = MaxSnapshots(guildID);
 
-	const availableSnapshots = Database.prepare(`
+	const availableSnapshots = await Database.query(`
 		SELECT id, pinned
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY pinned DESC, id DESC
-	`).all(guildID) ?? [];
+	`, [guildID]) ?? [];
 	if (availableSnapshots.length <= snapshotCount) return false; // not enough snapshots to delete
 
 	// we only have to check the last snapshots because anything before will stay no matter what
@@ -812,14 +812,14 @@ function isSnapshotDeletable(snapshotID) {
 }
 
 const guildCache = new TTLCache(); // snapshotID -> guildID
-function ResolveGuildFromSnapshot(snapshotID) {
+async function ResolveGuildFromSnapshot(snapshotID) {
 	if (guildCache.has(snapshotID)) return guildCache.get(snapshotID);
 
-	const guildID = Database.prepare(`
+	const guildID = await Database.query(`
 		SELECT guild_id
 		FROM Snapshots
 		WHERE id = ?
-	`).pluck().get(snapshotID);
+	`, [snapshotID]).then(rows => rows[0]?.guild_id);
 	if (!guildID) throw new Error('Snapshot not found');
 
 	guildCache.set(snapshotID, guildID, SECONDS.HOUR * 6 * 1000); // cache for 6 hours

@@ -22,18 +22,20 @@ function HashObject(obj) {
 const statCache = new TTLCache();
 const stateCache = new TTLCache();
 
-function SnapshotStats(snapshotID) {
+async function SnapshotStats(snapshotID) {
 	if (statCache.has(snapshotID)) return statCache.get(snapshotID);
 
 	const guildID = ResolveGuildFromSnapshot(snapshotID);
 
-	const snapshotIDs = Database.prepare(`
+	const snapshotIDs = (await Database.query(`
 		SELECT id
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
-	`).pluck().all(guildID);
+	`, [guildID])).map(row => row.id);
 	if (!snapshotIDs.includes(snapshotID)) throw new Error('Snapshot not found');
+
+	const connection = await Database.getConnection();
 
 	const targetIndex = snapshotIDs.indexOf(snapshotID);
 
@@ -64,18 +66,18 @@ function SnapshotStats(snapshotID) {
 	for (let i = baseIndex + 1; i <= targetIndex; i++) {
 		const sid = snapshotIDs[i];
 
-		const updateSet = (table, set, idKey = 'id') => {
-			const rows = Database.prepare(`SELECT ${idKey}, deleted FROM ${table} WHERE snapshot_id = ?`).all(sid);
+		const updateSet = async (table, set, idKey = 'id') => {
+			const rows = await connection.query(`SELECT ${idKey}, deleted FROM ${table} WHERE snapshot_id = ?`, [sid]);
 			for (const row of rows) {
 				if (row.deleted) set.delete(row[idKey]);
 				else set.add(row[idKey]);
 			}
 		};
 
-		updateSet('SnapshotChannels', baseState.channels);
-		updateSet('SnapshotRoles', baseState.roles);
-		updateSet('SnapshotPermissions', baseState.permissions);
-		updateSet('SnapshotBans', baseState.bans, 'user_id');
+		await updateSet('SnapshotChannels', baseState.channels);
+		await updateSet('SnapshotRoles', baseState.roles);
+		await updateSet('SnapshotPermissions', baseState.permissions);
+		await updateSet('SnapshotBans', baseState.bans, 'user_id');
 
 		// Cache state at this point
 		stateCache.set(sid, {
@@ -86,11 +88,13 @@ function SnapshotStats(snapshotID) {
 		}, SECONDS.HOUR * 1000); // cache for 1 hour
 	}
 
-	const metadata = Database.prepare(`
+	const [metadata] = await connection.query(`
 		SELECT *
 		FROM Snapshots
 		WHERE id = ?
-	`).get(snapshotID);
+	`, [snapshotID]);
+
+	Database.releaseConnection(connection);
 
 	const stats = {
 		...metadata,

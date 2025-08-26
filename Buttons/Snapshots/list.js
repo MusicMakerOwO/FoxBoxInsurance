@@ -109,7 +109,7 @@ module.exports = {
 					emoji: EMOJI.IMPORT
 				});
 			} else if (item.type === 'snapshot') {
-				const snapshotStats = SnapshotStats(item.id);
+				const snapshotStats = await SnapshotStats(item.id);
 				const createdAt = new Date(snapshotStats.created_at).getTime();
 				const emoji = snapshotStats.pinned ? EMOJI.PIN : EMOJI.SNAPSHOT;
 

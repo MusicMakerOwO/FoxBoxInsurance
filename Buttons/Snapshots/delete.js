@@ -42,7 +42,7 @@ module.exports = {
 			return listButton.execute(interaction, client, []);
 		}
 
-		const stats = SnapshotStats(snapshotID);
+		const stats = await SnapshotStats(snapshotID);
 
 		const embed = {
 			color: COLOR.ERROR,

@@ -730,7 +730,7 @@ async function UpdateHashes(snapshotID) {
 }
 
 const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';
-function GenerateExportID(attempts = 5) {
+async function GenerateExportID(connection, attempts = 5) {
 	if (attempts <= 0) throw new Error('Failed to generate snapshot ID');
 	// XXXX-XXXX-XXXX-XXXX
 	const id = [];
@@ -741,24 +741,34 @@ function GenerateExportID(attempts = 5) {
 		if (i !== 3) id.push('-');
 	}
 	const idString = id.join('');
-	const exists = Database.prepare('SELECT * FROM SnapshotExports WHERE id = ?').get(idString);
-	return exists ? GenerateExportID(attempts - 1) : idString;
+	const [exists] = await connection.query('SELECT * FROM SnapshotExports WHERE id = ? LIMIT 1', [idString]);
+	return exists ? GenerateExportID(connection, attempts - 1) : idString;
 }
 
 const SNAPSHOT_VERSION = 1;
 
-function ExportSnapshot(snapshotID) {
-	const snapshotData = await FetchSnapshot(snapshotID);
+async function ExportSnapshot(snapshotID) {
+	const snapshotData = await FetchSnapshot(connection, snapshotID);
 	if (!snapshotData) return null;
 
-	return {
-		id: GenerateExportID(),
+	const connection = await Database.getConnection();
+	const exportID = await GenerateExportID(connection).catch(() => null);
+	if (!exportID) {
+		Database.releaseConnection(connection);
+		throw new Error('Failed to generate export ID');
+	}
+
+	const snapshotExport =  {
+		id: exportID,
 		version: SNAPSHOT_VERSION,
 		channels: Array.from(snapshotData.channels.values()),
 		roles: Array.from(snapshotData.roles.values()),
 		permissions: Array.from(snapshotData.permissions.values()),
 		bans: Array.from(snapshotData.bans.values())
 	};
+
+	Database.releaseConnection(connection);
+	return snapshotExport;
 }
 
 const CACHE_TYPE = {

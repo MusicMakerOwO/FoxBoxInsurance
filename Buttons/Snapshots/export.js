@@ -54,7 +54,7 @@ module.exports = {
 			});
 		}
 
-		const data = ExportSnapshot(snapshotID, interaction.guild.id);
+		const data = await ExportSnapshot(snapshotID, interaction.guild.id);
 		if (!ParseFunctions.has(data.version)) {
 			// sanity check, should never happen
 			throw new Error(`No parse function registered for snapshot version ${data.version}`);

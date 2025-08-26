@@ -81,6 +81,10 @@ module.exports.StartTasks = async function StartTasks() {
 			warn(`Task "${name}" does not have a defined interval, skipping...`);
 			continue;
 		}
+		if (callback === undefined) {
+			warn(`Task "${name}" does not have a callback function, skipping...`);
+			continue;
+		}
 
 		const { lastRun } = (await selectQuery.execute(name))[0] ?? { lastRun: 0 }; // bigint
 

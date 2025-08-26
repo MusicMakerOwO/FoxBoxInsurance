@@ -11,9 +11,11 @@ class TaskScheduler {
 		if (typeof callback !== 'function') throw new TypeError('Callback must be a function');
 		if (typeof delay !== 'number') throw new TypeError('Delay must be a number');
 		if (interval && typeof interval !== 'number') throw new TypeError('Interval must be a number');
+		if (isNaN(delay) || delay < 0) throw new RangeError('Delay must be a non-negative number');
+		if (interval && (isNaN(interval) || interval < 0)) throw new RangeError('Interval must be a non-negative number');
 
 		if (interval === undefined) interval = delay;
-		
+
         const task = { callback, time: Date.now() + delay, interval };
         this.taskQueue.push(task);
         this.taskQueue.sort((a, b) => a.time - b.time);
@@ -22,7 +24,7 @@ class TaskScheduler {
 
     #reschedule() {
         if (this.timeout) clearTimeout(this.timeout);
-        
+
         const nextTask = this.taskQueue[0];
         const timeUntilNext = Math.max(0, nextTask.time - Date.now());
 

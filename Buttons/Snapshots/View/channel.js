@@ -32,7 +32,7 @@ module.exports = {
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
 
 		if (!channelCache.has(snapshotID)) {
-			const snapshotData = FetchSnapshot(snapshotID);
+			const snapshotData = await FetchSnapshot(snapshotID);
 
 			const channels = Array.from( snapshotData.channels.values() );
 
@@ -40,7 +40,7 @@ module.exports = {
 
 			channelCache.set(snapshotID, channels);
 		}
-		
+
 		const channels = channelCache.get(snapshotID);
 
 		const embed = {
@@ -59,7 +59,7 @@ module.exports = {
 			if (selectedChannels.length === 0) {
 				embed.description = 'No more channels to display on this page.';
 			} else {
-				embed.description = selectedChannels.map(channel => 
+				embed.description = selectedChannels.map(channel =>
 					'#' + RemoveFormatting(channel.name)
 				).join('\n');
 			}

@@ -33,7 +33,7 @@ module.exports = {
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
 
 		if (!roleCache.has(snapshotID)) {
-			const snapshotData = FetchSnapshot(snapshotID);
+			const snapshotData = await FetchSnapshot(snapshotID);
 
 			const roles = Array.from( snapshotData.roles.values() );
 
@@ -41,7 +41,7 @@ module.exports = {
 
 			roleCache.set(snapshotID, sorted);
 		}
-		
+
 		const roles = roleCache.get(snapshotID);
 
 		const embed = {
@@ -60,7 +60,7 @@ module.exports = {
 			if (selectedRoles.length === 0) {
 				embed.description = 'No more roles to display on this page.';
 			} else {
-				embed.description = selectedRoles.map(role => 
+				embed.description = selectedRoles.map(role =>
 					`${role.managed ? EMOJI.BOT : ''} @${RemoveFormatting(role.name)}`
 				).join('\n');
 			}

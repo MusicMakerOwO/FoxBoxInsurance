@@ -36,7 +36,7 @@ module.exports = {
 		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
 
 		if (!banCache.has(snapshotID)) {
-			const snapshotData = FetchSnapshot(snapshotID);
+			const snapshotData = await FetchSnapshot(snapshotID);
 
 			const bans = Array.from( snapshotData.bans.values() );
 
@@ -44,7 +44,7 @@ module.exports = {
 
 			banCache.set(snapshotID, bans);
 		}
-		
+
 		const bans = banCache.get(snapshotID);
 
 		const embed = {
@@ -63,7 +63,7 @@ module.exports = {
 			if (selectedBans.length === 0) {
 				embed.description = 'No more bans to display on this page.';
 			} else {
-				embed.description = selectedBans.map(ban => 
+				embed.description = selectedBans.map(ban =>
 					`<@${ban.user_id}> (${ban.user_id}) - ${ShortText(ban.reason || 'No reason provided', 50)}`
 				).join('\n');
 			}

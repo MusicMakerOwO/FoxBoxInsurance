@@ -87,7 +87,7 @@ async function ResolveSnapshot(client, guildID, id) {
 		`, [id]);
 		if (!exists) return null
 
-		return FetchSnapshot(id);
+		return await FetchSnapshot(id);
 	}
 
 	const importData = client.ttlcache.get(`import-${id}`);

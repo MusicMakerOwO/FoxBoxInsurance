@@ -110,17 +110,17 @@ async function SnapshotStats(snapshotID) {
 
 
 const snapshotCache = new TTLCache(); // 1 hour
-function FetchSnapshot(snapshot_id, { cache = true } = {}) {
+async function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 	if (cache && snapshotCache.has(snapshot_id)) return snapshotCache.get(snapshot_id);
 
 	const guildID = ResolveGuildFromSnapshot(snapshot_id);
 
-	const availableSnapshots = Database.prepare(`
+	const availableSnapshots = (await Database.query(`
 		SELECT id
-		FROM snapshots
+		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
-	`).pluck().all(guildID) ?? [];
+	`, [guildID]) ?? []).map(row => row?.id);
 	if (!availableSnapshots.includes(snapshot_id)) throw new Error('Snapshot not found');
 
 	const roles = new Map();
@@ -128,14 +128,16 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 	const permissions = new Map();
 	const bans = new Map();
 
+	const connection = await Database.getConnection();
+
 	for (const snapshotID of availableSnapshots) {
 		if (snapshotID > snapshot_id) break; // done reading snapshot data
 
-		const snapshotRoles = Database.prepare(`
+		const snapshotRoles = await connection.query(`
 			SELECT *
 			FROM SnapshotRoles
 			WHERE snapshot_id = ?
-		`).all(snapshotID);
+		`, [snapshotID]);
 		for (const role of snapshotRoles) {
 			if (role.deleted) {
 				roles.delete(role.id);
@@ -144,11 +146,11 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 			roles.set(role.id, role);
 		}
 
-		const snapshotChannels = Database.prepare(`
+		const snapshotChannels = await connection.query(`
 			SELECT *
 			FROM SnapshotChannels
 			WHERE snapshot_id = ?
-		`).all(snapshotID);
+		`, [snapshotID]);
 		for (const channel of snapshotChannels) {
 			if (channel.deleted) {
 				channels.delete(channel.id);
@@ -157,11 +159,11 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 			channels.set(channel.id, channel);
 		}
 
-		const snapshotPermissions = Database.prepare(`
+		const snapshotPermissions = await connection.query(`
 			SELECT *
 			FROM SnapshotPermissions
 			WHERE snapshot_id = ?
-		`).safeIntegers().all(snapshotID);
+		`, [snapshotID]);
 		for (const permission of snapshotPermissions) {
 			if (permission.deleted) {
 				permissions.delete(permission.id);
@@ -170,11 +172,11 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 			permissions.set(permission.id, permission);
 		}
 
-		const snapshotBans = Database.prepare(`
+		const snapshotBans = await connection.query(`
 			SELECT *
 			FROM SnapshotBans
 			WHERE snapshot_id = ?
-		`).all(snapshotID);
+		`, [snapshotID]);
 		for (const ban of snapshotBans) {
 			if (ban.deleted) {
 				bans.delete(ban.id);
@@ -184,11 +186,13 @@ function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 		}
 	}
 
-	const snapshotMetadata = Database.prepare(`
+	const snapshotMetadata = await connection.query(`
 		SELECT *
 		FROM Snapshots
 		WHERE id = ?
-	`).get(snapshot_id);
+	`, [snapshot_id]);
+
+	Database.releaseConnection(connection);
 
 	const result = {
 		...snapshotMetadata,
@@ -345,7 +349,7 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 		}
 	} else {
 
-		const snapshotData = FetchSnapshot(latestSnapshotID);
+		const snapshotData = await FetchSnapshot(latestSnapshotID);
 
 		const processedRoles = new Set();
 		const processedChannels = new Set();
@@ -618,7 +622,7 @@ function DeleteSnapshot(snapshotID) {
 
 
 async function UpdateHashes(snapshotID) {
-	const snapshotData = FetchSnapshot(snapshotID, { cache: false });
+	const snapshotData = await FetchSnapshot(snapshotID, { cache: false });
 	if (!snapshotData) return;
 
 	const Update = (lookup, table, id, simplify) => {
@@ -676,7 +680,7 @@ function GenerateExportID(attempts = 5) {
 const SNAPSHOT_VERSION = 1;
 
 function ExportSnapshot(snapshotID) {
-	const snapshotData = FetchSnapshot(snapshotID);
+	const snapshotData = await FetchSnapshot(snapshotID);
 	if (!snapshotData) return null;
 
 	return {

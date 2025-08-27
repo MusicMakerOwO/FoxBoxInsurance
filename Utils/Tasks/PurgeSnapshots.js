@@ -10,7 +10,7 @@ module.exports = async function PurgeSnapshots() {
 		SELECT guild_id, COUNT(*) as snapshot_count
 		FROM Snapshots
 		GROUP BY guild_id
-	`).all(); // { guild_id: string, snapshot_count: number }[]
+	`, []); // { guild_id: string, snapshot_count: number }[]
 
 	let deleteCount = 0;
 	let purgedGuilds = 0;

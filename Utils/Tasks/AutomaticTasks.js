@@ -10,7 +10,7 @@ const TASK = {
 	UPLOAD_FILES: 'upload_files',
 	UPLOAD_STATS: 'upload_stats',
 	ENCRYPT_MESSAGES: 'encrypt_messages',
-	PURGE_SNAPSHOTS: 'purge_snapshots',
+	// PURGE_SNAPSHOTS: 'purge_snapshots',
 	CLEAN_DATABASE: 'clean_database',
 	CHANNEL_PURGE: 'channel_purge',
 }
@@ -20,7 +20,7 @@ const TaskFunctions = {
 	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
 	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
 	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
-	[ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
+	// [ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
 	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
 	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
 }
@@ -30,7 +30,7 @@ const TASK_INTERVAL = {
 	[TASK.UPLOAD_FILES]: SECONDS.HOUR,
 	[TASK.UPLOAD_STATS]: SECONDS.HOUR,
 	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
-	[TASK.PURGE_SNAPSHOTS]: SECONDS.DAY,
+	// [TASK.PURGE_SNAPSHOTS]: SECONDS.DAY,
 	[TASK.CLEAN_DATABASE]: SECONDS.DAY,
 	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
 }

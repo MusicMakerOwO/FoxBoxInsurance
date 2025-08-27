@@ -489,36 +489,40 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 
 	await connection.query('START TRANSACTION');
 
-	connection.query(`
+	dbStart = process.hrtime.bigint();
+
+	await connection.query(`
 		INSERT INTO Snapshots (guild_id, type)
 		VALUES (?, ?)
-	`, [guild.id, type], async (err, result) => {
-		if (err) {
-			connection.query('ROLLBACK');
-			Database.releaseConnection(connection);
-			throw err;
-		}
-		dbStart = process.hrtime.bigint();
+	`, [guild.id, type]);
 
-		const snapshotID = result.insertId;
+	const snapshotID = await connection.query('SELECT MAX(id) as id FROM Snapshots WHERE guild_id = ?', [guild.id]).then(rows => rows[0]?.id);
+	if (!snapshotID) {
+		connection.query('ROLLBACK');
+		Database.releaseConnection(connection);
+		throw err;
+	}
 
-		try {
-			connection.bulk(`
-				INSERT INTO SnapshotRoles (
-					snapshot_id,
-					id, name, color, hoist,
-					position, permissions, managed,
-					hash, deleted
-				)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	try {
+		const promiseQueue = [];
+
+		if (roles.length > 0) promiseQueue.push(
+			connection.batch(`
+                INSERT INTO SnapshotRoles (snapshot_id,
+                                           id, name, color, hoist,
+                                           position, permissions, managed,
+                                           hash, deleted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`, roles.map(role => [
 				snapshotID,
 				role.id, role.name, role.color, +role.hoist,
 				role.position, role.permissions, +role.managed,
 				role.hash, role.change_type === CHANGE_TYPE.DELETE ? 1 : 0
-			]));
+			]))
+		);
 
-			connection.bulk(`
+		if (channels.length > 0) promiseQueue.push(
+			connection.batch(`
 				INSERT INTO SnapshotChannels (
 					snapshot_id,
 					id, type, name, position,
@@ -531,9 +535,11 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 				channel.id, channel.type, channel.name, channel.position,
 				channel.topic, +channel.nsfw, channel.parent_id,
 				channel.hash, channel.change_type === CHANGE_TYPE.DELETE ? 1 : 0
-			]));
+			]))
+		);
 
-			connection.bulk(`
+		if (permissions.length > 0) promiseQueue.push(
+			connection.batch(`
 				INSERT INTO SnapshotPermissions (
 					snapshot_id,
 					channel_id, role_id, allow, deny,
@@ -544,9 +550,11 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 				snapshotID,
 				permission.channel_id, permission.role_id, permission.allow, permission.deny,
 				permission.hash, permission.change_type === CHANGE_TYPE.DELETE ? 1 : 0
-			]));
+			]))
+		);
 
-			await connection.bulk(`
+		if (bans.length > 0) promiseQueue.push(
+			connection.batch(`
 				INSERT INTO SnapshotBans (
 					snapshot_id,
 					user_id, reason,
@@ -557,27 +565,24 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 				snapshotID,
 				ban.user_id, ban.reason,
 				ban.hash, ban.change_type === CHANGE_TYPE.DELETE ? 1 : 0
-			]));
+			]))
+		);
 
-			connection.query('COMMIT TRANSACTION');
-		} catch(error) {
-			connection.query('ROLLBACK TRANSACTION');
-			throw error;
-		} finally {
-			dbEnd = process.hrtime.bigint();
-			Database.releaseConnection(connection);
-		}
-	});
+		await Promise.all(promiseQueue);
+
+		connection.query('COMMIT');
+	} catch(error) {
+		connection.query('ROLLBACK');
+		throw error;
+	} finally {
+		dbEnd = process.hrtime.bigint();
+		Database.releaseConnection(connection);
+	}
 
 	const banDuration = Number(fetchEnd - fetchStart) / 1e6;
 	const diffDuration = Number(diffEnd - diffStart) / 1e6;
 	const dbDuration = Number(dbEnd - dbStart) / 1e6;
 
-	const { snapshotID } = (await connection.prepare(`
-		SELECT MAX(id) as id
-		FROM Snapshots
-		WHERE guild_id = ?
-	`, [guild.id]))[0] ?? { id: 0 };
 	Log.custom(`Snapshot #${snapshotID} created for ${guild.name} (${guild.id})`, 0x7946ff);
 	Log.custom(`Fetching : ${banDuration.toFixed(2)}ms, Diffing : ${diffDuration.toFixed(2)}ms, DB : ${dbDuration.toFixed(2)}ms`, 0x7946ff);
 

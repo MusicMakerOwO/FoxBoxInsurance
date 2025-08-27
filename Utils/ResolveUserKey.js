@@ -23,7 +23,7 @@ async function ResolveUserKey(userID) {
 
 	const key = BuildNewKey(userID);
 	cache.set(userID, key);
-	Database.query('UPDATE Users SET tag = ? WHERE id = ?').run(key, userID);
+	Database.query('UPDATE Users SET tag = ? WHERE id = ?', [key, userID]);
 
 	return key;
 }

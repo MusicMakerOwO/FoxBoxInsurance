@@ -254,8 +254,8 @@ CREATE TABLE IF NOT EXISTS SnapshotPermissions (
 	id TEXT GENERATED ALWAYS AS ( CONCAT(channel_id || '-' || role_id) ) VIRTUAL, -- The ID of the permission
 
 	-- The permissions of the role in the channel
-	allow INT UNSIGNED NOT NULL,
-	deny INT UNSIGNED NOT NULL,
+	allow BIGINT UNSIGNED NOT NULL,
+	deny BIGINT UNSIGNED NOT NULL,
 
 	needsUpdate BOOLEAN NOT NULL DEFAULT 0, -- 1 if the hash needs to be updated
 	hash TEXT NOT NULL, -- The hash of the permission

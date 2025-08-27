@@ -53,11 +53,11 @@ module.exports = {
 				emoji: EMOJI.EXPORT
 			});
 			if (!guilds.has(exportData.guild_id)) {
-				const guild = Database.prepare(`SELECT name FROM Guilds WHERE id = ?`).pluck().get(exportData.guild_id);
+				const guild = await Database.query(`SELECT name FROM Guilds WHERE id = ?`, [exportData.guild_id]).then(res => res[0]?.name || 'Unknown Guild');
 				guilds.set(exportData.guild_id, guild);
 			}
 			if (!channels.has(exportData.channel_id)) {
-				const channel = Database.prepare(`SELECT name FROM Channels WHERE id = ?`).pluck().get(exportData.channel_id);
+				const channel = await Database.query(`SELECT name FROM Channels WHERE id = ?`, [exportData.channel_id]).then(res => res[0]?.name || 'Unknown Channel');
 				channels.set(exportData.channel_id, channel);
 			}
 			const guild = guilds.get(exportData.guild_id);

@@ -99,7 +99,7 @@ module.exports.StartTasks = async function StartTasks() {
 		TaskScheduler.schedule(() => {
 			try {
 				callback();
-				connection.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
+				Database.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
 			} catch (err) {
 				error(err);
 			}

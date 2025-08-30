@@ -1,9 +1,11 @@
 const preLoadStart = process.hrtime.bigint();
 
-// must be run with `node --env-file .env index.js`
-if (!process.env.CDN_KEY) {
-	console.error('Could not find process.env.CDN_KEY in .env');
-	console.error('Please run the server with `node --env-file .env index.js`');
+require('dotenv').config();
+
+// Check for required environment variables
+if (!process.env.TOKEN) {
+	console.error('Could not find a TOKEN in .env');
+	console.error('Did you forget to create a .env file?');
 	process.exit(1);
 }
 

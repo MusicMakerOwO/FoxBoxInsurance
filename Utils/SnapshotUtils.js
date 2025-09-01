@@ -592,13 +592,20 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 async function DeleteSnapshot(snapshotID) {
 	const guildID = await ResolveGuildFromSnapshot(snapshotID);
 
-	const availableSnapshots = (await Database.query(`
+	const availableSnapshots = await Database.query(`
 		SELECT id
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
-	`, [guildID]) ?? []).map(row => row?.id);
+	`, [guildID]).then( rows => rows.map(row => row?.id) );
 	if (!availableSnapshots.includes(snapshotID)) throw new Error('Snapshot not found');
+
+	const pinned = await Database.query(`
+		SELECT pinned
+		FROM Snapshots
+		WHERE id = ?
+	`, [snapshotID]).then( rows => rows[0]?.pinned );
+	if (pinned) throw new Error('Cannot delete a pinned snapshot');
 
 	const tables = [
 		{

@@ -90,6 +90,16 @@ module.exports = {
 			embed.description += `| Created at <t:${Math.floor(new Date(snapshotData.created_at).getTime() / 1000)}:d>`
 		}
 
+		const pinned = await Database.query(`
+			SELECT pinned
+			FROM Snapshots
+			WHERE id = ?
+		`, [interaction.guild.id, snapshotData.id]).then(rows => rows[0]?.pinned ?? 0);
+
+		if (pinned.length > 0) {
+			embed.description += ` | ${EMOJI.PIN} Pinned`;
+		}
+
 		const viewButtons = {
 			type: 1,
 			components: [
@@ -112,7 +122,7 @@ module.exports = {
 				{
 					type: 2,
 					style: 2,
-					label: 'Pin',
+					label: pinned ? 'Unpin' : 'Pin',
 					custom_id: `snapshot-pin_${snapshotData.id}`,
 					emoji: EMOJI.PIN,
 					disabled: snapshotData.type === SNAPSHOT_TYPE.IMPORT // imports cannot be pinned
@@ -142,7 +152,7 @@ module.exports = {
 					label: 'Delete',
 					custom_id: `snapshot-delete_${snapshotData.id}`,
 					emoji: EMOJI.DELETE,
-					disabled: snapshotData.type === SNAPSHOT_TYPE.IMPORT // imports cannot be deleted
+					disabled: snapshotData.type === SNAPSHOT_TYPE.IMPORT || pinned // imports and pinned snapshots cannot be deleted
 				},
 			]
 		}

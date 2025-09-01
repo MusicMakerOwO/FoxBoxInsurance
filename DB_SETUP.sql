@@ -139,7 +139,8 @@ CREATE TABLE IF NOT EXISTS Messages (
 	reply_to VARCHAR(20) DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
 	encrypted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the message is encrypted
 	tag VARCHAR(32) DEFAULT NULL, -- NULL if no tag
-	length SMALLINT -- The length of the original message (unencrypted)
+	length SMALLINT, -- The length of the original message (unencrypted)
+    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME(SUBSTRING(id, 1, 10) + 1420070400) ) VIRTUAL -- The time the message was created
 );
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
 CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);

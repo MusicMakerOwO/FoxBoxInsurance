@@ -198,7 +198,9 @@ CREATE TABLE IF NOT EXISTS Snapshots (
 	guild_id VARCHAR(20) NOT NULL,
 
 	type TINYINT UNSIGNED NOT NULL, -- import, automatic, manual, etc.
-	pinned BOOLEAN NOT NULL DEFAULT 0 -- 1 if the snapshot is pinned
+	pinned BOOLEAN NOT NULL DEFAULT 0, -- 1 if the snapshot is pinned
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(3) -- 3 decimal places for milliseconds
 );
 CREATE INDEX IF NOT EXISTS snapshots_guild_id ON Snapshots (guild_id);
 

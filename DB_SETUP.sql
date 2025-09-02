@@ -275,7 +275,7 @@ CREATE TABLE IF NOT EXISTS SnapshotBans (
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user was deleted
 
 	user_id VARCHAR(20) NOT NULL,
-	reason VARCHAR(512),
+	reason TEXT,
 
 	hash TEXT NOT NULL, -- The hash of the ban
 

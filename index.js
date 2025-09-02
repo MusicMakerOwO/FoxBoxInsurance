@@ -1,6 +1,6 @@
 const preLoadStart = process.hrtime.bigint();
 
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' });
 
 // Check for required environment variables
 if (!process.env.TOKEN) {

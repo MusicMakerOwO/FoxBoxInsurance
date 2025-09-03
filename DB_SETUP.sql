@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS Guilds (
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the guild has accepted the terms
 	asset_id INT UNSIGNED, -- NULL if no icon
 	snapshots_enabled BOOLEAN NOT NULL DEFAULT 1, -- 1 if the guild has snapshots enabled
-	last_restore INT UNSIGNED NOT NULL DEFAULT 0 -- The last time the guild was (successfully) restored
+	last_restore BIGINT UNSIGNED NOT NULL DEFAULT 0 -- The last time the guild was (successfully) restored
 );
 CREATE INDEX IF NOT EXISTS guilds_name ON Guilds (name);
 CREATE INDEX IF NOT EXISTS guilds_asset ON Guilds (asset_id);

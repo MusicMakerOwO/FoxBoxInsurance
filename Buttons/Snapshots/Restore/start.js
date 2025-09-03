@@ -141,7 +141,7 @@ module.exports = {
 			FROM Guilds
 			WHERE id = ?
 		`, [interaction.guild.id]))[0] ?? { last_restore: 0 };
-		if (lastRestore > Date.now() - COOLDOWN) {
+		if (Number(lastRestore) > Date.now() - COOLDOWN) {
 			const remaining = Math.ceil((COOLDOWN - (Date.now() - lastRestore)) / 1000);
 			return interaction.editReply({
 				embeds: [{

@@ -190,7 +190,7 @@ async function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 		SELECT *
 		FROM Snapshots
 		WHERE id = ?
-	`, [snapshot_id]);
+	`, [snapshot_id]).then( rows => rows[0] );
 
 	Database.releaseConnection(connection);
 

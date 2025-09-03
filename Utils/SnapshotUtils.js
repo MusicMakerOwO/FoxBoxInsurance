@@ -760,7 +760,7 @@ async function GenerateExportID(connection, attempts = 5) {
 const SNAPSHOT_VERSION = 1;
 
 async function ExportSnapshot(snapshotID) {
-	const snapshotData = await FetchSnapshot(connection, snapshotID);
+	const snapshotData = await FetchSnapshot(snapshotID);
 	if (!snapshotData) return null;
 
 	const connection = await Database.getConnection();

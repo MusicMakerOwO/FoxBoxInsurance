@@ -4,10 +4,11 @@ const Tasks = require('./TaskScheduler');
 
 const MAX_CACHE_SIZE = 1000; // max size of the cache
 const SALT_LENGTH = 32; // bytes
+const KEY_LENGTH = 32; // bytes
 
 function BuildNewKey(userID) {
 	const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
-	return crypto.scryptSync(userID, salt, 32);
+	return crypto.scryptSync(userID, salt, KEY_LENGTH).toString('hex');
 }
 
 const cache = new Map(); // userID -> key

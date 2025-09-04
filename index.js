@@ -275,19 +275,19 @@ async function Shutdown() {
 	Task.destroy();
 
 	Log.warn('Clearing caches...');
-	await ProcessMessages(client.messageCache);
+	await ProcessMessages(client.messageCache).catch(Log.error);
 
 	Log.warn('Downloading assets...');
-	await DownloadAssets();
+	await DownloadAssets().catch(Log.error);
 
 	Log.warn('Linking assets...');
-	await LinkAssets();
+	await LinkAssets().catch(Log.error);
 
 	Log.warn('Encrypting messages...');
-	await EncryptMessages();
+	await EncryptMessages().catch(Log.error);
 
 	Log.warn('Pushing stats...');
-	await PushStats();
+	await PushStats().catch(Log.error);
 
 	Log.warn('Closing database connection...');
 	await Database.destroy();

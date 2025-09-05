@@ -104,7 +104,7 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	const decryptStart = process.hrtime.bigint();
 	for (let i = 0; i < messages.length; i++) {
 		const message = messages[i];
-		if (message.encrypted === 0) continue;
+		if (!message.encrypted) continue;
 		if (message.content === null) continue;
 
 		const key = keys[message.user_id];

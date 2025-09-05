@@ -8,7 +8,7 @@ const KEY_LENGTH = 32; // bytes
 
 function BuildNewKey(userID) {
 	const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
-	return crypto.scryptSync(userID, salt, KEY_LENGTH).toString('hex');
+	return crypto.scryptSync(userID, salt, KEY_LENGTH);
 }
 
 const cache = new Map(); // userID -> key

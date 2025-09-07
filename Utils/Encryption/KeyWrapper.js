@@ -28,7 +28,7 @@ function UnwrapKey(wrappedBlob, wrappingKey) {
 	const tag = wrappedBlob.subarray(wrappedBlob.length - 16);
 	// encrypted key is in the middle
 	const encryptedKey = wrappedBlob.subarray(12, wrappedBlob.length - 16);
-	const decipher = crypto.createDecipheriv('aes-256-gcm', MASTER_KEY, iv);
+	const decipher = crypto.createDecipheriv('aes-256-gcm', wrappingKey, iv);
 	decipher.setAuthTag(tag);
 	return Buffer.concat([decipher.update(encryptedKey), decipher.final()]); // original key
 }

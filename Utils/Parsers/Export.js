@@ -111,11 +111,11 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 
 		const wrappedUserKey = keys[message.user_id];
 		if (!wrappedUserKey) throw new Error(`Failed to get key for user ${message.user_id}`);
+		const userKey = UnwrapUserKey(wrappedUserKey);
 
 		const { iv, tag, wrapped_dek } = message;
-
-		const userKey = UnwrapUserKey(wrappedUserKey);
 		const dek = UnwrapKey(userKey, wrapped_dek);
+
 		message.content = DecryptMessage(message.content, tag, iv, dek);
 	}
 	const decryptEnd = process.hrtime.bigint();

@@ -130,18 +130,25 @@ CREATE TABLE IF NOT EXISTS EmbedFields (
 CREATE INDEX IF NOT EXISTS embed_fields_embed_id ON EmbedFields (embed_id);
 
 CREATE TABLE IF NOT EXISTS Messages (
-	id VARCHAR(20) NOT NULL PRIMARY KEY,
+	-- metadata IDs
+    id VARCHAR(20) NOT NULL PRIMARY KEY,
 	guild_id VARCHAR(20) NOT NULL,
 	channel_id VARCHAR(20) NOT NULL,
 	user_id VARCHAR(20) NOT NULL,
-	content VARCHAR(4000),
+
+    -- message content
+	content BLOB,
 	sticker_id VARCHAR(20),
 	reply_to VARCHAR(20) DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
+
+    -- encryption details
 	encrypted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the message is encrypted
     iv VARBINARY(12) DEFAULT NULL,
     tag VARBINARY(16) DEFAULT NULL,
     wrapped_dek BIGINT UNSIGNED DEFAULT NULL REFERENCES UserKeys(id),
     encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
+
+    -- miscellaneous metadata
 	length SMALLINT, -- The length of the original message (unencrypted)
     created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME(SUBSTRING(id, 1, 10) + 1420070400) ) VIRTUAL -- The time the message was created
 );

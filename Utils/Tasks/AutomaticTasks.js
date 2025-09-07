@@ -15,7 +15,7 @@ const TASKS = [
 ];
 
 for (let i = 0; i < TASKS.length; i++) {
-	TASKS[3] *= 1000; // convert interval to milliseconds
+	TASKS[i][2] *= 1000; // convert interval to milliseconds
 }
 
 const longestName = Object.values(TASKS).reduce((max, [name]) => Math.max(max, name.length), 0);

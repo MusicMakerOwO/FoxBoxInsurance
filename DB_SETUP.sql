@@ -73,10 +73,12 @@ CREATE TABLE IF NOT EXISTS Users (
 	bot BOOLEAN NOT NULL DEFAULT 0,
 	asset_id INT UNSIGNED, -- NULL if no avatar
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms
-	wrapped_key VARBINARY(512) -- NULL if no key, otherwise the key used to encrypt the user data
+	wrapped_key VARBINARY(512),
+    rotation_hour TINYINT UNSIGNED GENERATED ALWAYS AS ( CAST(id AS UNSIGNED) % 24 ) STORED -- The hour of the day (0-23) the user's key should be rotated
 );
 CREATE INDEX IF NOT EXISTS users_username ON Users (username);
 CREATE INDEX IF NOT EXISTS users_asset ON Users (asset_id ASC);
+CREATE INDEX IF NOT EXISTS users_hour ON Users(rotation_hour ASC);
 
 CREATE TABLE IF NOT EXISTS Emojis (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,

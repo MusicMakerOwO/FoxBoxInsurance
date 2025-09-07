@@ -3,7 +3,7 @@ const Log = require("../Logs")
 const crypto = require("crypto")
 const { ResolveUserKeyBulk } = require("../Encryption/ResolveUserKey")
 const { EncryptMessage } = require("../Encryption/Messages");
-const { WrapKey } = require("../Encryption/KeyWrapper");
+const { WrapKey, UnwrapUserKey } = require("../Encryption/KeyWrapper");
 
 module.exports = async function EncryptMessages() {
 	const unencryptedMessages = await Database.query("SELECT id, user_id, content FROM Messages WHERE encrypted = 0");
@@ -35,12 +35,13 @@ module.exports = async function EncryptMessages() {
 			continue;
 		}
 
-		const key = userKeys[message.user_id];
+		const wrappedUserkey = userKeys[message.user_id];
+		const userKey = UnwrapUserKey(wrappedUserkey);
 
 		const dek = crypto.randomBytes(32); // dek = data encryption key
 		const { iv, tag, encrypted } = EncryptMessage(message.content, dek);
 
-		const wrappedDek = WrapKey(dek, key);
+		const wrappedDek = WrapKey(dek, userKey);
 
 		UpdateStatement.execute([encrypted, iv, wrappedDek, tag, message.id]);
 	}

@@ -8,7 +8,6 @@ const MASTER_KEY = Buffer.from(process.env.PEPPER, 'base64');
  * @param wrappingKey
  * @param keyToWrap
  * @returns {Buffer<ArrayBuffer>}
- * @constructor
  */
 function WrapKey(keyToWrap, wrappingKey) {
 	const iv = crypto.randomBytes(12);
@@ -23,7 +22,6 @@ function WrapKey(keyToWrap, wrappingKey) {
  * @param wrappingKey
  * @param wrappedBlob
  * @returns {Buffer<ArrayBuffer>}
- * @constructor
  */
 function UnwrapKey(wrappedBlob, wrappingKey) {
 	const iv = wrappedBlob.subarray(0, 12);

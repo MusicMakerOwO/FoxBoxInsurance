@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-const Database = require('./Database');
-const Tasks = require('./TaskScheduler');
+const Database = require('../Database');
+const Tasks = require('../TaskScheduler');
 
 const MAX_CACHE_SIZE = 1000; // max size of the cache
 const KEY_LENGTH = 32; // bytes
@@ -39,10 +39,10 @@ async function ResolveUserKeyBulk(userIDs = []) {
 	for (const [userID, key] of Object.entries(results)) {
 		if (key) continue; // already in cache
 
-		const key = await fetchQuery.execute(userID).then(rows => rows[0]?.wrapped_key);
-		if (key) {
-			cache.set(userID, key);
-			results[userID] = key;
+		const savedKey = await fetchQuery.execute(userID).then(rows => rows[0]?.wrapped_key);
+		if (savedKey) {
+			cache.set(userID, savedKey);
+			results[userID] = savedKey;
 			continue;
 		}
 

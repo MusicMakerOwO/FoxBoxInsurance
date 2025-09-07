@@ -138,14 +138,14 @@ CREATE TABLE IF NOT EXISTS Messages (
 
     -- message content
 	content BLOB,
-	sticker_id VARCHAR(20),
+    sticker_id VARCHAR(20),
 	reply_to VARCHAR(20) DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
 
     -- encryption details
 	encrypted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the message is encrypted
     iv VARBINARY(12) DEFAULT NULL,
     tag VARBINARY(16) DEFAULT NULL,
-    wrapped_dek BIGINT UNSIGNED DEFAULT NULL REFERENCES UserKeys(id),
+    wrapped_dek VARBINARY(512) DEFAULT NULL,
     encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
 
     -- miscellaneous metadata

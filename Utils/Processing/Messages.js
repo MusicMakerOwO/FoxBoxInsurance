@@ -114,10 +114,10 @@ module.exports = async function ProcessMessages (messageCache = sampleCache) {
 			`, GuildList.map(g => [g.id, g.name])),
 
 			connection.batch(`
-				INSERT INTO Channels (id, guild_id, parent_id, name, type)
-				VALUES (?, ?, ?, ?, ?)
+				INSERT INTO Channels (id, guild_id, name, type)
+				VALUES (?, ?, ?, ?)
 				ON DUPLICATE KEY UPDATE name = VALUES(name)
-			`, ChannelList.map(c => [c.id, c.guildID, c.parentID, c.name, c.type])),
+			`, ChannelList.map(c => [c.id, c.guildID, c.name, c.type])),
 
 			connection.batch(`
 				INSERT INTO Users (id, username, bot)

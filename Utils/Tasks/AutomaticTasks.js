@@ -31,7 +31,7 @@ module.exports.StartTasks = async function StartTasks() {
 
 	for (let i = 0; i < TASKS.length; i++) {
 		const taskData = TASKS[i];
-		if (!Array.isArray(taskData) || taskData.length !== 2) {
+		if (!Array.isArray(taskData) || taskData.length !== 3) {
 			warn(`Task entry ${i} is not an array, skipping...`);
 			continue;
 		}

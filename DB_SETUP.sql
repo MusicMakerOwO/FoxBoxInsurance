@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS Users (
 	bot BOOLEAN NOT NULL DEFAULT 0,
 	asset_id INT UNSIGNED, -- NULL if no avatar
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms
-	tag TINYBLOB -- NULL if no key, otherwise the key used to encrypt the user data
+	wrapped_key VARBINARY(512) -- NULL if no key, otherwise the key used to encrypt the user data
 );
 CREATE INDEX IF NOT EXISTS users_username ON Users (username);
 CREATE INDEX IF NOT EXISTS users_asset ON Users (asset_id ASC);
@@ -138,7 +138,10 @@ CREATE TABLE IF NOT EXISTS Messages (
 	sticker_id VARCHAR(20),
 	reply_to VARCHAR(20) DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
 	encrypted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the message is encrypted
-	tag VARCHAR(32) DEFAULT NULL, -- NULL if no tag
+    iv VARBINARY(12) DEFAULT NULL,
+    tag VARBINARY(16) DEFAULT NULL,
+    wrapped_dek BIGINT UNSIGNED DEFAULT NULL REFERENCES UserKeys(id),
+    encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
 	length SMALLINT, -- The length of the original message (unencrypted)
     created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME(SUBSTRING(id, 1, 10) + 1420070400) ) VIRTUAL -- The time the message was created
 );

@@ -16,23 +16,13 @@ const TASK = {
 }
 
 const TaskFunctions = {
-	[ TASK.SERVER_SNAPSHOT	]: require("./SnapshotServers"),
-	[ TASK.UPLOAD_FILES		]: require("./UploadFiles"),
-	[ TASK.UPLOAD_STATS		]: require("./PushStats"),
-	[ TASK.ENCRYPT_MESSAGES	]: require("./EncryptMessages"),
+	[ TASK.SERVER_SNAPSHOT	]: [ require("./SnapshotServers"), SECONDS.HOUR ],
+	[ TASK.UPLOAD_FILES		]: [ require("./UploadFiles"), SECONDS.HOUR ],
+	[ TASK.UPLOAD_STATS		]: [ require("./PushStats"), SECONDS.HOUR ],
+	[ TASK.ENCRYPT_MESSAGES	]: [ require("./EncryptMessages"), SECONDS.HOUR * 2 ],
 	// [ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
-	[ TASK.CLEAN_DATABASE	]: require("./CleanDatabase"),
-	[ TASK.CHANNEL_PURGE 	]: require("./ChannelPurge"),
-}
-
-const TASK_INTERVAL = {
-	[TASK.SERVER_SNAPSHOT]: SECONDS.HOUR,
-	[TASK.UPLOAD_FILES]: SECONDS.HOUR,
-	[TASK.UPLOAD_STATS]: SECONDS.HOUR,
-	[TASK.ENCRYPT_MESSAGES]: SECONDS.HOUR * 2,
-	// [TASK.PURGE_SNAPSHOTS]: SECONDS.DAY,
-	[TASK.CLEAN_DATABASE]: SECONDS.DAY,
-	[TASK.CHANNEL_PURGE]: SECONDS.WEEK,
+	[ TASK.CLEAN_DATABASE	]: [ require("./CleanDatabase"), SECONDS.DAY ],
+	[ TASK.CHANNEL_PURGE 	]: [ require("./ChannelPurge"), SECONDS.WEEK ],
 }
 
 let longestName = 0;
@@ -75,8 +65,7 @@ module.exports.StartTasks = async function StartTasks() {
 	let i = -1;
 	for (const name of Object.values(TASK)) {
 		i++;
-		const callback = TaskFunctions[name];
-		const interval = TASK_INTERVAL[name];
+		const [ callback, interval ] = TaskFunctions[name] ?? [];
 		if (interval === undefined) {
 			warn(`Task "${name}" does not have a defined interval, skipping...`);
 			continue;

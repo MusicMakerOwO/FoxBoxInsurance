@@ -106,98 +106,77 @@ module.exports = async function ProcessMessages (messageCache = sampleCache) {
 
 	try {
 
-		const insertBatches = [
-			connection.batch(`
-				INSERT INTO Guilds (id, name)
-				VALUES (?, ?)
-				ON DUPLICATE KEY UPDATE name = VALUES(name)
-			`, GuildList.map(g => [g.id, g.name])),
+		await connection.batch(`
+			INSERT INTO Guilds (id, name)
+			VALUES (?, ?)
+			ON DUPLICATE KEY UPDATE name = VALUES(name)
+		`, GuildList.map(g => [g.id, g.name]));
 
-			connection.batch(`
-				INSERT INTO Channels (id, guild_id, name, type)
-				VALUES (?, ?, ?, ?)
-				ON DUPLICATE KEY UPDATE name = VALUES(name)
-			`, ChannelList.map(c => [c.id, c.guildID, c.name, c.type])),
+		await connection.batch(`
+			INSERT INTO Channels (id, guild_id, name, type)
+			VALUES (?, ?, ?, ?)
+			ON DUPLICATE KEY UPDATE name = VALUES(name)
+		`, ChannelList.map(c => [c.id, c.guildID, c.name, c.type]));
 
-			connection.batch(`
-				INSERT INTO Users (id, username, bot)
-				VALUES (?, ?, ?)
-				ON DUPLICATE KEY UPDATE username = VALUES(username)
-			`, UserList.map(u => [u.id, u.username, +u.bot])),
-		];
+		await connection.batch(`
+			INSERT INTO Users (id, username, bot)
+			VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE username = VALUES(username)
+		`, UserList.map(u => [u.id, u.username, +u.bot]));
 
-		if (EmojiList.length > 0) insertBatches.push(
-			connection.batch(`
-				INSERT INTO Emojis (id, name, animated)
-				VALUES (?, ?, ?)
-				ON DUPLICATE KEY UPDATE name = VALUES(name)
-			`, EmojiList.map(e => [e.id, e.name, +e.animated])),
-		);
+		if (EmojiList.length > 0) await connection.batch(`
+			INSERT INTO Emojis (id, name, animated)
+			VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE name = VALUES(name)
+		`, EmojiList.map(e => [e.id, e.name, +e.animated]));
 
-		if (StickerList.length > 0) insertBatches.push(
-			connection.batch(`
-				INSERT INTO Stickers (id, name)
-				VALUES (?, ?)
-				ON DUPLICATE KEY UPDATE name = VALUES(name)
-			`, StickerList.map(s => [s.id, s.name]))
-		);
+		if (StickerList.length > 0) await connection.batch(`
+			INSERT INTO Stickers (id, name)
+			VALUES (?, ?)
+			ON DUPLICATE KEY UPDATE name = VALUES(name)
+		`, StickerList.map(s => [s.id, s.name]));
 
-		insertBatches.push(
-			connection.batch(`
-				INSERT INTO Messages (id, guild_id, channel_id, user_id, content, sticker_id, reply_to, length)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-			`, messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id, m.reply_to, m.content?.length]))
-		);
+		await connection.batch(`
+			INSERT INTO Messages (id, guild_id, channel_id, user_id, content, sticker_id, reply_to, length)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`, messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id, m.reply_to, m.content?.length]));
 
-		if (MessageEmojis.length > 0) insertBatches.push(
-			connection.batch(`
-				INSERT INTO MessageEmojis (message_id, emoji_id, count)
-				VALUES (?, ?, ?)
-			`, MessageEmojis.map(m => [m.messageID, m.emojiID, m.count]))
-		);
+		if (MessageEmojis.length > 0) await connection.batch(`
+			INSERT INTO MessageEmojis (message_id, emoji_id, count)
+			VALUES (?, ?, ?)
+		`, MessageEmojis.map(m => [m.messageID, m.emojiID, m.count]));
 
-		if (AttachmentList.length > 0) insertBatches.push(
-			connection.batch(`
-				INSERT INTO Attachments (id, message_id, name)
-				VALUES (?, ?, ?)
-				ON DUPLICATE KEY UPDATE name = VALUES(name)
-			`, AttachmentList.map(a => [a.id, a.messageID, a.name]))
-		);
+		if (AttachmentList.length > 0) await connection.batch(`
+			INSERT INTO Attachments (id, message_id, name)
+			VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE name = VALUES(name)
+		`, AttachmentList.map(a => [a.id, a.messageID, a.name]));
 
-		if (EmbedList.length > 0) insertBatches.push(
-			connection.batch(`
-				INSERT INTO Embeds (
-					id, message_id,
-					title, description, url, timestamp, color,
-					footer_text, footer_icon,
-					thumbnail_url, image_url,
-					author_name, author_url, author_icon
-				)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`, EmbedList.map(e => [
-				e.id, e.messageID,
-				e.title, e.description, e.url, e.timestamp, e.color,
-				e.footer_text, e.footer_icon,
-				e.thumbnail_url, e.image_url,
-				e.author_name, e.author_url, e.author_icon
-			]))
-		);
+		if (EmbedList.length > 0) await connection.batch(`
+			INSERT INTO Embeds (
+				id, message_id,
+				title, description, url, timestamp, color,
+				footer_text, footer_icon,
+				thumbnail_url, image_url,
+				author_name, author_url, author_icon
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, EmbedList.map(e => [
+			e.id, e.messageID,
+			e.title, e.description, e.url, e.timestamp, e.color,
+			e.footer_text, e.footer_icon,
+			e.thumbnail_url, e.image_url,
+			e.author_name, e.author_url, e.author_icon
+		]));
 
-		if (FieldList.length > 0) insertBatches.push(
-			connection.batch(`
-				INSERT INTO EmbedFields (embed_id, name, value, inline)
-				VALUES (?, ?, ?, ?)
-			`, FieldList.map(f => [f.embedID, f.name, f.value, +f.inline]))
-		);
+		if (FieldList.length > 0) await connection.batch(`
+			INSERT INTO EmbedFields (embed_id, name, value, inline)
+			VALUES (?, ?, ?, ?)
+		`, FieldList.map(f => [f.embedID, f.name, f.value, +f.inline]));
 
-		// wait for all writes to finish
-		// they will run independently, but we cannot commit until all are done
-		// the pain of race conditions in async code :(
-		await Promise.all(insertBatches);
-
-		connection.commit();
+		await connection.commit();
 	} catch (error) {
-		connection.rollback();
+		await connection.rollback();
 		Database.releaseConnection(connection);
 		Log.error(error);
 		return; // do not print timing logs

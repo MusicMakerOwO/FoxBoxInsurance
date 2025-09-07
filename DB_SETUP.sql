@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS Guilds (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the guild has accepted the terms
-	asset_id INT UNSIGNED, -- NULL if no icon
+	asset_id INT UNSIGNED REFERENCES Assets(asset_id) ON DELETE SET NULL, -- NULL if no icon
 	snapshots_enabled BOOLEAN NOT NULL DEFAULT 1, -- 1 if the guild has snapshots enabled
 	last_restore BIGINT UNSIGNED NOT NULL DEFAULT 0 -- The last time the guild was (successfully) restored
 );
@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS guilds_name ON Guilds (name);
 CREATE INDEX IF NOT EXISTS guilds_asset ON Guilds (asset_id);
 
 CREATE TABLE IF NOT EXISTS GuildBlocks (
-	guild_id VARCHAR(20) NOT NULL,
+	guild_id VARCHAR(20) NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
 	user_id VARCHAR(20) NOT NULL,
 	moderator_id VARCHAR(20), -- NULL if automatic
 	PRIMARY KEY (guild_id, user_id)
@@ -55,8 +55,8 @@ CREATE INDEX IF NOT EXISTS guild_blocks_user_id  ON GuildBlocks (user_id);
 
 CREATE TABLE IF NOT EXISTS Channels (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
-	guild_id VARCHAR(20) NOT NULL,
-	parent_id VARCHAR(20), -- NULL if no parent
+	guild_id VARCHAR(20) NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
+	parent_id VARCHAR(20) REFERENCES Channels(id) ON DELETE SET NULL, -- NULL if no parent
 	name VARCHAR(100) NOT NULL,
 	type TINYINT UNSIGNED NOT NULL,
 	block_exports BOOLEAN NOT NULL DEFAULT 0, -- 1 if exports are blocked
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS Users (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
 	username VARCHAR(100) NOT NULL,
 	bot BOOLEAN NOT NULL DEFAULT 0,
-	asset_id INT UNSIGNED, -- NULL if no avatar
+	asset_id INT UNSIGNED REFERENCES Assets(asset_id) ON DELETE SET NULL, -- NULL if no avatar
 	accepted_terms BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user has accepted the terms
 	wrapped_key VARBINARY(512),
     rotation_hour TINYINT UNSIGNED GENERATED ALWAYS AS ( CAST(id AS UNSIGNED) % 24 ) STORED -- The hour of the day (0-23) the user's key should be rotated
@@ -83,29 +83,57 @@ CREATE TABLE IF NOT EXISTS Emojis (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
 	name VARCHAR(32) NOT NULL,
 	animated BOOLEAN NOT NULL DEFAULT 0,
-	asset_id INT UNSIGNED
+	asset_id INT UNSIGNED REFERENCES Assets(asset_id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS emojis_asset_null ON Emojis (asset_id);
 
 CREATE TABLE IF NOT EXISTS Stickers (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
 	name VARCHAR(32) NOT NULL,
-	asset_id INT UNSIGNED
+	asset_id INT UNSIGNED REFERENCES Assets(asset_id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS stickers_asset_null ON Stickers (asset_id);
 
+CREATE TABLE IF NOT EXISTS Messages (
+    -- metadata IDs
+    id VARCHAR(20) NOT NULL PRIMARY KEY,
+    guild_id VARCHAR(20) NOT NULL REFERENCES Guilds(id),
+    channel_id VARCHAR(20) NOT NULL REFERENCES Channels(id),
+    user_id VARCHAR(20) NOT NULL REFERENCES Users(id),
+
+    -- message content
+    content BLOB,
+    sticker_id VARCHAR(20) REFERENCES Stickers(id) ON DELETE SET NULL,
+    reply_to VARCHAR(20) DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
+
+    -- encryption details
+    encrypted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the message is encrypted
+    iv VARBINARY(12) DEFAULT NULL,
+    tag VARBINARY(16) DEFAULT NULL,
+    wrapped_dek VARBINARY(512) DEFAULT NULL,
+    encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
+
+    -- miscellaneous metadata
+    length SMALLINT, -- The length of the original message (unencrypted)
+    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME(SUBSTRING(id, 1, 10) + 1420070400) ) VIRTUAL -- The time the message was created
+);
+CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
+CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);
+CREATE INDEX IF NOT EXISTS messages_user_id    ON Messages (user_id);
+CREATE INDEX IF NOT EXISTS messages_encrypted  ON Messages (encrypted ASC);
+
 CREATE TABLE IF NOT EXISTS Attachments (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
-	message_id VARCHAR(20) NOT NULL,
+	message_id VARCHAR(20) NOT NULL REFERENCES Messages(id) ON DELETE CASCADE,
 	name TEXT NOT NULL,
-	asset_id INT UNSIGNED
+	asset_id INT UNSIGNED REFERENCES Assets(asset_id) ON DELETE SET NULL -- NULL if the attachment failed to upload
 );
 CREATE INDEX IF NOT EXISTS attachments_message_id ON Attachments (message_id);
 CREATE INDEX IF NOT EXISTS attachments_asset_null ON Attachments (asset_id);
 
 CREATE TABLE IF NOT EXISTS Embeds (
 	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-	message_id VARCHAR(20) NOT NULL,
+	message_id VARCHAR(20) NOT NULL REFERENCES Messages(id) ON DELETE CASCADE,
 	title VARCHAR(256),
 	description VARCHAR(4096),
 	url TEXT,
@@ -123,45 +151,17 @@ CREATE INDEX IF NOT EXISTS embeds_message_id ON Embeds (message_id);
 
 CREATE TABLE IF NOT EXISTS EmbedFields (
 	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, -- Only used for ordering, this has no impact on the data
-	embed_id INT UNSIGNED NOT NULL,
+	embed_id INT UNSIGNED NOT NULL REFERENCES Embeds(id) ON DELETE CASCADE,
 	name VARCHAR(256) NOT NULL,
 	value VARCHAR(1024) NOT NULL,
 	inline BOOLEAN NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS embed_fields_embed_id ON EmbedFields (embed_id);
 
-CREATE TABLE IF NOT EXISTS Messages (
-	-- metadata IDs
-    id VARCHAR(20) NOT NULL PRIMARY KEY,
-	guild_id VARCHAR(20) NOT NULL,
-	channel_id VARCHAR(20) NOT NULL,
-	user_id VARCHAR(20) NOT NULL,
-
-    -- message content
-	content BLOB,
-    sticker_id VARCHAR(20),
-	reply_to VARCHAR(20) DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
-
-    -- encryption details
-	encrypted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the message is encrypted
-    iv VARBINARY(12) DEFAULT NULL,
-    tag VARBINARY(16) DEFAULT NULL,
-    wrapped_dek VARBINARY(512) DEFAULT NULL,
-    encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
-
-    -- miscellaneous metadata
-	length SMALLINT, -- The length of the original message (unencrypted)
-    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME(SUBSTRING(id, 1, 10) + 1420070400) ) VIRTUAL -- The time the message was created
-);
-CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
-CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);
-CREATE INDEX IF NOT EXISTS messages_user_id    ON Messages (user_id);
-CREATE INDEX IF NOT EXISTS messages_encrypted  ON Messages (encrypted ASC);
-
 -- Quick lookup every emoji used in a message
 CREATE TABLE IF NOT EXISTS MessageEmojis (
-	message_id VARCHAR(20) NOT NULL,
-	emoji_id VARCHAR(20) NOT NULL,
+	message_id VARCHAR(20) NOT NULL REFERENCES Messages(id) ON DELETE CASCADE,
+	emoji_id VARCHAR(20) NOT NULL REFERENCES Emojis(id) ON DELETE CASCADE,
     -- the largest message can have 4,000 messages
     -- the smallest emoji is 24 bytes: <:aa:12345678901234567:>
     -- 4000 / 24 = 170 max emojis in a message
@@ -206,7 +206,7 @@ CREATE INDEX IF NOT EXISTS interaction_logs_created_at ON InteractionLogs (creat
 
 CREATE TABLE IF NOT EXISTS Snapshots (
 	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-	guild_id VARCHAR(20) NOT NULL,
+	guild_id VARCHAR(20) NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
 
 	type TINYINT UNSIGNED NOT NULL, -- import, automatic, manual, etc.
 	pinned BOOLEAN NOT NULL DEFAULT 0, -- 1 if the snapshot is pinned
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS Snapshots (
 CREATE INDEX IF NOT EXISTS snapshots_guild_id ON Snapshots (guild_id);
 
 CREATE TABLE IF NOT EXISTS SnapshotRoles (
-	snapshot_id INT UNSIGNED NOT NULL,
+	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the role was deleted
 
 	id VARCHAR(20) NOT NULL, -- The ID of the role
@@ -238,7 +238,7 @@ CREATE INDEX IF NOT EXISTS snapshot_roles_update ON SnapshotRoles (needsUpdate);
 
 
 CREATE TABLE IF NOT EXISTS SnapshotChannels (
-	snapshot_id INT UNSIGNED NOT NULL,
+	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the channel was deleted
 
 	id VARCHAR(20) NOT NULL,
@@ -260,7 +260,7 @@ CREATE INDEX IF NOT EXISTS snapshot_channelID ON SnapshotChannels (id);
 CREATE INDEX IF NOT EXISTS snapshot_channels_update ON SnapshotChannels (needsUpdate);
 
 CREATE TABLE IF NOT EXISTS SnapshotPermissions (
-	snapshot_id INT UNSIGNED NOT NULL,
+	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the permission was deleted
 
 	channel_id VARCHAR(20) NOT NULL,
@@ -282,7 +282,7 @@ CREATE INDEX IF NOT EXISTS snapshot_permissions_roleID ON SnapshotPermissions (r
 CREATE INDEX IF NOT EXISTS snapshot_permissions_update ON SnapshotPermissions (needsUpdate);
 
 CREATE TABLE IF NOT EXISTS SnapshotBans (
-	snapshot_id INT UNSIGNED NOT NULL,
+	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user was deleted
 
 	user_id VARCHAR(20) NOT NULL,

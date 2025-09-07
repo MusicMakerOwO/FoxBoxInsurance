@@ -56,7 +56,6 @@ CREATE INDEX IF NOT EXISTS guild_blocks_user_id  ON GuildBlocks (user_id);
 CREATE TABLE IF NOT EXISTS Channels (
 	id VARCHAR(20) NOT NULL PRIMARY KEY,
 	guild_id VARCHAR(20) NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
-	parent_id VARCHAR(20) REFERENCES Channels(id) ON DELETE SET NULL, -- NULL if no parent
 	name VARCHAR(100) NOT NULL,
 	type TINYINT UNSIGNED NOT NULL,
 	block_exports BOOLEAN NOT NULL DEFAULT 0, -- 1 if exports are blocked
@@ -64,7 +63,6 @@ CREATE TABLE IF NOT EXISTS Channels (
 	last_purge INT UNSIGNED NOT NULL DEFAULT UNIX_TIMESTAMP() -- The last time the channel was purged
 );
 CREATE INDEX IF NOT EXISTS channels_guild_id  ON Channels (guild_id);
-CREATE INDEX IF NOT EXISTS channels_parent_id ON Channels (parent_id);
 CREATE INDEX IF NOT EXISTS channels_last_purge ON Channels (last_purge DESC);
 
 CREATE TABLE IF NOT EXISTS Users (

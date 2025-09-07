@@ -29,7 +29,7 @@ module.exports.StartTasks = async function StartTasks() {
 
 	const selectQuery = await connection.prepare("SELECT last_run FROM Timers WHERE id = ?");
 
-	for (let i = 0; i < totalTasks; i++) {
+	for (let i = 0; i < TASKS.length; i++) {
 		const taskData = TASKS[i];
 		if (!Array.isArray(taskData) || taskData.length !== 2) {
 			warn(`Task entry ${i} is not an array, skipping...`);

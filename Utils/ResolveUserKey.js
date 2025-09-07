@@ -14,15 +14,15 @@ const cache = new Map(); // userID -> key
 async function ResolveUserKey(userID) {
 	if (cache.has(userID)) return cache.get(userID); // buffer
 
-	const savedKey = await Database.query('SELECT tag FROM Users WHERE id = ?', [userID]);
+	const savedKey = await Database.query('SELECT wrapped_key FROM Users WHERE id = ?', [userID]).then(rows => rows[0]?.wrapped_key);
 	if (savedKey) {
 		cache.set(userID, savedKey);
 		return savedKey;
 	}
 
-	const key = BuildNewKey(userID);
+	const key = BuildNewKey();
 	cache.set(userID, key);
-	Database.query('UPDATE Users SET tag = ? WHERE id = ?', [key, userID]);
+	Database.query('UPDATE Users SET wrapped_key = ? WHERE id = ?', [key, userID]);
 
 	return key;
 }
@@ -34,23 +34,23 @@ async function ResolveUserKeyBulk(userIDs = []) {
 
 	const connection = await Database.getConnection();
 
-	const fetchQuery = await connection.prepare(`SELECT tag FROM Users WHERE id = ?`);
+	const fetchQuery = await connection.prepare(`SELECT wrapped_key FROM Users WHERE id = ?`);
 
 	for (const [userID, key] of Object.entries(results)) {
 		if (key) continue; // already in cache
 
-		const { tag } = (await fetchQuery.execute(userID))[0] ?? {};
-		if (tag) {
-			cache.set(userID, tag);
-			results[userID] = tag;
+		const key = await fetchQuery.execute(userID).then(rows => rows[0]?.wrapped_key);
+		if (key) {
+			cache.set(userID, key);
+			results[userID] = key;
 			continue;
 		}
 
-		const newTag = BuildNewKey(userID);
+		const newTag = BuildNewKey();
 		cache.set(userID, newTag);
 		results[userID] = newTag;
 
-		connection.query('UPDATE Users SET tag = ? WHERE id = ?', [newTag, userID]);
+		connection.query('UPDATE Users SET wrapped_key = ? WHERE id = ?', [newTag, userID]);
 	}
 
 	Database.releaseConnection(connection);
@@ -58,7 +58,11 @@ async function ResolveUserKeyBulk(userIDs = []) {
 	return results;
 }
 
-module.exports = { ResolveUserKey, ResolveUserKeyBulk };
+function DeleteUserKeyFromCache(userID) {
+	return cache.delete(userID);
+}
+
+module.exports = { ResolveUserKey, ResolveUserKeyBulk, DeleteUserKeyFromCache };
 
 Tasks.schedule(() => {
 	if (cache.size < MAX_CACHE_SIZE) return;

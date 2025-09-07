@@ -219,18 +219,21 @@ function PresetFile(componentFolder, callback, filePath, type = 0) {
 	callback(filePath);
 }
 
+// deferred promise
+const dbInitPromise = Database.Initialize();
+
 Log.info(`Logging in...`);
 client.login(process.env.TOKEN);
 client.on('ready', async function () {
 	Log.custom(`Logged in as ${client.user.tag}!`, 0x7946ff);
 
-	await Database.Initialize();
+	await dbInitPromise;
 	Log.custom('Database initialized', 0x7946ff);
 
 	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
 
 	const connection = await Database.getConnection();
-	const savedGuilds = new Set((await connection.query('SELECT id FROM Guilds')).map(g => g.id))
+	const savedGuilds = new Set(await connection.query('SELECT id FROM Guilds').then(rows => rows.map(g => g.id)) );
 
 	if (savedGuilds.size !== client.guilds.cache.size) {
 		const guildsToInsert = [];

@@ -76,7 +76,6 @@ CREATE TABLE IF NOT EXISTS Users (
 	wrapped_key VARBINARY(512),
     rotation_hour TINYINT UNSIGNED GENERATED ALWAYS AS ( CAST(id AS UNSIGNED) % 24 ) STORED -- The hour of the day (0-23) the user's key should be rotated
 );
-CREATE INDEX IF NOT EXISTS users_username ON Users (username);
 CREATE INDEX IF NOT EXISTS users_asset ON Users (asset_id ASC);
 CREATE INDEX IF NOT EXISTS users_hour ON Users(rotation_hour ASC);
 

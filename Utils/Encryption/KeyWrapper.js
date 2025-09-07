@@ -10,7 +10,7 @@ const MASTER_KEY = Buffer.from(process.env.PEPPER, 'base64');
  * @returns {Buffer<ArrayBuffer>}
  * @constructor
  */
-function WrapKey(wrappingKey, keyToWrap) {
+function WrapKey(keyToWrap, wrappingKey) {
 	const iv = crypto.randomBytes(12);
 	const cipher = crypto.createCipheriv('aes-256-gcm', wrappingKey, iv);
 	const wrapped = Buffer.concat([cipher.update(keyToWrap), cipher.final()]);
@@ -25,7 +25,7 @@ function WrapKey(wrappingKey, keyToWrap) {
  * @returns {Buffer<ArrayBuffer>}
  * @constructor
  */
-function UnwrapKey(wrappingKey, wrappedBlob) {
+function UnwrapKey(wrappedBlob, wrappingKey) {
 	const iv = wrappedBlob.subarray(0, 12);
 	const tag = wrappedBlob.subarray(wrappedBlob.length - 16);
 	// encrypted key is in the middle
@@ -36,11 +36,11 @@ function UnwrapKey(wrappingKey, wrappedBlob) {
 }
 
 function WrapUserKey(key) {
-	return WrapKey(MASTER_KEY, key);
+	return WrapKey(key, MASTER_KEY);
 }
 
 function UnwrapUserKey(wrappedBlob) {
-	return UnwrapKey(MASTER_KEY, wrappedBlob);
+	return UnwrapKey(wrappedBlob, MASTER_KEY);
 }
 
 module.exports = {

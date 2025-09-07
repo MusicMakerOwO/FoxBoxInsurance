@@ -114,7 +114,7 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		const userKey = UnwrapUserKey(wrappedUserKey);
 
 		const { iv, tag, wrapped_dek } = message;
-		const dek = UnwrapKey(userKey, wrapped_dek);
+		const dek = UnwrapKey(wrapped_dek, userKey);
 
 		message.content = DecryptMessage(message.content, tag, iv, dek);
 	}

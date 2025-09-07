@@ -40,7 +40,7 @@ module.exports = async function EncryptMessages() {
 		const dek = crypto.randomBytes(32); // dek = data encryption key
 		const { iv, tag, encrypted } = EncryptMessage(message.content, dek);
 
-		const wrappedDek = WrapKey(key, dek);
+		const wrappedDek = WrapKey(dek, key);
 
 		UpdateStatement.execute([encrypted, iv, wrappedDek, tag, message.id]);
 	}

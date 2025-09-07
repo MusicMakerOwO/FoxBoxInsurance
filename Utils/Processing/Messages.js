@@ -124,10 +124,6 @@ module.exports = async function ProcessMessages (messageCache = sampleCache) {
 				VALUES (?, ?, ?)
 				ON DUPLICATE KEY UPDATE username = VALUES(username)
 			`, UserList.map(u => [u.id, u.username, +u.bot])),
-			connection.batch(`
-				INSERT INTO Messages (id, guild_id, channel_id, user_id, content, sticker_id, reply_to, length)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-			`, messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id, m.reply_to, m.content?.length]))
 		];
 
 		if (EmojiList.length > 0) insertBatches.push(
@@ -136,11 +132,6 @@ module.exports = async function ProcessMessages (messageCache = sampleCache) {
 				VALUES (?, ?, ?)
 				ON DUPLICATE KEY UPDATE name = VALUES(name)
 			`, EmojiList.map(e => [e.id, e.name, +e.animated])),
-
-			connection.batch(`
-				INSERT INTO MessageEmojis (message_id, emoji_id, count)
-				VALUES (?, ?, ?)
-			`, MessageEmojis.map(m => [m.messageID, m.emojiID, m.count]))
 		);
 
 		if (StickerList.length > 0) insertBatches.push(
@@ -149,6 +140,20 @@ module.exports = async function ProcessMessages (messageCache = sampleCache) {
 				VALUES (?, ?)
 				ON DUPLICATE KEY UPDATE name = VALUES(name)
 			`, StickerList.map(s => [s.id, s.name]))
+		);
+
+		insertBatches.push(
+			connection.batch(`
+				INSERT INTO Messages (id, guild_id, channel_id, user_id, content, sticker_id, reply_to, length)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			`, messages.map(m => [m.id, m.guild.id, m.channel.id, m.user.id, m.content, m.sticker?.id, m.reply_to, m.content?.length]))
+		);
+
+		if (MessageEmojis.length > 0) insertBatches.push(
+			connection.batch(`
+				INSERT INTO MessageEmojis (message_id, emoji_id, count)
+				VALUES (?, ?, ?)
+			`, MessageEmojis.map(m => [m.messageID, m.emojiID, m.count]))
 		);
 
 		if (AttachmentList.length > 0) insertBatches.push(

@@ -18,7 +18,7 @@ for (let i = 0; i < TASKS.length; i++) {
 	TASKS[i][2] *= 1000; // convert interval to milliseconds
 }
 
-const longestName = Object.values(TASKS).reduce((max, [name]) => Math.max(max, name.length), 0);
+const longestName = Math.max( ... TASKS.map(t => t[0].length) );
 
 module.exports.StartTasks = async function StartTasks() {
 	const totalTasks = TASKS.length;

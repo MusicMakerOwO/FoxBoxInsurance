@@ -5,52 +5,19 @@ const TaskScheduler = require("../TaskScheduler");
 
 const TIME_BETWEEN_TASKS = SECONDS.MINUTE * 10; // 10 minutes
 
-const TASK = {
-	SERVER_SNAPSHOT: 'server_snapshot',
-	UPLOAD_FILES: 'upload_files',
-	UPLOAD_STATS: 'upload_stats',
-	ENCRYPT_MESSAGES: 'encrypt_messages',
-	// PURGE_SNAPSHOTS: 'purge_snapshots',
-	CLEAN_DATABASE: 'clean_database',
-	CHANNEL_PURGE: 'channel_purge',
-}
+const TASKS = [
+	[ 'server_snapshots',	require("./SnapshotServers"),	SECONDS.HOUR	],
+	[ 'upload_files',		require("./UploadFiles"),		SECONDS.HOUR	],
+	[ 'upload_stats',		require("./PushStats"),			SECONDS.HOUR	],
+	[ 'encrypt_messages',	require("./EncryptMessages"),	SECONDS.HOUR * 2],
+	[ 'clean_database',		require("./CleanDatabase"),		SECONDS.DAY		],
+	[ 'channel_purge',		require("./ChannelPurge"),		SECONDS.WEEK	],
+];
 
-const TaskFunctions = {
-	[ TASK.SERVER_SNAPSHOT	]: [ require("./SnapshotServers"), SECONDS.HOUR ],
-	[ TASK.UPLOAD_FILES		]: [ require("./UploadFiles"), SECONDS.HOUR ],
-	[ TASK.UPLOAD_STATS		]: [ require("./PushStats"), SECONDS.HOUR ],
-	[ TASK.ENCRYPT_MESSAGES	]: [ require("./EncryptMessages"), SECONDS.HOUR * 2 ],
-	// [ TASK.PURGE_SNAPSHOTS	]: require("./PurgeSnapshots"),
-	[ TASK.CLEAN_DATABASE	]: [ require("./CleanDatabase"), SECONDS.DAY ],
-	[ TASK.CHANNEL_PURGE 	]: [ require("./ChannelPurge"), SECONDS.WEEK ],
-}
-
-let longestName = 0;
-
-let i = 0;
-for (const [name, callback] of Object.entries(TaskFunctions)) {
-	i++;
-	if (name === undefined) {
-		warn(`Task ${i} is undefined, skipping...`);
-		delete TaskFunctions[name];
-		return;
-	}
-
-	if (name.length > longestName) {
-		longestName = name.length;
-	}
-
-	if (typeof callback !== 'function') {
-		warn(`Task "${name}" is not a function, skipping...`);
-		delete TaskFunctions[name];
-		continue;
-	}
-
-	TASK_INTERVAL[name] *= 1000; // convert to milliseconds
-}
+const longestName = Object.values(TASKS).reduce((max, [name]) => Math.max(max, name.length), 0);
 
 module.exports.StartTasks = async function StartTasks() {
-	const totalTasks = Object.keys(TASK).length;
+	const totalTasks = TASKS.length;
 	if (totalTasks === 0) {
 		warn("No tasks to manage - nothing to do!");
 		return;
@@ -62,16 +29,24 @@ module.exports.StartTasks = async function StartTasks() {
 
 	const selectQuery = await connection.prepare("SELECT last_run FROM Timers WHERE id = ?");
 
-	let i = -1;
-	for (const name of Object.values(TASK)) {
-		i++;
-		const [ callback, interval ] = TaskFunctions[name] ?? [];
-		if (interval === undefined) {
+	for (let i = 0; i < totalTasks; i++) {
+		const taskData = TASKS[i];
+		if (!Array.isArray(taskData) || taskData.length !== 2) {
+			warn(`Task entry ${i} is not an array, skipping...`);
+			continue;
+		}
+		const [ name, callback, interval ] = taskData;
+
+		if (typeof interval !== 'number' || interval <= 0 || !Number.isFinite(interval)) {
 			warn(`Task "${name}" does not have a defined interval, skipping...`);
 			continue;
 		}
-		if (callback === undefined) {
+		if (typeof callback !== 'function') {
 			warn(`Task "${name}" does not have a callback function, skipping...`);
+			continue;
+		}
+		if (callback.constructor.name !== 'AsyncFunction') {
+			warn(`Task "${name}" callback must be an async function, skipping...`);
 			continue;
 		}
 

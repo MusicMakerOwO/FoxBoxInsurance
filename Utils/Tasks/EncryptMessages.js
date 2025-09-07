@@ -1,7 +1,9 @@
 const Database = require("../Database")
 const Log = require("../Logs")
 const crypto = require("crypto")
-const { ResolveUserKeyBulk } = require("../ResolveUserKey")
+const { ResolveUserKeyBulk } = require("../Encryption/ResolveUserKey")
+const { EncryptMessage } = require("../Encryption/Messages");
+const { WrapKey } = require("../Encryption/KeyWrapper");
 
 module.exports = async function EncryptMessages() {
 	const unencryptedMessages = await Database.query("SELECT id, user_id, content FROM Messages WHERE encrypted = 0");
@@ -14,26 +16,33 @@ module.exports = async function EncryptMessages() {
 
 	const connection = await Database.getConnection();
 
-	const UpdateStatement = await connection.prepare("UPDATE Messages SET content = ?, tag = ?, encrypted = 1 WHERE id = ?");
+	const UpdateStatement = await connection.prepare(`
+		UPDATE Messages
+		SET content = ?,
+		    encrypted = 1,
+		    iv = ?,
+		    wrapped_dek = ?,
+		    tag = ?
+		WHERE id = ?
+	`);
 
 	const userKeys = await ResolveUserKeyBulk(unencryptedMessages.map(m => m.user_id));
 
 	const start = process.hrtime.bigint();
 	for (const message of unencryptedMessages) {
 		if (message.content === null) {
-			UpdateStatement.execute([null, null, message.id]);
+			UpdateStatement.execute([null, null, null, null, message.id]);
 			continue;
 		}
 
 		const key = userKeys[message.user_id];
 
-		const iv = crypto.createHash("sha256").update(`${message.id}${message.user_id}`).subarray(0, 12);
-		const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+		const dek = crypto.randomBytes(32); // dek = data encryption key
+		const { iv, tag, encrypted } = EncryptMessage(message.content, dek);
 
-		const encrypted = cipher.update(message.content ?? '', "utf8", "base64") + cipher.final("base64");
-		const tag = cipher.getAuthTag().toString("base64");
+		const wrappedDek = WrapKey(key, dek);
 
-		UpdateStatement.execute([encrypted, tag, message.id]);
+		UpdateStatement.execute([encrypted, iv, wrappedDek, tag, message.id]);
 	}
 
 	UpdateStatement.close();

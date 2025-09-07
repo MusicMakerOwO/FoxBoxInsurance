@@ -3,8 +3,10 @@ const Database = require("../Database");
 const { readFileSync } = require("fs");
 const { minify } = require("html-minifier");
 const crypto = require("crypto");
-const { ResolveUserKeyBulk } = require("../ResolveUserKey");
+const { ResolveUserKeyBulk } = require("../Encryption/ResolveUserKey");
 const { SimplifyMessage, SimplifyUser, SimplifyGuild } = require("./Simplify");
+const { UnwrapUserKey, UnwrapKey } = require("../Encryption/KeyWrapper");
+const { DecryptMessage } = require("../Encryption/Messages");
 
 const missingAsset = readFileSync(`${__dirname}/../../missing.png`);
 
@@ -107,14 +109,14 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 		if (!message.encrypted) continue;
 		if (message.content === null) continue;
 
-		const key = keys[message.user_id];
-		if (!key) throw new Error(`Failed to get key for user ${message.user_id}`);
+		const wrappedUserKey = keys[message.user_id];
+		if (!wrappedUserKey) throw new Error(`Failed to get key for user ${message.user_id}`);
 
-		const iv = crypto.createHash('sha256').update(`${message.id}${message.user_id}`).digest('hex').slice(0, 16);
-		const decrypt = crypto.createDecipheriv('aes-256-gcm', key, iv);
-		decrypt.setAuthTag(Buffer.from(message.tag, 'base64'));
+		const { iv, tag, wrapped_dek } = message;
 
-		message.content = decrypt.update(message.content, 'base64', 'utf8') + decrypt.final('utf8');
+		const userKey = UnwrapUserKey(wrappedUserKey);
+		const dek = UnwrapKey(userKey, wrapped_dek);
+		message.content = DecryptMessage(message.content, tag, iv, dek);
 	}
 	const decryptEnd = process.hrtime.bigint();
 	const decryptTime = Number(decryptEnd - decryptStart) / 1e6;

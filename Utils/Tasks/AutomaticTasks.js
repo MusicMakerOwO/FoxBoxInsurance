@@ -14,6 +14,10 @@ const TASKS = [
 	[ 'channel_purge',		require("./ChannelPurge"),		SECONDS.WEEK	],
 ];
 
+for (let i = 0; i < TASKS.length; i++) {
+	TASKS[3] *= 1000; // convert interval to milliseconds
+}
+
 const longestName = Object.values(TASKS).reduce((max, [name]) => Math.max(max, name.length), 0);
 
 module.exports.StartTasks = async function StartTasks() {

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const Database = require('../Database');
 const Tasks = require('../TaskScheduler');
+const { WrapUserKey } = require("./KeyWrapper");
 
 const MAX_CACHE_SIZE = 1000; // max size of the cache
 const KEY_LENGTH = 32; // bytes
@@ -21,8 +22,9 @@ async function ResolveUserKey(userID) {
 	}
 
 	const key = BuildNewKey();
-	cache.set(userID, key);
-	Database.query('UPDATE Users SET wrapped_key = ? WHERE id = ?', [key, userID]);
+	const wrappedKey = WrapUserKey(key);
+	cache.set(userID, wrappedKey);
+	Database.query('UPDATE Users SET wrapped_key = ? WHERE id = ?', [wrappedKey, userID]);
 
 	return key;
 }
@@ -46,11 +48,12 @@ async function ResolveUserKeyBulk(userIDs = []) {
 			continue;
 		}
 
-		const newTag = BuildNewKey();
-		cache.set(userID, newTag);
-		results[userID] = newTag;
+		const newKey = BuildNewKey();
+		const wrappedKey = WrapUserKey(newKey);
+		cache.set(userID, wrappedKey);
+		results[userID] = wrappedKey;
 
-		connection.query('UPDATE Users SET wrapped_key = ? WHERE id = ?', [newTag, userID]);
+		connection.query('UPDATE Users SET wrapped_key = ? WHERE id = ?', [wrappedKey, userID]);
 	}
 
 	Database.releaseConnection(connection);

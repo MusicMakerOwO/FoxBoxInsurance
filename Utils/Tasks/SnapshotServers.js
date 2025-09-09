@@ -29,7 +29,7 @@ module.exports = async function SnapshotServers() {
 		return;
 	}
 
-	console.log(`Backing up ${snapshotQueue.length} servers`);
+	console.log(`Backing up ${snapshotQueue.length} servers : ${snapshotQueue.map(g => g.id).join(', ')}`);
 
 	for (const guild of snapshotQueue) {
 		const snapshotID = await CreateSnapshot(guild, SNAPSHOT_TYPE.AUTOMATIC);

@@ -136,11 +136,11 @@ module.exports = {
 			});
 		}
 
-		const lastRestore = (await Database.query(`
+		const lastRestore = await Database.query(`
 			SELECT last_restore
 			FROM Guilds
 			WHERE id = ?
-		`, [interaction.guild.id]))[0] ?? { last_restore: 0 };
+		`, [interaction.guild.id]).then(res => res[0]?.last_restore ?? 0);
 		if (Number(lastRestore) > Date.now() - COOLDOWN) {
 			const remaining = Math.ceil((COOLDOWN - (Date.now() - lastRestore)) / 1000);
 			return interaction.editReply({

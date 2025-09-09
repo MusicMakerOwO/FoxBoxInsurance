@@ -54,9 +54,9 @@ module.exports.StartTasks = async function StartTasks() {
 			continue;
 		}
 
-		const { last_run } = (await selectQuery.execute(name))[0] ?? { last_run: 0 }; // bigint
+		const lastRun = await selectQuery.execute(name).then(res => res[0]?.last_run ?? 0);
 		// rounding errors shouldn't be a concern because the exact second doesn't matter
-		const lastRunNumber = Number(last_run);
+		const lastRunNumber = Number(lastRun);
 
 		const now = Date.now();
 		const timeSinceLastRun = Math.max(0, now - lastRunNumber);

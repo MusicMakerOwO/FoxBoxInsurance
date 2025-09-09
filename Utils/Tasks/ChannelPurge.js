@@ -18,7 +18,7 @@ module.exports = async function ChannelPurge() {
 
 	const now = new Date().getSeconds();
 
-	const ChannelsToPurge = (await connection.query("SELECT id FROM Channels WHERE last_purge < ?", [now + SECONDS.WEEK])).map(c => c.id);
+	const ChannelsToPurge = await connection.query("SELECT id FROM Channels WHERE last_purge < ?", [now + SECONDS.WEEK]).then(res => res.map(r => r.id));
 
 	await connection.query("START TRANSACTION");
 

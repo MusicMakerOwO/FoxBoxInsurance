@@ -150,7 +150,7 @@ module.exports = {
 		const currentStart = Date.now();
 		const GuildChannels = Array.from( interaction.guild.channels.cache.values() );
 		const GuildRoles = Array.from( interaction.guild.roles.cache.values() );
-		const GuildBans = Array.from( (await FetchAllBans(interaction.guild) ).values() );
+		const GuildBans = Array.from( await FetchAllBans(interaction.guild).then( x => x.values() ) );
 		const currentEnd = Date.now();
 		const currentTime = (currentEnd - currentStart) / 1000; // in seconds
 

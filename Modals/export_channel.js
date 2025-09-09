@@ -60,7 +60,7 @@ module.exports = {
 				targetID = channel.id;
 			} else {
 				// check if the channel exists in the guild
-				const channel = interaction.guild.channels.cache.get(input) ?? (await Database.query('SELECT id FROM channels WHERE id = ?', [input]))[0];
+				const channel = interaction.guild.channels.cache.get(input) ?? await Database.query('SELECT id FROM channels WHERE id = ?', [input]).then(res => res[0]);
 				if (channel) {
 					targetID = channel.id;
 				} else {

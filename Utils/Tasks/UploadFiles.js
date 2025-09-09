@@ -77,7 +77,7 @@ module.exports = async function UploadAssets() {
 		if (failedFiles.has(file)) continue;
 		// check if it was already uploaded
 		const discordID = file.split('.')[0];
-		const asset = (await connection.query(`SELECT asset_id FROM Assets WHERE discord_id = ? AND uploaded = 1`, [discordID]))[0];
+		const asset = await connection.query(`SELECT asset_id FROM Assets WHERE discord_id = ? AND uploaded = 1`, [discordID]).then(res => res[0]);
 		if (asset) {
 			// if it was uploaded but not deleted for whatever reason, delete the file
 			Logs.warn(`Oprphaned file not deleted: ${file}`);

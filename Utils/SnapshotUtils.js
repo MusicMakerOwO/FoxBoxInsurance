@@ -27,12 +27,12 @@ async function SnapshotStats(snapshotID) {
 
 	const guildID = await ResolveGuildFromSnapshot(snapshotID);
 
-	const snapshotIDs = (await Database.query(`
+	const snapshotIDs = await Database.query(`
 		SELECT id
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
-	`, [guildID])).map(row => row.id);
+	`, [guildID]).then( rows => rows.map(row => row?.id) );
 	if (!snapshotIDs.includes(snapshotID)) throw new Error('Snapshot not found');
 
 	const connection = await Database.getConnection();
@@ -115,12 +115,12 @@ async function FetchSnapshot(snapshot_id, { cache = true } = {}) {
 
 	const guildID = await ResolveGuildFromSnapshot(snapshot_id);
 
-	const availableSnapshots = (await Database.query(`
+	const availableSnapshots = await Database.query(`
 		SELECT id
 		FROM Snapshots
 		WHERE guild_id = ?
 		ORDER BY id ASC
-	`, [guildID]) ?? []).map(row => row?.id);
+	`, [guildID]).then( rows => rows.map(row => row?.id) );
 	if (!availableSnapshots.includes(snapshot_id)) throw new Error('Snapshot not found');
 
 	const roles = new Map();
@@ -305,11 +305,11 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 
 	const connection = await Database.getConnection();
 
-	const { id: latestSnapshotID } = (await connection.query(`
+	const latestSnapshotID = await connection.query(`
 		SELECT MAX(id) as id
 		FROM Snapshots
 		WHERE guild_id = ?
-	`, [guild.id]))[0] ?? { id: 0 };
+	`, [guild.id]).then( rows => rows[0]?.id ?? null );
 
 	const [lastSnapshot] = await connection.query(`
 		SELECT *

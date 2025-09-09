@@ -54,10 +54,10 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 	const connection = await Database.getConnection();
 
 	const Context = {
-		Owner: (await connection.query('SELECT * FROM Users WHERE id = ?', [options.userID]))[0],
+		Owner: await connection.query('SELECT * FROM Users WHERE id = ?', [options.userID]).then(res => res[0]),
 		ID: await GenerateExportID(connection),
-		Guild: (await connection.query('SELECT * FROM Guilds WHERE id = ?', [options.guildID]))[0],
-		Channel: (await connection.query('SELECT * FROM Channels WHERE id = ?', [options.channelID]))[0],
+		Guild: await connection.query('SELECT * FROM Guilds WHERE id = ?', [options.guildID]).then(res => res[0]),
+		Channel: await connection.query('SELECT * FROM Channels WHERE id = ?', [options.channelID]).then(res => res[0]),
 
 		Users: new Map(),
 		Emojis: new Map(),

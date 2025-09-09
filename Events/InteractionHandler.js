@@ -9,7 +9,7 @@ const ErrorParse = require('../Utils/FindError');
 const { FANCY_ERRORS } = require('../config.json');
 const { COLOR } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
-const { GetGuildTOS, GetUserTOS } = require('../Utils/Caching/TOS');
+const { GetGuildTOS, GetUserTOS, SetGuildTOS } = require('../Utils/Caching/TOS');
 
 module.exports = {
 	name: 'interactionCreate',
@@ -145,18 +145,22 @@ async function InteractionHandler(client, interaction, type, cache) {
 
 	const guildAccepted = await GetGuildTOS(interaction.guildId);
 	const userAccepted = await GetUserTOS(interaction.user.id);
-	if (guildAccepted === 0 && component.bypass !== true) {
+	if (!guildAccepted && component.bypass !== true) {
 		if (interaction.user.id !== interaction.guild.ownerId) {
-			// warn user that the server owner has not accepted TOS
-			interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], ephemeral: true });
+			if (userAccepted) {
+				// user has already accepted TOS but not the server, automatically accept for them
+				await SetGuildTOS(interaction.guildId, true);
+			} else {
+				// warn user that the server owner has not accepted TOS
+				return interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], ephemeral: true });
+			}
 		} else {
 			// Owner must accept TOS
-			interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
+			return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
 		}
-		return;
 	}
 
-	if (userAccepted === 0 && component.bypass !== true) {
+	if (!userAccepted && component.bypass !== true) {
 		// Force users to accept TOS
 		return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
 	}

@@ -26,7 +26,7 @@ async function BatchCache(connection, list = [{}], property = '', table = '', co
 	const dbData = await connection.query(`
 		SELECT *
 		FROM ${table}
-		WHERE ${column} IN ( ${'?,'.repeat(IDs.size - 1)}? )
+		WHERE ${column} IN ( ${'?,'.repeat(IDs.length - 1)}? )
 	`, IDs);
 	return new Map(dbData.map(x => [x[column], x]));
 }

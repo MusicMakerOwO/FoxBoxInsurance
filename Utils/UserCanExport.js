@@ -10,7 +10,7 @@ module.exports = async function CanUserExportChannel(member, channelID) {
 	if (isAdmin) return true;
 
 	// admin disabled the specific channel
-	const [{ block_exports: isDisabled }] = await Database.query("SELECT block_exports FROM Channels WHERE id = ?", [channelID]);
+	const isDisabled = await Database.query("SELECT block_exports FROM Channels WHERE id = ?", [channelID]).then(res => res[0]?.block_exports ?? 0);
 	if (isDisabled) return false;
 
 	// banned users are blocked from using exports

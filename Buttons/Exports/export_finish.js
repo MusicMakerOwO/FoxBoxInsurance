@@ -9,6 +9,8 @@ const UploadFiles = require("../../Utils/Tasks/UploadFiles");
 const UploadCDN = require("../../Utils/UploadCDN");
 const Database = require("../../Utils/Database");
 
+const Log = require("../../Utils/Logs");
+
 const loadingMessages = [
 	'Hmm this is taking a while...',
 	'Please wait a moment...',
@@ -71,12 +73,27 @@ module.exports = {
 			}, 5000); // every 5 seconds
 		}, 5000); // 5-second delay
 
-		const file = await Export(exportOptions); // { name: string, data: Buffer }
-
-		// stop the loading interval
-		finished = true;
-		clearTimeout(loadingTimeout);
-		clearInterval(loadingInterval);
+		let file;
+		try {
+			file = await Export(exportOptions);
+		} catch (e) {
+			Log.error(e);
+			interaction.editReply({
+				embeds: [{
+					color: COLOR.ERROR,
+					title: 'Export Failed',
+					description: `
+An error occurred while generating your export :broken_heart:
+The error has been reported automatically and a fix is being worked on`
+				}],
+			});
+			return;
+		} finally {
+			// stop the loading interval
+			finished = true;
+			clearTimeout(loadingTimeout);
+			clearInterval(loadingInterval);
+		}
 
 		await interaction.editReply({ embeds: [RandomLoadingEmbed()] });
 

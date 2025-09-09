@@ -322,7 +322,7 @@ function ExportHTML(Context) {
 		fields: Object.fromEntries(Context.EmbedFields)
 	}
 
-	for (const [userID, user] of Object.entries(Lookups.users)) {
+	for (const user of Object.values(Lookups.users)) {
 		// generate a random color for each user
 		const r = Math.floor(64 + Math.random() * 192).toString(16).padStart(2, '0');
 		const g = Math.floor(64 + Math.random() * 192).toString(16).padStart(2, '0');

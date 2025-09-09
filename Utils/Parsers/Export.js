@@ -100,8 +100,8 @@ module.exports = async function Export(options = DEFAULT_OPTIONS) {
 
 	console.log(`Decrypting ${messages.length} messages...`);
 
-	const userIDs = messages.filter(m => m.encrypted === 1 && m.content !== null).map(m => m.user_id);
-	const keys = await ResolveUserKeyBulk(userIDs);
+	const encryptedUserIDs = messages.filter(m => m.encrypted === 1 && m.content !== null).map(m => m.user_id);
+	const keys = await ResolveUserKeyBulk(encryptedUserIDs);
 
 	const decryptStart = process.hrtime.bigint();
 	for (let i = 0; i < messages.length; i++) {

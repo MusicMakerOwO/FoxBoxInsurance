@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS SnapshotPermissions (
 
 	channel_id VARCHAR(20) NOT NULL,
 	role_id VARCHAR(20) NOT NULL,
-	id TEXT GENERATED ALWAYS AS ( CONCAT(channel_id || '-' || role_id) ) VIRTUAL, -- The ID of the permission
+	id TEXT GENERATED ALWAYS AS ( CONCAT(channel_id, '-', role_id) ) VIRTUAL, -- The ID of the permission
 
 	-- The permissions of the role in the channel
 	allow BIGINT UNSIGNED NOT NULL,

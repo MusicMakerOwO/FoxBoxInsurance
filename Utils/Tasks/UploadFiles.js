@@ -4,30 +4,6 @@ const { UPLOAD_CACHE } = require("../Constants");
 const Logs = require("../Logs");
 const UploadCDN = require("../UploadCDN");
 
-/*
-CREATE TABLE IF NOT EXISTS Assets (
-	asset_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	discord_id TEXT NOT NULL, -- Discord ID of whatever this asset represents
-	type INTEGER NOT NULL,
-
-	-- The URL to the asset on Discord's servers, may return 404 if they delete it
-	-- For long term retrievale use the cdn server and lookup by hash
-	discord_url TEXT NOT NULL UNIQUE,
-
-	name TEXT NOT NULL, -- Original file name
-	extension TEXT NOT NULL,
-	fileName TEXT GENERATED ALWAYS AS (name || '.' || extension) VIRTUAL, -- The file name of the asset
-
-	width INTEGER,
-	height INTEGER,
-	size INTEGER, -- in bytes
-
-	hash TEXT, -- this will be set after uploading to the cdn server
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')),
-	uploaded INTEGER NOT NULL DEFAULT 0 -- 1 if the file is uploaded to the storage
-) STRICT;
-*/
-
 module.exports = async function UploadAssets() {
 	const UploadList = await Database.query(`SELECT * FROM Assets WHERE uploaded = 0`);
 	if (UploadList.length === 0) {

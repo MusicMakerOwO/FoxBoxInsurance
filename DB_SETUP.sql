@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS Messages (
 
     -- miscellaneous metadata
     length SMALLINT, -- The length of the original message (unencrypted)
-    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME(SUBSTRING(id, 1, 10) + 1420070400) ) VIRTUAL -- The time the message was created
+    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME( ((CAST(id AS UNSIGNED) >> 22) + 1420070400000) / 1000) ) VIRTUAL -- The time the message was created
 );
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
 CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);

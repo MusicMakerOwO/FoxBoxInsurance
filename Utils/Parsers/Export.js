@@ -272,6 +272,7 @@ You can check if the export has been tampered with by using /verify and the ID a
 		emojis: Object.fromEntries(Context.Emojis),
 		stickers: Object.fromEntries(Context.Stickers),
 		files: Object.fromEntries(Context.Files),
+		assets: Object.fromEntries(Context.Assets),
 		messages: Context.Messages
 	}
 

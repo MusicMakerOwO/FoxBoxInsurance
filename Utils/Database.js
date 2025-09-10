@@ -8,7 +8,7 @@ const connection_pool = MariaDB.createPool({
 	host: process.env.MARIADB_HOST,
 	user: process.env.MARIADB_USER,
 	password: process.env.MARIADB_PASSWORD,
-	database: 'FBI',
+	database: process.env.MARIADB_DATABASE,
 
 	connectionLimit: 10,
 	minimumIdle: 2, // always keep 2 connections open

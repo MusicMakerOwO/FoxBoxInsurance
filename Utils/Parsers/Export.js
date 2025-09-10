@@ -2,7 +2,6 @@ const { FORMAT } = require("../Constants");
 const Database = require("../Database");
 const { readFileSync } = require("fs");
 const { minify } = require("html-minifier");
-const crypto = require("crypto");
 const { ResolveUserKeyBulk } = require("../Encryption/ResolveUserKey");
 const { SimplifyMessage, SimplifyUser, SimplifyGuild } = require("./Simplify");
 const { UnwrapUserKey, UnwrapKey } = require("../Encryption/KeyWrapper");

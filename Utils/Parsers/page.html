@@ -56,7 +56,7 @@
 			transition: transform 0.2s ease-in-out;
 			cursor: pointer;
 		}
-		
+
 		/* Scale back when you take the mouse off */
 		.attachment img:not(:hover) {
 			transform: scale(1);
@@ -295,13 +295,13 @@
 			const sticker = lookup.stickers[msg.sticker_id];
 			const attachments = lookup.files[msg.id];
 			const embeds = lookup.embeds[msg.id];
-			
+
 			const msgDiv = document.createElement("div");
 			msgDiv.className = "message";
 			msgDiv.innerHTML = `<span class="username" style="color: ${user.color}">@${user.username}</span>
 							<span class="timestamp">(${localTime})</span>
 							<br>`;
-			
+
 			if (msg.reply_to) {
 				const repliedMessage = messages.find(m => m.id === msg.reply_to); // it's slow but I don't care enough
 				if (!repliedMessage) {
@@ -317,7 +317,7 @@
 
 			if (msg.content) {
 				const p = document.createElement("p");
-				
+
 				let content = msg.content;
 				content = ReplaceEmojis(content);
 				content = PrettyPings(content);
@@ -325,7 +325,7 @@
 				p.innerHTML = content;
 				msgDiv.appendChild(p);
 			}
-			
+
 			if (sticker) {
 				const asset = lookup.assets[sticker.asset_id];
 				if (!asset) {

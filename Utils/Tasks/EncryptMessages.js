@@ -28,10 +28,12 @@ module.exports = async function EncryptMessages() {
 
 	const userKeys = await ResolveUserKeyBulk(unencryptedMessages.map(m => m.user_id));
 
+	const updateQueue = [];
+
 	const start = process.hrtime.bigint();
 	for (const message of unencryptedMessages) {
 		if (message.content === null) {
-			UpdateStatement.execute([null, null, null, null, message.id]);
+			updateQueue.push( UpdateStatement.execute([null, null, null, null, message.id]) );
 			continue;
 		}
 
@@ -43,8 +45,10 @@ module.exports = async function EncryptMessages() {
 
 		const wrappedDek = WrapKey(dek, userKey);
 
-		UpdateStatement.execute([encrypted, iv, wrappedDek, tag, message.id]);
+		updateQueue.push( UpdateStatement.execute([encrypted, iv, wrappedDek, tag, message.id]) );
 	}
+
+	await Promise.all(updateQueue);
 
 	UpdateStatement.close();
 	Database.releaseConnection(connection);

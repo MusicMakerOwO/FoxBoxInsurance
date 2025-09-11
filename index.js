@@ -243,9 +243,10 @@ client.on('ready', async function () {
 			guildsToInsert.push([guild.id, guild.name]);
 		}
 
-		await connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)', guildsToInsert);
-
-		Log.success(`Inserted ${guildsToInsert.length} new guilds into the database`);
+		if (guildsToInsert > 0) {
+			await connection.batch('INSERT INTO Guilds (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)', guildsToInsert);
+			Log.success(`Inserted ${guildsToInsert.length} new guilds into the database`);
+		}
 	}
 
 	Database.releaseConnection(connection);

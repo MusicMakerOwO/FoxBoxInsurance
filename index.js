@@ -235,7 +235,7 @@ client.on('ready', async function () {
 	const connection = await Database.getConnection();
 	const savedGuilds = new Set(await connection.query('SELECT id FROM Guilds').then(rows => rows.map(g => g.id)) );
 
-	if (savedGuilds.size !== client.guilds.cache.size) {
+	if (savedGuilds.size < client.guilds.cache.size) {
 		const guildsToInsert = [];
 
 		for (const guild of client.guilds.cache.values()) {

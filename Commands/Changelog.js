@@ -136,6 +136,14 @@ const CHANGELOG = {
 		changes: [
 			"Updated server costs in /donate with the addition of email hosting"
 		]
+	},
+	"v4.0.0": {
+		date: "2025 September 11th",
+		changes: [
+			"Switched databases",
+			"Minor bug fixes and performance improvements",
+			"New and stronger encryption for messages"
+		]
 	}
 }
 

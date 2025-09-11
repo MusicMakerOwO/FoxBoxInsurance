@@ -6,10 +6,10 @@ module.exports = async function PushStats() {
 
 	const connection = await Database.getConnection();
 
-	const messageCount = await connection.query('SELECT COUNT(*) FROM Messages');
-	const guildCount = await connection.query('SELECT COUNT(*) FROM Guilds');
-	const userCount = await connection.query('SELECT COUNT(*) FROM Users');
-	const snapshotCount = await connection.query('SELECT COUNT(*) FROM Snapshots');
+	const messageCount = await connection.query('SELECT COUNT(*) as count FROM Messages').then(rows => Number(rows[0].count));
+	const guildCount = await connection.query('SELECT COUNT(*) as count FROM Guilds').then(rows => Number(rows[0].count));
+	const userCount = await connection.query('SELECT COUNT(*) as count FROM Users').then(rows => Number(rows[0].count));
+	const snapshotCount = await connection.query('SELECT COUNT(*) as count FROM Snapshots').then(rows => Number(rows[0].count));
 
 	try {
 		await UploadStats(guildCount, messageCount, userCount, snapshotCount);

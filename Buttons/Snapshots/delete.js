@@ -1,5 +1,6 @@
 const { COLOR, EMOJI } = require("../../Utils/Constants");
 const { SnapshotStats, DeleteSnapshot } = require("../../Utils/SnapshotUtils");
+const Database = require("../../Utils/Database");
 
 const ownerEmbed = {
 	color: COLOR.ERROR,
@@ -10,6 +11,11 @@ const ownerEmbed = {
 const successEmbed = {
 	color: COLOR.PRIMARY,
 	description: `${EMOJI.DELETE} The snapshot has been deleted`
+}
+
+const pinnedEmbed = {
+	color: COLOR.ERROR,
+	description: `${EMOJI.ERROR} This snapshot is pinned and cannot be deleted. Please unpin it first.`
 }
 
 // snapshot-delete_0
@@ -26,6 +32,18 @@ module.exports = {
 
 		const snapshotID = parseInt(args[0]);
 		const confirm = args[1] === 'confirm';
+
+		const pinned = await Database.query(`
+			SELECT pinned
+			FROM Snapshots
+			WHERE id = ?
+		`, [snapshotID]).then(rows => rows[0]?.pinned);
+		if (pinned) {
+			return interaction.editReply({
+				embeds: [pinnedEmbed],
+				components: []
+			});
+		}
 
 		if (confirm) {
 

@@ -144,6 +144,12 @@ const CHANGELOG = {
 			"Minor bug fixes and performance improvements",
 			"New and stronger encryption for messages"
 		]
+	},
+	"v4.0.1": {
+		date: "2025 September 11th",
+		changes: [
+			"Better error message for deleting a pinned snapshot"
+		]
 	}
 }
 

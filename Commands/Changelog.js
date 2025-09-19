@@ -148,7 +148,13 @@ const CHANGELOG = {
 	"v4.0.1": {
 		date: "2025 September 11th",
 		changes: [
-			"Better error message for deleting a pinned snapshot"
+			"Better error message for deleting a pinned snapshot (credit to @titsou.js)"
+		]
+	},
+	"v4.0.2": {
+		date: "2025 September 18th",
+		changes: [
+			"Fixed a bug where restoring a snapshot would not update message data internally"
 		]
 	}
 }

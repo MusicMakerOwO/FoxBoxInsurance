@@ -3,9 +3,13 @@
 		"discord.js": "14.16",
 		"dotenv": "^17.2.1",
 		"html-minifier": "^4.0.0",
-		"mariadb": "^3.4.5"
+		"mariadb": "^3.4.5",
+		"ws": "^8.18.3"
 	},
 	"scripts": {
 		"start": "node index.js"
+	},
+	"devDependencies": {
+		"@types/ws": "^8.18.1"
 	}
 }

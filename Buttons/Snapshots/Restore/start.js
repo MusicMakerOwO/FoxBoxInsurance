@@ -365,13 +365,24 @@ Step ${job.cursor + 1} / ${job.actions.length + 1}`
 							WHERE channel_id = ?
 						`, [newID, oldID]);
 
+						await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+
+						await connection.query(`
+							UPDATE Channels
+							SET channel_id = ?
+							WHERE channel_id = ?
+							AND guild_id = ?
+						`, [newID, oldID, interaction.guild.id]);
+
 						// Messages data - No hashing here!
-						connection.query(`
+						await connection.query(`
 							UPDATE Messages
 							SET channel_id = ?
 							WHERE channel_id = ?
 							AND guild_id = ?
 						`, [newID, oldID, interaction.guild.id]);
+
+						await connection.query('SET FOREIGN_KEY_CHECKS = 1');
 					}
 
 					for (const [oldID, newID] of job.role_lookups) {

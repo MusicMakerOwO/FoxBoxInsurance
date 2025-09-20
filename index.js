@@ -41,6 +41,7 @@ const { existsSync, readFileSync, writeFileSync, mkdirSync } = require('node:fs'
 
 const Log = require('./Utils/Logs');
 const ComponentLoader = require('./Utils/ComponentLoader');
+const WebSocketLoader = require('./Utils/WebSocketLoader');
 const EventLoader = require('./Utils/EventLoader');
 const RegisterCommands = require('./Utils/RegisterCommands');
 const CheckIntents = require('./Utils/CheckIntents');
@@ -83,6 +84,8 @@ client.buttons = new Map();
 client.menus = new Map();
 client.modals = new Map();
 
+client.websockets = new Map(); // op_code -> websocket handler
+
 // file path : [component type, component cache]
 const COMPONENT_FOLDERS = {
 	'./Commands': client.commands,
@@ -121,6 +124,9 @@ for (const [componentFolder, presetFile] of Object.entries(PRESET_FILES)) {
 	const data = readFileSync(fullPresetPath, 'utf-8');
 	if (data.length > 0) PRESET_FILES[componentFolder] = data;
 }
+
+WebSocketLoader(`${__dirname}/WebSockets`, client.websockets);
+Log.debug(`Loaded ${client.websockets.size} WebSocket Handlers`);
 
 for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
 	const fullPath = `${__dirname}/${path}`;

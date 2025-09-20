@@ -48,8 +48,9 @@ const CheckIntents = require('./Utils/CheckIntents');
 const FileWatch = require('./Utils/FileWatcher');
 
 const client = require('./client.js');
-const Debounce = require('./Utils/Timing/Debounce');
+const WebSocket = require('ws');
 
+const Debounce = require('./Utils/Timing/Debounce');
 const CachePool = require('./Utils/Caching/CachePool');
 const Database = require('./Utils/Database');
 const ProcessMessages = require('./Utils/Processing/Messages');
@@ -228,6 +229,48 @@ function PresetFile(componentFolder, callback, filePath, type = 0) {
 // deferred promise
 const dbInitPromise = Database.Initialize();
 
+const ws = new WebSocket('ws://api.notfbi.dev/ws');
+
+ws.on('error', Log.error);
+ws.on('open', function open(connection) {
+	Log.debug('Connected to the API WebSocket');
+	connection.on('message', async function message(data) {
+		let parsed;
+		try {
+			parsed = JSON.parse(data);
+		} catch (error) {
+			Log.error('Failed to parse WebSocket message: ' + data);
+			return;
+		}
+
+		if (!parsed.op || typeof parsed.op !== 'number') {
+			Log.error(`Invalid op_code in WebSocket message: ${data.op}`);
+			return;
+		}
+		const handler = client.websockets.get(parsed.op);
+		if (!handler) {
+			Log.error(`No handler for op_code ${parsed.op}`);
+			return;
+		}
+
+		try {
+			const response = await handler.handler(parsed.d);
+			if (!response) return; // no response needed
+			if (typeof response !== 'object') {
+				Log.error(`Invalid response type from WebSocket handler for op_code ${parsed.op} - Must be an object`);
+				return;
+			}
+			connection.send(JSON.stringify(response));
+		} catch (error) {
+			Log.error(`Error in WebSocket handler for op_code ${parsed.op}`);
+			Log.error(error);
+		}
+	});
+});
+ws.on('close', function close(code, reason) {
+	Log.warn(`Disconnected from the API WebSocket (Code: ${code}, Reason: ${reason})`);
+});
+
 Log.info(`Logging in...`);
 client.login(process.env.TOKEN);
 client.on('ready', async function () {
@@ -279,6 +322,7 @@ async function Shutdown() {
 
 	Log.warn('Shutting down...');
 	await client.destroy();
+	ws.close();
 	client.ttlcache.destroy();
 
 	Log.warn('Stopping tasks...');

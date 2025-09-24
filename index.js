@@ -386,7 +386,7 @@ async function Shutdown() {
 
 	Log.warn('Shutting down...');
 	await client.destroy();
-	ws.close();
+	ws?.close();
 	client.ttlcache.destroy();
 
 	Log.warn('Stopping tasks...');

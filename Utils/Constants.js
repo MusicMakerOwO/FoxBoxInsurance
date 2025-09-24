@@ -134,6 +134,8 @@ const WebSocketOpCodes = {
 	HEARTBEAT_ACK	: 101,
 	SERVER_ACK		: 102,
 	CLIENT_ACK		: 103,
+	HELLO			: 104,
+	RESUME			: 105,
 
 	// dispatch ops (200-299)
 	FLUSH_CACHE		: 200,
@@ -143,6 +145,9 @@ const WebSocketOpCodes = {
 	JSON_FORMAT_ERROR	: 401,
 	UNKNOWN_OP_CODE		: 402,
 	NO_RESPONSE			: 403,
+	INVALID_SESSION		: 404,
+
+	SHUTTING_DOWN		: 499
 }
 
 module.exports = {

@@ -61,7 +61,7 @@ const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
 const EncryptMessages = require('./Utils/Tasks/EncryptMessages');
 const PushStats = require('./Utils/Tasks/PushStats');
-const { UPLOAD_CACHE, DOWNLOAD_CACHE, FAILED_MESSAGES } = require('./Utils/Constants');
+const { UPLOAD_CACHE, DOWNLOAD_CACHE, FAILED_MESSAGES, WebSocketOpCodes } = require('./Utils/Constants');
 const TTLCache = require('./Utils/Caching/TTLCache.js');
 
 if (!existsSync(UPLOAD_CACHE)) mkdirSync(UPLOAD_CACHE, { recursive: true });
@@ -229,24 +229,75 @@ function PresetFile(componentFolder, callback, filePath, type = 0) {
 // deferred promise
 const dbInitPromise = Database.Initialize();
 
-const ws = new WebSocket('ws://api.notfbi.dev/ws');
+let sessionID, ws;
 
-ws.on('error', Log.error);
-ws.on('open', function open(connection) {
-	Log.debug('Connected to the API WebSocket');
-	connection.on('message', async function message(data) {
-		let parsed;
-		try {
-			parsed = JSON.parse(data);
-		} catch (error) {
-			Log.error('Failed to parse WebSocket message: ' + data);
-			return;
+function connect() {
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		ws.close();
+		sessionID = null;
+	}
+	ws = new WebSocket('wss://api.notfbi.dev/');
+
+	ws.on('open', () => {
+		Log.debug('Connected to the API WebSocket');
+
+		// Try resume if we have a saved sessionId
+		if (sessionID) {
+			ws.send(JSON.stringify({ op: WebSocketOpCodes.RESUME, d: { code: sessionID } }));
 		}
+	});
+
+	ws.on('message', async (raw) => {
+		const parsed = JSON.parse(raw.toString());
+
+		console.log(parsed);
 
 		if (!parsed.op || typeof parsed.op !== 'number') {
-			Log.error(`Invalid op_code in WebSocket message: ${data.op}`);
+			Log.error(`Invalid op_code in WebSocket message: ${parsed.op}`);
 			return;
 		}
+
+		parsed.d ??= {}; // null | undefined -> {}
+		if (typeof parsed.d !== 'object' || Array.isArray(parsed.d)) {
+			Log.error(`Invalid data in WebSocket message: ${parsed.d}`);
+			return;
+		}
+
+		if (parsed.op === WebSocketOpCodes.HELLO) {
+			sessionID = String(parsed.d.code);
+			Log.debug(`Received HELLO from the API WebSocket`);
+			return;
+		}
+
+		if (parsed.op === WebSocketOpCodes.HEARTBEAT) {
+			return ws.send(JSON.stringify({ op: WebSocketOpCodes.HEARTBEAT_ACK, code: sessionID }));
+		}
+
+		if (parsed.op === WebSocketOpCodes.INVALID_SESSION) {
+			Log.error('Session code has been invalidated');
+			sessionID = null;
+			return;
+		}
+		if (parsed.op === WebSocketOpCodes.SHUTTING_DOWN) {
+			Log.error('Websocket is being shut down');
+			ws = null;
+			sessionID = null;
+			return;
+		}
+
+
+		if (parsed.op === WebSocketOpCodes.RESUME) {
+			if (parsed.d.success) {
+				Log.debug("Resumed session successfully");
+			} else {
+				Log.warn("Resume failed, doing full connect");
+				sessionID = null;
+				ws.close();
+				setTimeout(connect, 5_000);
+			}
+			return;
+		}
+
 		const handler = client.websockets.get(parsed.op);
 		if (!handler) {
 			Log.error(`No handler for op_code ${parsed.op}`);
@@ -256,20 +307,33 @@ ws.on('open', function open(connection) {
 		try {
 			const response = await handler.handler(parsed.d);
 			if (!response) return; // no response needed
-			if (typeof response !== 'object') {
-				Log.error(`Invalid response type from WebSocket handler for op_code ${parsed.op} - Must be an object`);
-				return;
+			if (typeof response !== 'object' || Array.isArray(response)) {
+				throw new Error(`Invalid response type from WebSocket handler for op_code ${parsed.op} - Must be an object`);
 			}
-			connection.send(JSON.stringify(response));
+			if (typeof response.op !== 'number') {
+				throw new Error(`Invalid response op_code from WebSocket handler for op_code ${parsed.op} - Must be a number`);
+			}
+			if (response.d !== 'undefined' && typeof response.d !== 'object') {
+				throw new Error(`Invalid response data from WebSocket handler for op_code ${parsed.op} - Must be an object or undefined`);
+			}
+			ws.send(JSON.stringify({ ... response, code: sessionID }));
 		} catch (error) {
 			Log.error(`Error in WebSocket handler for op_code ${parsed.op}`);
 			Log.error(error);
 		}
 	});
-});
-ws.on('close', function close(code, reason) {
-	Log.warn(`Disconnected from the API WebSocket (Code: ${code}, Reason: ${reason})`);
-});
+
+	ws.on('close', (code, reason) => {
+		Log.warn(`WS closed (code=${code}, reason=${reason})`);
+		setTimeout(connect, 2000);
+	});
+
+	ws.on('error', (err) => {
+		Log.error('WS error', err);
+	});
+}
+
+connect();
 
 Log.info(`Logging in...`);
 client.login(process.env.TOKEN);

@@ -250,8 +250,6 @@ function connect() {
 	ws.on('message', async (raw) => {
 		const parsed = JSON.parse(raw.toString());
 
-		console.log(parsed);
-
 		if (!parsed.op || typeof parsed.op !== 'number') {
 			Log.error(`Invalid op_code in WebSocket message: ${parsed.op}`);
 			return;
@@ -263,14 +261,16 @@ function connect() {
 			return;
 		}
 
+		if (parsed.op === WebSocketOpCodes.HEARTBEAT) {
+			return ws.send(JSON.stringify({ op: WebSocketOpCodes.HEARTBEAT_ACK, code: sessionID }));
+		}
+
+		console.log(parsed);
+
 		if (parsed.op === WebSocketOpCodes.HELLO) {
 			sessionID = String(parsed.d.code);
 			Log.debug(`Received HELLO from the API WebSocket`);
 			return;
-		}
-
-		if (parsed.op === WebSocketOpCodes.HEARTBEAT) {
-			return ws.send(JSON.stringify({ op: WebSocketOpCodes.HEARTBEAT_ACK, code: sessionID }));
 		}
 
 		if (parsed.op === WebSocketOpCodes.INVALID_SESSION) {

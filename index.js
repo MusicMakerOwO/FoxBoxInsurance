@@ -309,7 +309,7 @@ client.on('ready', async function () {
 	}
 
 	for (const [path, cache] of Object.entries(COMPONENT_FOLDERS)) {
-		const watcher = new FileWatch(path, true);
+		const watcher = new FileWatch(`${__dirname}/${path}`, true);
 		const callback = Debounce(HotReload.bind(null, cache, path), 2_000);
 		watcher.onAdd = PresetFile.bind(null, path, callback);
 		watcher.onRemove = callback;

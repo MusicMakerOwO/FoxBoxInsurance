@@ -135,7 +135,6 @@ const WebSocketOpCodes = {
 	SERVER_ACK		: 102,
 	CLIENT_ACK		: 103,
 	HELLO			: 104,
-	RESUME			: 105,
 
 	// dispatch ops (200-299)
 	FLUSH_CACHE		: 200,

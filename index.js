@@ -240,11 +240,6 @@ function connect() {
 
 	ws.on('open', () => {
 		Log.debug('Connected to the API WebSocket');
-
-		// Try resume if we have a saved sessionId
-		if (sessionID) {
-			ws.send(JSON.stringify({ op: WebSocketOpCodes.RESUME, d: { code: sessionID } }));
-		}
 	});
 
 	ws.on('message', async (raw) => {
@@ -282,19 +277,6 @@ function connect() {
 			Log.error('Websocket is being shut down');
 			ws = null;
 			sessionID = null;
-			return;
-		}
-
-
-		if (parsed.op === WebSocketOpCodes.RESUME) {
-			if (parsed.d.success) {
-				Log.debug("Resumed session successfully");
-			} else {
-				Log.warn("Resume failed, doing full connect");
-				sessionID = null;
-				ws.close();
-				setTimeout(connect, 5_000);
-			}
 			return;
 		}
 

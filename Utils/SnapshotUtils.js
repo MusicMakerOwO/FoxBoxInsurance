@@ -508,10 +508,12 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 
 		if (roles.length > 0) promiseQueue.push(
 			connection.batch(`
-                INSERT INTO SnapshotRoles (snapshot_id,
-                                           id, name, color, hoist,
-                                           position, permissions, managed,
-                                           hash, deleted)
+                INSERT INTO SnapshotRoles (
+					snapshot_id,
+					id, name, color, hoist,
+					position, permissions, managed,
+					hash, deleted
+				)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`, roles.map(role => [
 				snapshotID,

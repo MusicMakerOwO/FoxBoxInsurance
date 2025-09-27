@@ -298,7 +298,7 @@ function connect() {
 			if (response.d !== 'undefined' && typeof response.d !== 'object') {
 				throw new Error(`Invalid response data from WebSocket handler for op_code ${parsed.op} - Must be an object or undefined`);
 			}
-			ws.send(JSON.stringify({ ... response, code: sessionID }));
+			ws.send(JSON.stringify({ ... response, code: sessionID, ... (parsed.seq ? { seq: parsed.seq } : {}) }));
 		} catch (error) {
 			Log.error(`Error in WebSocket handler for op_code ${parsed.op}`);
 			Log.error(error);

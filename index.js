@@ -63,6 +63,7 @@ const EncryptMessages = require('./Utils/Tasks/EncryptMessages');
 const PushStats = require('./Utils/Tasks/PushStats');
 const { UPLOAD_CACHE, DOWNLOAD_CACHE, FAILED_MESSAGES, WebSocketOpCodes } = require('./Utils/Constants');
 const TTLCache = require('./Utils/Caching/TTLCache.js');
+const HashObject = require('./Utils/HashObject.js');
 
 if (!existsSync(UPLOAD_CACHE)) mkdirSync(UPLOAD_CACHE, { recursive: true });
 if (!existsSync(DOWNLOAD_CACHE)) mkdirSync(DOWNLOAD_CACHE, { recursive: true });

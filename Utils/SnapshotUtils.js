@@ -1,23 +1,11 @@
 const { Guild } = require('discord.js');
-const crypto = require('crypto');
 const Database = require('./Database');
 const Log = require('./Logs');
 const { SNAPSHOT_TYPE, SECONDS } = require('./Constants');
 const client = require('../client.js');
 const TTLCache = require('./Caching/TTLCache.js');
 const { SimplifyRole, SimplifyChannel, SimplifyPermission, SimplifyBan } = require('./Parsers/Simplify.js');
-
-function HashObject(obj) {
-	if (Object.values(obj).some(v => typeof v === 'object' && v !== null)) {
-		console.log(obj);
-		throw new Error('HashObject received a nested object. Use only on flattened structures.');
-	}
-
-	const entries = Object.entries(obj);
-	entries.sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
-	const flatString = entries.map(([key, value]) => key + ':' + value).join(',');
-	return crypto.createHash('sha1').update(flatString).digest('hex');
-}
+const HashObject = require('./HashObject');
 
 const statCache = new TTLCache();
 const stateCache = new TTLCache();

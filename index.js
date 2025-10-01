@@ -230,12 +230,11 @@ function PresetFile(componentFolder, callback, filePath, type = 0) {
 // deferred promise
 const dbInitPromise = Database.Initialize();
 
-let sessionID, ws;
+let ws;
 
 function connect() {
 	if (ws && ws.readyState === WebSocket.OPEN) {
 		ws.close();
-		sessionID = null;
 	}
 	ws = new WebSocket('wss://api.notfbi.dev/');
 
@@ -258,26 +257,20 @@ function connect() {
 		}
 
 		if (parsed.op === WebSocketOpCodes.HEARTBEAT) {
-			return ws.send(JSON.stringify({ op: WebSocketOpCodes.HEARTBEAT_ACK, code: sessionID }));
+			return ws.send(JSON.stringify({ op: WebSocketOpCodes.HEARTBEAT_ACK }));
 		}
 
 		console.log(parsed);
 
 		if (parsed.op === WebSocketOpCodes.HELLO) {
-			sessionID = String(parsed.d.code);
 			Log.debug(`Received HELLO from the API WebSocket`);
-			return;
+			const opCodeHash = HashObject(WebSocketOpCodes);
+			return ws.send(JSON.stringify({ op: WebSocketOpCodes.IDENTIFY, d: { auth: process.env.WEBSOCKET_AUTH, op_codes_hash: opCodeHash } }));
 		}
 
-		if (parsed.op === WebSocketOpCodes.INVALID_SESSION) {
-			Log.error('Session code has been invalidated');
-			sessionID = null;
-			return;
-		}
 		if (parsed.op === WebSocketOpCodes.SHUTTING_DOWN) {
 			Log.error('Websocket is being shut down');
 			ws = null;
-			sessionID = null;
 			return;
 		}
 
@@ -299,7 +292,7 @@ function connect() {
 			if (response.d !== 'undefined' && typeof response.d !== 'object') {
 				throw new Error(`Invalid response data from WebSocket handler for op_code ${parsed.op} - Must be an object or undefined`);
 			}
-			ws.send(JSON.stringify({ ... response, code: sessionID, ... (parsed.seq ? { seq: parsed.seq } : {}) }));
+			ws.send(JSON.stringify({ op: WebSocketOpCodes.OK, seq: parsed.seq ?? null, ... response }));
 		} catch (error) {
 			Log.error(`Error in WebSocket handler for op_code ${parsed.op}`);
 			Log.error(error);
@@ -316,7 +309,7 @@ function connect() {
 	});
 }
 
-connect();
+// connect();
 
 Log.info(`Logging in...`);
 client.login(process.env.TOKEN);

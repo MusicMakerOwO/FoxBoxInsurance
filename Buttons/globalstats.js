@@ -127,7 +127,7 @@ async function CalcuateMessageStats() {
 	const maxDate = DiscordIDToDate(BigInt(timespan.max_id));
 	const minDate = DiscordIDToDate(BigInt(timespan.min_id));
 	const timeDiff = Math.abs(maxDate - minDate);
-	const rate = timespan.count / (timeDiff / 1000 / 60); // messages per minute
+	const rate = Number(timespan.count) / (timeDiff / 1000 / 60); // messages per minute
 
 	const output = {
 		color: COLOR.PRIMARY,
@@ -136,24 +136,24 @@ async function CalcuateMessageStats() {
 Last ${MessageStats.message_count} messages
 - Guilds: ${MessageStats.guild_count}
 - Channels: ${MessageStats.channel_count}
-- Users: ${MessageStats.user_count} (${(MessageStats.message_count / MessageStats.user_count).toFixed(2)} msg/user)
+- Users: ${MessageStats.user_count} (${Number(MessageStats.message_count / MessageStats.user_count).toFixed(2)} msg/user)
 
 - Avg Length: ${MessageStats.avg_length} characters
 
 Emoji Stats (${EmojiStats.emojis} emojis) *
 - Max emojis: ${topEmoji.max} emojis
-- Avg emojis: ${(EmojiStats.emojis / EmojiStats.messages).toFixed(2)} emojis/msg
+- Avg emojis: ${(Number(EmojiStats.emojis) / Number(EmojiStats.messages)).toFixed(2)} emojis/msg
 
 Files Stats (${FileStats.file_count} files) **
-- Max size: ${(FileStats.max_file / 1024 / 1024).toFixed(2)} MB
-- Min size: ${(FileStats.min_file / 1024).toFixed(2)} KB
-- Avg files: ${(FileStats.file_count / FileStats.message_count).toFixed(2)} files/msg
+- Max size: ${(Number(FileStats.max_file) / 1024 / 1024).toFixed(2)} MB
+- Min size: ${(Number(FileStats.min_file) / 1024).toFixed(2)} KB
+- Avg files: ${(Number(FileStats.file_count) / Number(FileStats.message_count)).toFixed(2)} files/msg
 \`\`\`
 
 **Quick Facts** \`\`\`
-Only ${(MessageStats.sticker_count / MessageStats.message_count * 100).toFixed(2)}% of messages have a sticker
-Only ${(FileStats.message_count / MessageStats.message_count * 100).toFixed(2)}% of messages have a file
-The average user sent ${(MessageStats.message_count / MessageStats.user_count).toFixed(2)} messages
+Only ${(Number(MessageStats.sticker_count) / Number(MessageStats.message_count) * 100).toFixed(2)}% of messages have a sticker
+Only ${(Number(FileStats.message_count) / Number(MessageStats.message_count) * 100).toFixed(2)}% of messages have a file
+The average user sent ${(Number(MessageStats.message_count) / Number(MessageStats.user_count)).toFixed(2)} messages
 On average, ${rate.toFixed(2)} messages are sent per minute
 \`\`\`
 -# \\* Only messages with emojis are counted

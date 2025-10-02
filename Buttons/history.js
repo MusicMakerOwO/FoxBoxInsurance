@@ -12,7 +12,7 @@ module.exports = {
 
 		const connection = await Database.getConnection();
 
-		const exportCount = await connection.query(`SELECT COUNT(*) FROM Exports WHERE user_id = ?`, [interaction.user.id]);
+		const exportCount = await connection.query(`SELECT COUNT(*) as count FROM Exports WHERE user_id = ?`, [interaction.user.id]).then(res => Number(res[0].count));
 
 		if (page === 'first') {
 			page = 0;

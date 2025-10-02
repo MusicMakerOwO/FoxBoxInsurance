@@ -122,6 +122,8 @@ async function CalcuateMessageStats() {
 		FROM selected_messages
 	`);
 
+	Database.releaseConnection(connection);
+
 	const maxDate = DiscordIDToDate(BigInt(timespan.max_id));
 	const minDate = DiscordIDToDate(BigInt(timespan.min_id));
 	const timeDiff = Math.abs(maxDate - minDate);

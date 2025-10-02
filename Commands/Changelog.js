@@ -163,6 +163,8 @@ const CHANGELOG = {
 			"Fixed website not loading properly (credit to @justabettergamingchair)",
 			"Fixed error in /info (credit to @justabettergamingchair)",
 			"Broken database query in /history (credit to @justabettergamingchair)",
+			"Channel exports missing creation dates",
+			"Bad data parsing when reading export metadata"
 		]
 	}
 }

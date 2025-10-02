@@ -156,6 +156,13 @@ const CHANGELOG = {
 		changes: [
 			"Fixed a bug where restoring a snapshot would not update message data internally"
 		]
+	},
+	"v4.0.3": {
+		date: "2025 October 1st",
+		changes: [
+			"Fixed website not loading properly (credit to @justabettergamingchair)",
+			"Fixed error in /info (credit to @justabettergamingchair)"
+		]
 	}
 }
 

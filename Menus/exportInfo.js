@@ -20,8 +20,8 @@ module.exports = {
 			return interaction.editReply({ embeds: [NoExportEmbed], components: [] });
 		}
 
-		const guild = await connection.query(`SELECT name FROM Guilds WHERE id = ?`, [exportData.guild_id]);
-		const channel = await connection.query(`SELECT name FROM Channels WHERE id = ?`, [exportData.channel_id]);
+		const guild = await connection.query(`SELECT name FROM Guilds WHERE id = ?`, [exportData.guild_id]).then(res => res[0]?.name || 'Unknown Guild');
+		const channel = await connection.query(`SELECT name FROM Channels WHERE id = ?`, [exportData.channel_id]).then(res => res[0]?.name || 'Unknown Channel');
 
 		Database.releaseConnection(connection);
 

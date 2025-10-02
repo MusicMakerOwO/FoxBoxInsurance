@@ -106,8 +106,8 @@ The error has been reported automatically and a fix is being worked on`
 
 		// insert the export into the database
 		await Database.query(`
-			INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash, lookup, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ? , NOW())
+			INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash, lookup)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		`, [
 			file.id,
 			exportOptions.guildID,

@@ -70,7 +70,7 @@ module.exports = {
 			embed.description += `
 **Export ID:** \`${exportData.id}\`
 ${guild} - #${channel}
-<t:${Math.floor(new Date(exportData.created_at).getTime() / 1000)}:D>
+<t:${Math.floor(new Date(exportData.created_at * 1000).getTime() / 1000)}:D>
 `
 		}
 

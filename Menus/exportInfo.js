@@ -36,7 +36,7 @@ module.exports = {
 **Messages** : ${exportData.message_count}
 **Format** : ${FORMAT[exportData.format] || 'Unknown'}
 
-**Created At** : <t:${Math.floor(new Date(exportData.created_at).getTime() / 1000)}:f>`
+**Created At** : <t:${Math.floor(new Date(exportData.created_at * 1000).getTime() / 1000)}:f>`
 		}
 
 		interaction.editReply({ embeds: [embed], components: [] });

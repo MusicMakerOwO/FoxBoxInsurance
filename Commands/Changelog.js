@@ -161,7 +161,8 @@ const CHANGELOG = {
 		date: "2025 October 1st",
 		changes: [
 			"Fixed website not loading properly (credit to @justabettergamingchair)",
-			"Fixed error in /info (credit to @justabettergamingchair)"
+			"Fixed error in /info (credit to @justabettergamingchair)",
+			"Broken database query in /history (credit to @justabettergamingchair)",
 		]
 	}
 }

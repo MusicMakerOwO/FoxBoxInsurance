@@ -23,7 +23,12 @@ module.exports = {
 			if (isNaN(page) || page < 0) page = 0;
 		}
 
-		const exports = await connection.query(`SELECT * FROM Exports WHERE user_id = ? ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET (? * ${PAGE_SIZE})`, [interaction.user.id, page]); // 0-5, 6-10, 11-15, etc.
+		const exports = await connection.query(`
+			SELECT * FROM Exports
+			WHERE user_id = ?
+			ORDER BY created_at DESC, id ASC
+			LIMIT ${PAGE_SIZE} OFFSET ?
+		`, [interaction.user.id, page * PAGE_SIZE]); // 0-5, 6-10, 11-15, etc.
 
 		Database.releaseConnection(connection);
 

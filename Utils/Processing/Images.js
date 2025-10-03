@@ -19,30 +19,24 @@ const ASSET_TYPE = {
 
 const HUNDRED_MEGABYTES = 1024 * 1024 * 100;
 
-const BasicAsset = {
-	id: '',
-	name: '',
-	url: '',
-	type: ASSET_TYPE.USER,
-
-	// optional
-	width: -1,
-	height: -1
-}
-
-const DownloadQueue = [BasicAsset]; // public access queue
-DownloadQueue.length = 0;
-
+const DownloadQueue = []; // public access queue
 const CurrentURLs = new Set(); // List of urls in the queue
-const Push = Array.prototype.push.bind(DownloadQueue);
-DownloadQueue.push = function (asset = BasicAsset) {
-	if (typeof asset !== 'object') throw new TypeError(`Expected object, got ${typeof asset}`);
-	if (asset === null) throw new TypeError(`Expected object, got null`);
 
-	// Dont add the same URL to the queue
+function AddDownloadToQueue(asset) {
+	if (typeof asset !== 'object' || asset === null) throw new TypeError(`Expected object, got ${typeof asset}`);
+
+	if (typeof asset.id !== 'string' || asset.id.length === 0) throw new TypeError(`Asset must have a valid id`);
+	if (typeof asset.name !== 'string' || asset.name.length === 0) throw new TypeError(`Asset must have a valid name`);
+	if (typeof asset.url !== 'string' || asset.url.length === 0) throw new TypeError(`Asset must have a valid url`);
+	if (typeof asset.type !== 'number' || !Object.values(ASSET_TYPE).includes(asset.type)) throw new TypeError(`Asset must have a valid type`);
+
+	if (asset.width !== undefined && (typeof asset.width !== 'number' || asset.width < -1)) throw new TypeError(`Asset width must be an integer >= -1`);
+	if (asset.height !== undefined && (typeof asset.height !== 'number' || asset.height < -1)) throw new TypeError(`Asset height must be an integer >= -1`);
+
+	// Don't add the same URL to the queue
 	if (CurrentURLs.has(asset.url)) return;
 	CurrentURLs.add(asset.url);
-	Push(asset);
+	DownloadQueue.push(asset);
 }
 
 const MAX_URL_CACHE_SIZE = 1000;
@@ -256,7 +250,7 @@ async function DownloadURL(url) {
 }
 
 module.exports.ASSET_TYPE = ASSET_TYPE;
-module.exports.DownloadQueue = DownloadQueue;
-module.exports.DownloadAssets = DownloadAssets; // public access
+module.exports.AddDownloadToQueue = AddDownloadToQueue;
+module.exports.DownloadAssets = DownloadAssets;
 
 Task.schedule(DownloadAssets, 1000 * 30, 1000 * 60); // every 60 seconds

@@ -4,6 +4,7 @@ const https = require("node:https");
 const CONSTANTS = require("../Constants");
 const Database = require("../Database");
 const Log = require("../Logs");
+const LinkAssets = require("../Processing/LinkAssets");
 
 const Task = require("../TaskScheduler");
 const TestConnection = require("../TestConnection");
@@ -203,6 +204,8 @@ async function DownloadAssets() {
 			if (--urlsToRemove <= 0) break;
 		}
 	}
+
+	setImmediate(LinkAssets);
 }
 
 function Clean(input) {

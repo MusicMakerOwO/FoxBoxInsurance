@@ -1,6 +1,6 @@
 const { GetGuildTOS } = require('../Utils/Caching/TOS');
 const SimplifyMessage = require('../Utils/Parsers/ParseMessage');
-const { AddDownloadToQueue, ASSET_TYPE } = require('../Utils/Processing/Images');
+const { AddDownloadToQueue, ASSET_TYPE, DownloadAssets } = require('../Utils/Processing/Images');
 const fs = require('node:fs');
 const { FAILED_MESSAGES } = require("../Utils/Constants");
 const Log = require('../Utils/Logs');
@@ -83,6 +83,8 @@ function CreateCache() {
 
 		attachments: [], // { id, message_id, name }[]
 		embeds: [], // { message_id, title, description, url, timestamp, color, footer_text, footer_icon, thumbnail_url, image_url, author_name, author_url, author_icon }[]
+
+		downloadQueue: new Map(), // discord_id -> { type, id, name, url, width, height }
 	}
 }
 
@@ -106,6 +108,17 @@ function EnqueueMessage(simplified) {
 		name: simplified.guild.name
 	});
 
+	if (simplified.guild.icon) {
+		InsertCache.downloadQueue.set(simplified.guild.id, {
+			type	: ASSET_TYPE.GUILD,
+			id		: simplified.guild.id,
+			url		: simplified.guild.icon.url,
+			name	: simplified.guild.icon.name,
+			width	: simplified.guild.icon.width,
+			height	: simplified.guild.icon.height
+		});
+	}
+
 	// Channel
 	InsertCache.channels.set(simplified.channel.id, {
 		id: simplified.channel.id,
@@ -121,12 +134,33 @@ function EnqueueMessage(simplified) {
 		bot: simplified.user.bot
 	});
 
+	if (simplified.user.icon) {
+		InsertCache.downloadQueue.set(simplified.user.id, {
+			type	: ASSET_TYPE.USER,
+			id		: simplified.user.id,
+			url		: simplified.user.icon.url,
+			name	: simplified.user.icon.name,
+			width	: simplified.user.icon.width,
+			height	: simplified.user.icon.height
+		});
+	}
+
 	// Sticker
 	if (simplified.sticker) {
 		InsertCache.stickers.set(simplified.sticker.id, {
 			id: simplified.sticker.id,
 			name: simplified.sticker.name
 		});
+		if (simplified.sticker.icon) {
+			InsertCache.downloadQueue.set(simplified.sticker.id, {
+				type	: ASSET_TYPE.STICKER,
+				id		: simplified.sticker.id,
+				url		: simplified.sticker.icon.url,
+				name	: simplified.sticker.icon.name,
+				width	: simplified.sticker.icon.width,
+				height	: simplified.sticker.icon.height
+			});
+		}
 	}
 
 	if (simplified.emojis.length > 0) {
@@ -140,6 +174,15 @@ function EnqueueMessage(simplified) {
 			});
 
 			emojiCount[emoji.id] = (emojiCount[emoji.id] ?? 0) + 1;
+
+			InsertCache.downloadQueue.set(emoji.id, {
+				type	: ASSET_TYPE.EMOJI,
+				id		: emoji.id,
+				url		: emoji.url,
+				name	: emoji.name,
+				width	: emoji.width,
+				height	: emoji.height
+			});
 		}
 
 		InsertCache.emojiCounts[simplified.id] = emojiCount;
@@ -151,6 +194,16 @@ function EnqueueMessage(simplified) {
 			id: attachment.id,
 			message_id: simplified.id,
 			name: attachment.name
+		});
+
+		// do not add to cache, send directly to queue since it is SUPER short-lived o_o
+		AddDownloadToQueue({
+			type: ASSET_TYPE.ATTACHMENT,
+			id: attachment.id,
+			url: attachment.url,
+			name: attachment.name,
+			width: attachment.width,
+			height: attachment.height
 		});
 	}
 
@@ -177,6 +230,15 @@ function EnqueueMessage(simplified) {
 
 	if (InsertCache.messages.length >= MAX_CACHE_SIZE) {
 		setImmediate(Flush);
+
+		// no need to check for downloads
+		// Flush() already triggers the download process
+		return;
+	}
+
+	if (simplified.attachments.length > 0) {
+		// if there are attachments, download immediately to avoid them being lost
+		setImmediate(DownloadAssets);
 	}
 }
 
@@ -328,6 +390,12 @@ async function Flush(chanelID = null) {
 		await fs.promises.writeFile(filename, contents);
 	}
 
+	for (const asset of savedCache.downloadQueue.values()) {
+		AddDownloadToQueue(asset);
+	}
+
+	// kick off the download process if not already running
+	setImmediate(DownloadAssets);
 }
 
 async function AttemptInsert(connection, query, inserts) {
@@ -384,7 +452,5 @@ module.exports = {
 		const simplified = SimplifyMessage(message);
 
 		EnqueueMessage(simplified);
-
-		console.log([InsertCache]);
 	}
 }

@@ -54,8 +54,6 @@ const Debounce = require('./Utils/Timing/Debounce');
 const CachePool = require('./Utils/Caching/CachePool');
 const Database = require('./Utils/Database');
 const { FlushMessages } = require('./Events/Messages');
-const { DownloadAssets } = require('./Utils/Processing/Images');
-const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
 const { StartTasks } = require('./Utils/Tasks/AutomaticTasks');
 const UploadFiles = require('./Utils/Tasks/UploadFiles');
@@ -368,12 +366,6 @@ async function Shutdown() {
 
 	Log.warn('Clearing caches...');
 	await FlushMessages().catch(Log.error);
-
-	Log.warn('Downloading assets...');
-	await DownloadAssets().catch(Log.error);
-
-	Log.warn('Linking assets...');
-	await LinkAssets().catch(Log.error);
 
 	Log.warn('Encrypting messages...');
 	await EncryptMessages().catch(Log.error);

@@ -30,8 +30,8 @@ function AddDownloadToQueue(asset) {
 	if (typeof asset.url !== 'string' || asset.url.length === 0) throw new TypeError(`Asset must have a valid url`);
 	if (typeof asset.type !== 'number' || !Object.values(ASSET_TYPE).includes(asset.type)) throw new TypeError(`Asset must have a valid type`);
 
-	if (asset.width !== undefined && (typeof asset.width !== 'number' || asset.width < -1)) throw new TypeError(`Asset width must be an integer >= -1`);
-	if (asset.height !== undefined && (typeof asset.height !== 'number' || asset.height < -1)) throw new TypeError(`Asset height must be an integer >= -1`);
+	if (asset.width && (typeof asset.width !== 'number' || asset.width < -1)) throw new TypeError(`Asset width must be an integer >= -1`);
+	if (asset.height && (typeof asset.height !== 'number' || asset.height < -1)) throw new TypeError(`Asset height must be an integer >= -1`);
 
 	// Don't add the same URL to the queue
 	if (CurrentURLs.has(asset.url)) return;

@@ -3,6 +3,7 @@ const Database = require('../Database');
 const Log = require('../Logs');
 
 module.exports = async function PushStats() {
+	if (process.env.ENVIORMENT === "DEV") return;
 
 	const connection = await Database.getConnection();
 

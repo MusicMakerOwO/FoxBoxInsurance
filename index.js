@@ -9,6 +9,11 @@ if (!process.env.TOKEN) {
 	process.exit(1);
 }
 
+if (process.env.ENVIORNMENT !== 'PROD' && process.env.ENVIORNMENT !== 'DEV') {
+	console.error('ENVIRONMENT in .env must be either "PROD" or "DEV"');
+	process.exit(1);
+}
+
 const config = require('./config.json');
 
 const ConfigTemplate = {

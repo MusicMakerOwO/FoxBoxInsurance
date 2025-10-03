@@ -53,7 +53,7 @@ const WebSocket = require('ws');
 const Debounce = require('./Utils/Timing/Debounce');
 const CachePool = require('./Utils/Caching/CachePool');
 const Database = require('./Utils/Database');
-const ProcessMessages = require('./Utils/Processing/Messages');
+const { FlushMessages } = require('./Events/Messages');
 const { DownloadAssets } = require('./Utils/Processing/Images');
 const LinkAssets = require('./Utils/Processing/LinkAssets');
 const Task = require('./Utils/TaskScheduler');
@@ -319,8 +319,6 @@ client.on('ready', async function () {
 	await dbInitPromise;
 	Log.custom('Database initialized', 0x7946ff);
 
-	Task.schedule( ProcessMessages.bind(null, client.messageCache), 1000 * 60 * 30); // 30 minutes
-
 	const connection = await Database.getConnection();
 	const savedGuilds = new Set(await connection.query('SELECT id FROM Guilds').then(rows => rows.map(g => g.id)) );
 
@@ -369,7 +367,7 @@ async function Shutdown() {
 	Task.destroy();
 
 	Log.warn('Clearing caches...');
-	await ProcessMessages(client.messageCache).catch(Log.error);
+	await FlushMessages().catch(Log.error);
 
 	Log.warn('Downloading assets...');
 	await DownloadAssets().catch(Log.error);

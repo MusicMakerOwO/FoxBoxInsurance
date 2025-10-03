@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { COLOR, FORMAT, RandomLoadingEmbed } = require('../Utils/Constants');
 const Database = require('../Utils/Database');
-const ProcessMessages = require('../Utils/Processing/Messages');
+const { FlushMessages } = require('../Events/Messages');
 const UserCanExport = require('../Utils/UserCanExport');
 const { GetGuildTOS } = require('../Utils/Caching/TOS');
 
@@ -50,7 +50,7 @@ module.exports = {
 			});
 		}
 
-		await ProcessMessages(client.messageCache); // save messages
+		await FlushMessages();
 
 		const [{ "count": channelMessageCount }] = await Database.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [interaction.channel.id]);
 		if (channelMessageCount === 0) {

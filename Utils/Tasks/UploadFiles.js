@@ -6,10 +6,7 @@ const UploadCDN = require("../UploadCDN");
 
 module.exports = async function UploadAssets() {
 	const UploadList = await Database.query(`SELECT * FROM Assets WHERE uploaded = 0`);
-	if (UploadList.length === 0) {
-		Logs.success('No assets to upload');
-		return;
-	}
+	if (UploadList.length === 0) return;
 
 	Logs.success(`Uploading ${UploadList.length} assets...`);
 

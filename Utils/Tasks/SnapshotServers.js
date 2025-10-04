@@ -24,10 +24,7 @@ module.exports = async function SnapshotServers() {
 
 	Database.releaseConnection(connection);
 
-	if (snapshotQueue.length === 0) {
-		Log.custom('No servers to snapshot this hour', 0x7946ff);
-		return;
-	}
+	if (snapshotQueue.length === 0) return;
 
 	console.log(`Backing up ${snapshotQueue.length} servers : ${snapshotQueue.map(g => g.id).join(', ')}`);
 

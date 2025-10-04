@@ -7,10 +7,7 @@ const { WrapKey, UnwrapUserKey } = require("../Encryption/KeyWrapper");
 
 module.exports = async function EncryptMessages() {
 	const unencryptedMessages = await Database.query("SELECT id, user_id, content FROM Messages WHERE encrypted = 0");
-	if (unencryptedMessages.length === 0) {
-		Log.success("Nothing to encrypt");
-		return;
-	}
+	if (unencryptedMessages.length === 0) return;
 
 	Log.success(`Encrypting ${unencryptedMessages.length} messages...`);
 

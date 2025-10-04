@@ -259,18 +259,6 @@ function connect() {
 			return;
 		}
 
-		if (parsed.op === WebSocketOpCodes.HEARTBEAT) {
-			return ws.send(JSON.stringify({ op: WebSocketOpCodes.HEARTBEAT_ACK }));
-		}
-
-		console.log(parsed);
-
-		if (parsed.op === WebSocketOpCodes.HELLO) {
-			Log.debug(`Received HELLO from the API WebSocket`);
-			const opCodeHash = HashObject(WebSocketOpCodes);
-			return ws.send(JSON.stringify({ op: WebSocketOpCodes.IDENTIFY, d: { auth: process.env.WEBSOCKET_AUTH, op_codes_hash: opCodeHash } }));
-		}
-
 		if (parsed.op === WebSocketOpCodes.SHUTTING_DOWN) {
 			Log.error('Websocket is being shut down');
 			ws = null;
@@ -292,7 +280,7 @@ function connect() {
 			if (typeof response.op !== 'number') {
 				throw new Error(`Invalid response op_code from WebSocket handler for op_code ${parsed.op} - Must be a number`);
 			}
-			if (response.d !== 'undefined' && typeof response.d !== 'object') {
+			if (response.d !== undefined && typeof response.d !== 'object') {
 				throw new Error(`Invalid response data from WebSocket handler for op_code ${parsed.op} - Must be an object or undefined`);
 			}
 			ws.send(JSON.stringify({ op: WebSocketOpCodes.OK, seq: parsed.seq ?? null, ... response }));
@@ -304,7 +292,7 @@ function connect() {
 
 	ws.on('close', (code, reason) => {
 		Log.warn(`WS closed (code=${code}, reason=${reason})`);
-		setTimeout(connect, 2000);
+		setTimeout(connect, 5000);
 	});
 
 	ws.on('error', (err) => {
@@ -312,7 +300,7 @@ function connect() {
 	});
 }
 
-// connect();
+connect();
 
 Log.info(`Logging in...`);
 client.login(process.env.TOKEN);

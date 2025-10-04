@@ -148,6 +148,9 @@ const WebSocketOpCodes = {
 	ERR_BAD_OP_CODES	: 405,
 
 	SHUTTING_DOWN		: 499,
+
+	// critical errors (500-599)
+	CRIT_SERVER_BUSY		: 500,
 }
 
 module.exports = {

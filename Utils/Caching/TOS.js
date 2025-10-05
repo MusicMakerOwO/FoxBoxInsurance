@@ -25,7 +25,7 @@ async function SetGuildTOS(id, value) {
 }
 
 async function GetGuildTOS(id) {
-	if (process.env.ENVIORMENT === "DEV") return true;
+	if (process.env.ENVIORNMENT === "DEV") return true;
 
 	if (guildCache.has(id)) return guildCache.get(id);
 
@@ -62,7 +62,7 @@ async function SetUserTOS(id, value) {
 }
 
 async function GetUserTOS(id) {
-	if (process.env.ENVIORMENT === "DEV") return true;
+	if (process.env.ENVIORNMENT === "DEV") return true;
 
 	if (userCache.has(id)) return userCache.get(id);
 

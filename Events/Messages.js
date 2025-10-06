@@ -299,11 +299,15 @@ async function Flush(chanelID = null) {
 	const savedCache = InsertCache;
 	InsertCache = CreateCache();
 
+	const startTime = process.hrtime.bigint();
+
 	RemoveUnchangedEntities(savedCache.guilds  , GUILD_CACHE   );
 	RemoveUnchangedEntities(savedCache.channels, CHANNEL_CACHE );
 	RemoveUnchangedEntities(savedCache.users   , USER_CACHE    );
 	RemoveUnchangedEntities(savedCache.stickers, STICKER_CACHE );
 	RemoveUnchangedEntities(savedCache.emojis  , EMOJI_CACHE   );
+
+	const filterTime = process.hrtime.bigint();
 
 	const guildInserts		= TransformForInsert(TABLE_COLUMNS.GUILDS     , savedCache.guilds      );
 	const channelInserts	= TransformForInsert(TABLE_COLUMNS.CHANNELS   , savedCache.channels    );
@@ -313,10 +317,13 @@ async function Flush(chanelID = null) {
 	const messageInserts	= TransformForInsert(TABLE_COLUMNS.MESSAGES   , savedCache.messages    );
 	const attachmentInserts = TransformForInsert(TABLE_COLUMNS.ATTACHMENTS, savedCache.attachments );
 
+	const transformTime = process.hrtime.bigint();
+
 	const connection = await Database.getConnection();
 
 	// embeds and their fields are a bit more complicated
 	let nextEmbedID = await connection.query('SELECT MAX(id) + 1 as id FROM Embeds').then(res => res[0]?.id ?? 1);
+
 	const embedInserts = [];
 	const embedFieldInserts = [];
 	for (const embed of savedCache.embeds) {
@@ -392,6 +399,8 @@ async function Flush(chanelID = null) {
 		Database.releaseConnection(connection);
 	}
 
+	const insertEndTime = process.hrtime.bigint();
+
 	failures = failures.filter(Boolean);
 	if (failures.length > 0) {
 		console.log(failures);
@@ -403,8 +412,43 @@ async function Flush(chanelID = null) {
 		await fs.promises.writeFile(filename, contents);
 	}
 
+	const failureTime = process.hrtime.bigint();
+
 	for (const asset of savedCache.downloadQueue.values()) {
 		AddDownloadToQueue(asset);
+	}
+
+	if (process.env.ENVIORNMENT === "DEV") {
+
+		const DECIMAL_PLACES = 3;
+
+		const filterDuration    = Number(filterTime    - startTime       ) / 1_000_000;
+		const transformDuration = Number(transformTime - filterTime      ) / 1_000_000;
+		const insertDuration    = Number(insertEndTime - insertStartTime ) / 1_000_000;
+		const failureDuration   = Number(failureTime   - insertEndTime   ) / 1_000_000;
+		const totalDuration     = Number(failureTime   - startTime       ) / 1_000_000;
+
+		console.log(`Message Flush Report:`);
+		console.log(`  Messages : ${savedCache.messages.length}`); // messages will always be present
+		if (guildInserts.length      > 0) console.log(`  Guilds   : ${guildInserts.length}`);
+		if (channelInserts.length    > 0) console.log(`  Channels : ${channelInserts.length}`);
+		if (userInserts.length       > 0) console.log(`  Users    : ${userInserts.length}`);
+		if (stickerInserts.length    > 0) console.log(`  Stickers : ${stickerInserts.length}`);
+		if (emojiInserts.length      > 0) console.log(`  Emojis   : ${emojiInserts.length}`);
+		if (attachmentInserts.length > 0) console.log(`  Files    : ${attachmentInserts.length}`);
+		if (embedInserts.length      > 0) console.log(`  Embeds   : ${embedInserts.length}`);
+		if (embedFieldInserts.length > 0) console.log(`  Fields   : ${embedFieldInserts.length}`);
+
+		console.log('='.repeat(35));
+		console.log(`  Filter Time    : ${filterDuration.toFixed(DECIMAL_PLACES)} ms`);
+		console.log(`  Transform Time : ${transformDuration.toFixed(DECIMAL_PLACES)} ms`);
+		console.log(`  Insert Time    : ${insertDuration.toFixed(DECIMAL_PLACES)} ms`);
+		if (failures.length > 0) console.log(`  Failure Time   : ${failureDuration.toFixed(DECIMAL_PLACES)} ms`);
+		console.log('='.repeat(35));
+		console.log(`  Query Count    : ${queryCount}`);
+		console.log(`  Total Time     : ${totalDuration.toFixed(DECIMAL_PLACES)} ms`);
+		console.log(`  Average Speed  : ${(savedCache.messages.length / totalDuration * 1_000).toFixed(2)} msgs/sec`);
+		console.log('='.repeat(35));
 	}
 
 	// kick off the download process if not already running

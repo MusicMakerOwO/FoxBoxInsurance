@@ -144,37 +144,36 @@ async function DownloadAssets() {
 			console.log(`Setting default avatar for ${asset.id} : ${asset.url}`);
 		}
 
-		promiseQueue.push( ( async () => {
-			try {
-				connection.query(`
-					INSERT INTO Assets (type, discord_id, discord_url, name, extension, width, height, size)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		promiseQueue.push(
+			connection.query(`
+				INSERT INTO Assets (type, discord_id, discord_url, name, extension, width, height, size)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 
-					-- Already exists, update in place, no need for a delete
-					ON DUPLICATE KEY UPDATE
-						type        = VALUES(type),
-						discord_id  = VALUES(discord_id),
-						discord_url = VALUES(discord_url),
-						name        = VALUES(name),
-						extension   = VALUES(extension),
-						width       = VALUES(width),
-						height      = VALUES(height),
-						size        = VALUES(size)
-				`, [
-					asset.type,
-					asset.id,
-					asset.url,
-					Clean(asset.name),
-					extension,
-					asset.width,
-					asset.height,
-					buffer.length
-				])
-			} catch (err) {
-				Log.error(`Failed to insert asset into database: ${err.message}`);
+				-- Already exists, update in place, no need for a delete
+				ON DUPLICATE KEY UPDATE
+					type        = VALUES(type),
+					discord_id  = VALUES(discord_id),
+					discord_url = VALUES(discord_url),
+					name        = VALUES(name),
+					extension   = VALUES(extension),
+					width       = VALUES(width),
+					height      = VALUES(height),
+					size        = VALUES(size)
+			`, [
+				asset.type,
+				asset.id,
+				asset.url,
+				Clean(asset.name),
+				extension,
+				asset.width,
+				asset.height,
+				buffer.length
+			]).catch((err) => {
+				Log.error(err);
 				Log.error(asset);
-			}
-		})());
+				failedDownloads.push(asset);
+			})
+		)
 	}
 
 	await Promise.all(promiseQueue);

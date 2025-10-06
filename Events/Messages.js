@@ -7,7 +7,8 @@ const Log = require('../Utils/Logs');
 const Database = require('../Utils/Database');
 const LRUCache = require('../Utils/Caching/LRUCache');
 
-const MAX_CACHE_SIZE = 100;
+const MAX_CACHE_SIZE = 1000;
+const FLUSH_INTERVAL = 30_000;
 
 const GUILD_CACHE   = new LRUCache(2000); // max 2,000 guilds per shard
 const CHANNEL_CACHE = new LRUCache(10_000); // the rest of these values I chose completely at random lol
@@ -284,11 +285,11 @@ function RemoveUnchangedEntities(cache, lru) {
 	}
 }
 
-let timeout = setTimeout(Flush, 30_000);
+let timeout = setTimeout(Flush, FLUSH_INTERVAL);
 async function Flush(chanelID = null) {
 	// reset timeout
 	clearTimeout(timeout);
-	timeout = setTimeout(Flush, 30_000);
+	timeout = setTimeout(Flush, FLUSH_INTERVAL);
 
 	if (InsertCache.messages.length === 0) return; // nothing to do
 

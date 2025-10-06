@@ -403,7 +403,6 @@ async function Flush(chanelID = null) {
 
 	failures = failures.filter(Boolean);
 	if (failures.length > 0) {
-		console.log(failures);
 		const totalRowsFailed = failures.reduce((sum, f) => sum + f.length, 0);
 		Log.error(`Failed to insert ${totalRowsFailed} rows into the database, saving to disk for later analysis`);
 		const timestamp = Log.getTimestamp().replace(/[:\s]/g, '-');

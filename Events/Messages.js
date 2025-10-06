@@ -361,20 +361,29 @@ async function Flush(chanelID = null) {
 	}
 
 	let failures = []; // { query: string, values: any[][] }[]
+	let queryCount = 0;
 
 	await connection.beginTransaction();
 
+	const AttemptInsert = async function (connection, query, inserts) {
+		const [queries, failedValues] = await SafeBulkInsert(connection, query, inserts);
+		queryCount += queries;
+		if (failedValues.length > 0) failures.push({ query, values: failedValues });
+	}
+
+	const insertStartTime = process.hrtime.bigint();
+
 	try {
-		if (guildInserts.length      > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.GUILDS      , guildInserts      ));
-		if (channelInserts.length    > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.CHANNELS    , channelInserts    ));
-		if (userInserts.length       > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.USERS       , userInserts       ));
-		if (stickerInserts.length    > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.STICKERS    , stickerInserts    ));
-		if (emojiInserts.length      > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.EMOJIS      , emojiInserts      ));
-		if (messageInserts.length    > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.MESSAGES    , messageInserts    ));
-		if (emojiCountInserts.length > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.EMOJI_COUNTS, emojiCountInserts ));
-		if (attachmentInserts.length > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.ATTACHMENTS , attachmentInserts ));
-		if (embedInserts.length      > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.EMBEDS      , embedInserts      ));
-		if (embedFieldInserts.length > 0) failures.push( await AttemptInsert(connection, TABLE_QUERIES.EMBED_FIELDS, embedFieldInserts ));
+		if (guildInserts.length      > 0) await AttemptInsert(connection, TABLE_QUERIES.GUILDS      , guildInserts      );
+		if (channelInserts.length    > 0) await AttemptInsert(connection, TABLE_QUERIES.CHANNELS    , channelInserts    );
+		if (userInserts.length       > 0) await AttemptInsert(connection, TABLE_QUERIES.USERS       , userInserts       );
+		if (stickerInserts.length    > 0) await AttemptInsert(connection, TABLE_QUERIES.STICKERS    , stickerInserts    );
+		if (emojiInserts.length      > 0) await AttemptInsert(connection, TABLE_QUERIES.EMOJIS      , emojiInserts      );
+		if (messageInserts.length    > 0) await AttemptInsert(connection, TABLE_QUERIES.MESSAGES    , messageInserts    );
+		if (emojiCountInserts.length > 0) await AttemptInsert(connection, TABLE_QUERIES.EMOJI_COUNTS, emojiCountInserts );
+		if (attachmentInserts.length > 0) await AttemptInsert(connection, TABLE_QUERIES.ATTACHMENTS , attachmentInserts );
+		if (embedInserts.length      > 0) await AttemptInsert(connection, TABLE_QUERIES.EMBEDS      , embedInserts      );
+		if (embedFieldInserts.length > 0) await AttemptInsert(connection, TABLE_QUERIES.EMBED_FIELDS, embedFieldInserts );
 		await connection.commit();
 	} catch (err) {
 		await connection.rollback();
@@ -402,20 +411,15 @@ async function Flush(chanelID = null) {
 	setImmediate(DownloadAssets);
 }
 
-async function AttemptInsert(connection, query, inserts) {
-	const failed = await SafeBulkInsert(connection, query, inserts);
-	return failed.length > 0 ? { query, values: failed } : null;
-}
-
 async function SafeBulkInsert(connection, query, values = [], depth = 0) {
-	if (values.length === 0) return [];
+	if (values.length === 0) return [0, []];
 	if (depth > 10) { // 2^10 = 1024, limit is only 100 so should never reach this point
 		Log.error( new Error('Maximum recursion depth, aborting!') );
-		return values;
+		return [0, values];
 	}
 	try {
 		await connection.batch(query, values); // any[][]
-		return [];
+		return [1, []];
 	} catch (err) {
 
 		if (values.length === 1) {
@@ -423,7 +427,7 @@ async function SafeBulkInsert(connection, query, values = [], depth = 0) {
 			console.log(values);
 			Log.error(err);
 			// found the poison row!
-			return values;
+			return [1, values];
 		}
 
 		// split and retry
@@ -434,7 +438,7 @@ async function SafeBulkInsert(connection, query, values = [], depth = 0) {
 		const failedFirst = await SafeBulkInsert(connection, query, firstHalf, depth + 1);
 		const failedSecond = await SafeBulkInsert(connection, query, secondHalf, depth + 1);
 
-		return failedFirst.concat(failedSecond);
+		return [ failedFirst[0] + failedSecond[0], [ ...failedFirst[1], ...failedSecond[1] ] ];
 	}
 }
 

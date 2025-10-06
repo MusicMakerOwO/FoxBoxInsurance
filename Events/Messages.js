@@ -9,26 +9,29 @@ const LRUCache = require('../Utils/Caching/LRUCache');
 
 const MAX_CACHE_SIZE = 100;
 
-const GUILD_CACHE = new LRUCache(2000); // max 2,000 guilds per shard
+const GUILD_CACHE   = new LRUCache(2000); // max 2,000 guilds per shard
 const CHANNEL_CACHE = new LRUCache(10_000); // the rest of these values I chose completely at random lol
-const USER_CACHE = new LRUCache(50_000);
+const USER_CACHE    = new LRUCache(50_000);
 const STICKER_CACHE = new LRUCache(5_000);
-const EMOJI_CACHE = new LRUCache(5_000);
+const EMOJI_CACHE   = new LRUCache(5_000);
 
 const TABLE_COLUMNS = {
-	GUILDS: ['id', 'name'],
-	CHANNELS: ['id', 'guild_id', 'name', 'type'],
-	USERS: ['id', 'username', 'bot'],
+	// globals
+	GUILDS       : ['id', 'name'],
+	CHANNELS     : ['id', 'guild_id', 'name', 'type'],
+	USERS        : ['id', 'username', 'bot'],
 
-	STICKERS: ['id', 'name'],
-	EMOJIS: ['id', 'name', 'animated'],
+	// only certain messages
+	STICKERS     : ['id', 'name'],
+	EMOJIS       : ['id', 'name', 'animated'],
+	EMOJI_COUNTS : ['message_id', 'emoji_id', 'count'], // message metadata
 
-	MESSAGES: ['id', 'guild_id', 'channel_id', 'user_id', 'content', 'reply_to', 'sticker_id'],
-	EMOJI_COUNTS: ['message_id', 'emoji_id', 'count'],
+	MESSAGES     : ['id', 'guild_id', 'channel_id', 'user_id', 'content', 'reply_to', 'sticker_id'],
 
-	ATTACHMENTS: ['id', 'message_id', 'name'],
-	EMBEDS: ['message_id', 'title', 'description', 'url', 'timestamp', 'color', 'footer_text', 'footer_icon', 'thumbnail_url', 'image_url', 'author_name', 'author_url', 'author_icon'],
-	EMBED_FIELDS: ['embed_id', 'name', 'value', 'inline']
+	// optional metadata for messages
+	ATTACHMENTS  : ['id', 'message_id', 'name'],
+	EMBEDS       : ['message_id', 'title', 'description', 'url', 'timestamp', 'color', 'footer_text', 'footer_icon', 'thumbnail_url', 'image_url', 'author_name', 'author_url', 'author_icon'],
+	EMBED_FIELDS : ['embed_id', 'name', 'value', 'inline']
 }
 
 // yeah, I know this is a pain to read, but I don't know how else to do this :sob:

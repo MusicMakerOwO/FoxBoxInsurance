@@ -3,7 +3,7 @@ const Log  = require('../../Utils/Logs');
 
 module.exports = {
 	op_code: WebSocketOpCodes.ERR_INVALID_AUTH,
-	handler: async function (message) {
+	handler: async function (data) {
 		Log.error('[WEBSOCKET] Invalid auth token in ENV file');
 	}
 }

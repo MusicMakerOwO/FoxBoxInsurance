@@ -3,7 +3,7 @@ const Log  = require('../../Utils/Logs');
 
 module.exports = {
 	op_code: WebSocketOpCodes.ERR_UNKNOWN_OP_CODE,
-	handler: async function (message) {
-		Log.error(`[WEBSOCKET] Unknown Op Code`);
+	handler: async function (data) {
+		Log.error(`[WEBSOCKET] ${data.message}`);
 	}
 }

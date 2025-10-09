@@ -299,9 +299,9 @@ function ExportCSV(Context) {
 
 		const line = [
 			message.created_at,
-			'"' + user.id.toString + '"',
-			'"' + (message.content ?? '').replace(/\n/g, '\\n') + '"',
-			'"' + sticker?.name ?? '' + '"',
+			'"' + user.id.toString() + '"',
+			message.content === null ? '""' : '"' + message.content.replace(/\n/g, '\\n') + '"',
+			sticker ? '"' + sticker.name + '"' : '""',
 			attachments?.length ?? 0
 		].join(',');
 

@@ -42,7 +42,7 @@ module.exports = {
 		const exportID = interaction.options.getString('export_id');
 		const file = interaction.options.getAttachment('file');
 
-		await interaction.deferReply({ ephemeral: true }).catch(() => {});
+		await interaction.deferReply({ flags: 64 }).catch(() => {});
 
 		const [{ hash: storedHash }] = await Database.query(`SELECT hash FROM Exports WHERE id = ?`, [exportID]);
 		if (!storedHash) {

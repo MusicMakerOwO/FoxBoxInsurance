@@ -37,7 +37,7 @@ module.exports = {
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.reply({
 				embeds: [PermissionsEmbed],
-				ephemeral: true
+				flags: 64
 			});
 		}
 
@@ -53,7 +53,7 @@ module.exports = {
 
 		interaction.reply({
 			embeds: [Embed],
-			ephemeral: true
+			flags: 64
 		});
 	}
 }

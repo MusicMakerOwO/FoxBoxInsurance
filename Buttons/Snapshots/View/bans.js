@@ -33,7 +33,7 @@ module.exports = {
 		const page = parseInt(args[1]) || 0;
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!banCache.has(snapshotID)) {
 			const snapshotData = await FetchSnapshot(snapshotID);

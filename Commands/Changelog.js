@@ -206,7 +206,7 @@ module.exports = {
 			console.error(`Changelog for version "${input}" not found`);
 			return interaction.reply({
 				content: `No changelog found for version \`${input}\``,
-				ephemeral: true
+				flags: 64
 			});
 		}
 

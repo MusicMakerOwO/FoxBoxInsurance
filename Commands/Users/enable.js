@@ -26,7 +26,7 @@ module.exports = {
 		),
 	execute: async function(interaction, client) {
 
-		await interaction.deferReply({ ephemeral: true }).catch(() => {});
+		await interaction.deferReply({ flags: 64 }).catch(() => {});
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({ embeds: [NoPermissionsEmbed] });
 		}

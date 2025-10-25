@@ -112,7 +112,7 @@ module.exports = {
 	execute: async function(interaction, client, args) {
 
 		if (interaction.user.id !== interaction.guild.ownerId) {
-			return interaction.reply({ embeds: [ownerEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [ownerEmbed], flags: 64 });
 		}
 
 		const restoreOptions = client.ttlcache.get(`restore-options-${interaction.guild.id}`);
@@ -124,7 +124,7 @@ module.exports = {
 
 		let snapshotID = args[0];
 
-		await interaction.deferUpdate({ ephemeral: true });
+		await interaction.deferUpdate({ flags: 64 });
 
 		await interaction.editReply({
 			embeds: [ LoadingEmbed(snapshotID, 0) ],

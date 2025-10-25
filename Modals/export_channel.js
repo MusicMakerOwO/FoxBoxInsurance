@@ -64,7 +64,7 @@ module.exports = {
 				if (channel) {
 					targetID = channel.id;
 				} else {
-					return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
+					return interaction.reply({ embeds: [UnknownChannelEmbed], flags: 64 });
 				}
 			}
 		} else {
@@ -104,7 +104,7 @@ module.exports = {
 			if (input in channelList) {
 				// if multiple IDs are found, require the user to specify one
 				if (channelList[input].length > 1) {
-					return interaction.reply({ embeds: [MultipleChannelEmbed], ephemeral: true });
+					return interaction.reply({ embeds: [MultipleChannelEmbed], flags: 64 });
 				} else {
 					targetID = channelList[input][0];
 				}
@@ -115,7 +115,7 @@ module.exports = {
 
 				const selection = channelList.get(match); // id[]
 				if (selection.length > 1) {
-					return interaction.reply({ embeds: [MultipleChannelEmbed], ephemeral: true });
+					return interaction.reply({ embeds: [MultipleChannelEmbed], flags: 64 });
 				} else {
 					targetID = selection[0];
 				}
@@ -130,19 +130,19 @@ module.exports = {
 			!interaction.member.permissions.has('Administrator') &&
 			!(targetChannel?.permissionsFor(interaction.member).has('ViewChannel'))
 		) {
-			return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [UnknownChannelEmbed], flags: 64 });
 		}
 
 		const channelData = targetChannel ?? (await Database.query('SELECT type FROM Channels WHERE id = ?', [targetID]))[0];
 		if (!channelData) {
-			return interaction.reply({ embeds: [UnknownChannelEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [UnknownChannelEmbed], flags: 64 });
 		}
 		if (!ALLOWED_CHANNEL_TYPES.includes(channelData.type)) {
-			return interaction.reply({ embeds: [IncompatibleChannelEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [IncompatibleChannelEmbed], flags: 64 });
 		}
 
 		if ( ! await UserCanExport(interaction.member, targetID)) {
-			return interaction.reply({ embeds: [NoExport], ephemeral: true });
+			return interaction.reply({ embeds: [NoExport], flags: 64 });
 		}
 
 		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetID])

@@ -22,7 +22,7 @@ module.exports = {
 		if (interaction.user.id !== interaction.guild.ownerId) {
 			return interaction.reply({
 				embeds: [NotOwnerEmbed],
-				ephemeral: true
+				flags: 64
 			});
 		}
 

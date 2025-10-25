@@ -108,7 +108,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 	if (!component) {
 		interaction.reply({
 			content: `There was an error while executing this command!\n\`\`\`Command not found\`\`\``,
-			ephemeral: true
+			flags: 64
 		});
 		client.logs.error(`${type} not found: ${name}`);
 		return;
@@ -119,7 +119,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 			await component.execute(interaction, client, type === 'commands' ? undefined : args);
 		} catch (error) {
 			client.logs.error(error);
-			await interaction.deferReply({ ephemeral: true }).catch(() => {});
+			await interaction.deferReply({ flags: 64 }).catch(() => {});
 			interaction.editReply({
 				content: `There was an error while executing this command!\n\`\`\`${error}\`\`\``,
 				embeds: [],
@@ -152,22 +152,22 @@ async function InteractionHandler(client, interaction, type, cache) {
 				await SetGuildTOS(interaction.guildId, true);
 			} else {
 				// warn user that the server owner has not accepted TOS
-				return interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], ephemeral: true });
+				return interaction.reply({ embeds: [GUILD_TOS_Embed], components: [], flags: 64 });
 			}
 		} else {
 			// Owner must accept TOS
-			return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
+			return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], flags: 64 });
 		}
 	}
 
 	if (!userAccepted && component.bypass !== true) {
 		// Force users to accept TOS
-		return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], ephemeral: true });
+		return interaction.reply({ embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS], flags: 64 });
 	}
 
 
 	if ('defer' in component && component.defer !== null) {
-		await interaction.deferReply({ ephemeral: component.defer });
+		await interaction.deferReply({ flags: component.defer ? 64 : 0 });
 	}
 
 	try {
@@ -196,7 +196,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 			}
 		}
 	} catch (error) {
-		await interaction.deferReply({ ephemeral: true }).catch(() => {});
+		await interaction.deferReply({ flags: 64 }).catch(() => {});
 		const payload = {
 			content: '',
 			embeds: [],
@@ -231,7 +231,7 @@ async function InteractionHandler(client, interaction, type, cache) {
 	} catch (error) {
 		client.logs.error(error);
 
-		await interaction.deferReply({ ephemeral: true }).catch(() => {});
+		await interaction.deferReply({ flags: 64 }).catch(() => {});
 
 		if (!FANCY_ERRORS) {
 			interaction.editReply({

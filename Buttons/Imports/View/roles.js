@@ -26,7 +26,7 @@ module.exports = {
 		const page = parseInt(args[2]) || 0;
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({
@@ -48,7 +48,7 @@ module.exports = {
 
 			roleCache.set(importID, sorted);
 		}
-		
+
 		const roles = roleCache.get(importID);
 
 		const embed = {
@@ -67,7 +67,7 @@ module.exports = {
 			if (selectedRoles.length === 0) {
 				embed.description = 'No more roles to display on this page.';
 			} else {
-				embed.description = selectedRoles.map(role => 
+				embed.description = selectedRoles.map(role =>
 					`${role.managed ? EMOJI.BOT : ''} @${RemoveFormatting(role.name)}`
 				).join('\n');
 			}

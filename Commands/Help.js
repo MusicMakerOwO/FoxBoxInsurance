@@ -92,7 +92,7 @@ module.exports = {
 
 			return interaction.reply({
 				embeds: [embed],
-				ephemeral: true,
+				flags: 64
 			});
 		}
 
@@ -127,7 +127,7 @@ module.exports = {
 		interaction.reply({
 			embeds: [embed],
 			components: [dropdown],
-			ephemeral: true,
+			flags: 64
 		});
 	}
 }

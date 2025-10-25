@@ -25,7 +25,7 @@ module.exports = {
 		const page = parseInt(args[2]) || 0;
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({
@@ -49,7 +49,7 @@ module.exports = {
 
 			channelCache.set(importID, sorted);
 		}
-		
+
 		const channels = channelCache.get(importID);
 
 		const embed = {
@@ -68,7 +68,7 @@ module.exports = {
 			if (selectedChannels.length === 0) {
 				embed.description = 'No more channels to display on this page.';
 			} else {
-				embed.description = selectedChannels.map(channel => 
+				embed.description = selectedChannels.map(channel =>
 					'#' + RemoveFormatting(channel.name)
 				).join('\n');
 			}

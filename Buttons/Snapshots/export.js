@@ -33,7 +33,7 @@ module.exports = {
 		const snapshotID = parseInt(args[0]);
 		if (isNaN(snapshotID) || snapshotID < 1) throw new Error(`Invalid snapshot ID provided: ${args[0]}`);
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		await interaction.editReply({
 			embeds: [ RandomLoadingEmbed() ],

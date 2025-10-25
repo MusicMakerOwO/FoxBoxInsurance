@@ -10,7 +10,7 @@ module.exports = async function GetExportCache(client, interaction) {
 	const exportOptions = client.ttlcache.get(cacheKey);
 	if (!exportOptions) {
 		if (!interaction.deferred && !interaction.replied) {
-			await interaction.deferUpdate({ ephemeral: true });
+			await interaction.deferUpdate({ flags: 64 });
 		}
 		await interaction.editReply({ embeds: [NoDataEmbed], components: [], files: [] });
 		setTimeout(async () => {

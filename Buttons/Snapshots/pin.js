@@ -56,7 +56,7 @@ module.exports = {
 		}
 		const confirm = args[1] === 'confirm';
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({
@@ -77,7 +77,7 @@ module.exports = {
 			if (pinnedCount >= maxSnapshots) {
 				return interaction.reply({
 					embeds: [NoMorePinsEmbed],
-					ephemeral: true
+					flags: 64
 				});
 			}
 

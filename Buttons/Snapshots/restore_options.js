@@ -130,7 +130,7 @@ ${title}
 		return interaction.update({
 			embeds: [embed],
 			components: [dropdown, ContinueButtons],
-			ephemeral: true
+			flags: 64
 		});
 	}
 }

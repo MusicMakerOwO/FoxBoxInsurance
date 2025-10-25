@@ -27,7 +27,7 @@ module.exports = {
 			throw new Error('Invalid page number provided.');
 		}
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({

@@ -16,11 +16,11 @@ module.exports = {
 		if (count === 0) {
 			return interaction.reply({
 				embeds: [NoExportsEmbed],
-				ephemeral: true
+				flags: 64
 			});
 		}
 
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		const history = client.buttons.get('history');
 		return history.execute(interaction, client, ['0']);

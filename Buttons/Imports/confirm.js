@@ -17,7 +17,7 @@ module.exports = {
 	execute: async function(interaction, client, args) {
 		const importID = args[0];
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({

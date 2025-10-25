@@ -9,7 +9,7 @@ const NoExportEmbed = {
 module.exports = {
 	customID: 'exportInfo',
 	execute: async function(interaction, client, args) {
-		await interaction.deferReply({ ephemeral: true }).catch(() => {});
+		await interaction.deferReply({ flags: 64 }).catch(() => {});
 
 		const connection = await Database.getConnection();
 

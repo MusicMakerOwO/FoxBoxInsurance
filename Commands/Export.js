@@ -36,7 +36,7 @@ module.exports = {
 		.setName('export')
 		.setDescription('Export messages from the channel'),
 	execute: async function(interaction, client) {
-		await interaction.reply({ embeds: [RandomLoadingEmbed()], ephemeral: true });
+		await interaction.reply({ embeds: [RandomLoadingEmbed()], flags: 64 });
 		await new Promise(r => setTimeout(r, 2000));
 
 		if ( ! await UserCanExport(interaction.member, interaction.channel.id)) {

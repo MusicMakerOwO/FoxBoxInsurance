@@ -13,7 +13,7 @@ module.exports = {
 		if (input !== interaction.guild.name) {
 			return interaction.reply({
 				embeds: [WrongInputEmbed],
-				ephemeral: true
+				flags: 64
 			});
 		}
 

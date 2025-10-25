@@ -123,13 +123,13 @@ module.exports = {
 		),
 	execute: async function(interaction, client) {
 		if (!interaction.member.permissions.has('Administrator')) {
-			return interaction.reply({ embeds: [noPermissionEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [noPermissionEmbed], flags: 64 });
 		}
 
 		const subcommand = interaction.options.getSubcommand();
 		if (subcommand === 'disable' || subcommand === 'enable') {
 			if (interaction.user.id !== interaction.guild.ownerId) {
-				return interaction.reply({ embeds: [ownerEmbed], ephemeral: true });
+				return interaction.reply({ embeds: [ownerEmbed], flags: 64 });
 			}
 
 			const enabled = subcommand === 'enable' ? 1 : 0;
@@ -143,12 +143,12 @@ module.exports = {
 				description: `${emoji} Automatic snapshots have been ${enabled ? 'enabled' : 'disabled'}.`,
 			}
 
-			return interaction.reply({ embeds: [embed], ephemeral: true });
+			return interaction.reply({ embeds: [embed], flags: 64 });
 		}
 
 		const [{ snapshots_enabled: enabled }] = await Database.query('SELECT snapshots_enabled FROM Guilds WHERE id = ?', [interaction.guild.id]);
 		if (!enabled) {
-			return interaction.reply({ embeds: [disabledEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [disabledEmbed], flags: 64 });
 		}
 
 		if (subcommand === 'list' || subcommand === 'manage' || subcommand === 'restore') {
@@ -167,7 +167,7 @@ module.exports = {
 							emoji: '⚠️'
 						}]
 					}],
-					ephemeral: true
+					flags: 64
 				});
 			}
 
@@ -179,11 +179,11 @@ module.exports = {
 			if (isGuildRestoring(interaction.guild.id)) {
 				return interaction.reply({
 					embeds: [ RestoreInProgressEmbed ],
-					ephemeral: true
+					flags: 64
 				});
 			}
 
-			await interaction.reply({ embeds: [ RandomLoadingEmbed() ], ephemeral: true });
+			await interaction.reply({ embeds: [ RandomLoadingEmbed() ], flags: 64 });
 
 			const start = process.hrtime.bigint();
 			const snapshotID = await CreateSnapshot(interaction.guild, SNAPSHOT_TYPE.MANUAL);
@@ -196,7 +196,7 @@ module.exports = {
 		}
 
 		if (subcommand === 'import') {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const attachment = interaction.options.getAttachment('file');
 			if (!attachment || !attachment.name.endsWith('.json')) {

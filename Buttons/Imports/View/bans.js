@@ -30,7 +30,7 @@ module.exports = {
 		const page = parseInt(args[2]) || 0;
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({
@@ -54,7 +54,7 @@ module.exports = {
 
 			banCache.set(importID, sorted);
 		}
-		
+
 		const bans = banCache.get(importID);
 
 		const embed = {
@@ -73,7 +73,7 @@ module.exports = {
 			if (selectedBans.length === 0) {
 				embed.description = 'No more bans to display on this page.';
 			} else {
-				embed.description = selectedBans.map(ban => 
+				embed.description = selectedBans.map(ban =>
 					`<@${ban.user_id}> (${ban.user_id}) - ${ShortText(ban.reason || 'No reason provided', 50)}`
 				).join('\n');
 			}

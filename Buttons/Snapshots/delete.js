@@ -25,10 +25,10 @@ module.exports = {
 	customID: 'snapshot-delete',
 	execute: async function (interaction, client, args) {
 		if (interaction.guild.ownerId !== interaction.user.id) {
-			return interaction.reply({ embeds: [ownerEmbed], ephemeral: true });
+			return interaction.reply({ embeds: [ownerEmbed], flags: 64 });
 		}
 
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		const snapshotID = parseInt(args[0]);
 		const confirm = args[1] === 'confirm';

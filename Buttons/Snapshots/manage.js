@@ -53,7 +53,7 @@ async function ResolveSnapshot(client, guildID, id) {
 module.exports = {
 	customID: 'snapshot-manage',
 	execute: async function(interaction, client, args) {
-		await interaction.deferUpdate({ ephemeral: true }).catch(() => { });
+		await interaction.deferUpdate({ flags: 64 }).catch(() => { });
 
 		if (!interaction.member.permissions.has('Administrator')) {
 			return interaction.editReply({

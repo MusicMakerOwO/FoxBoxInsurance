@@ -4,16 +4,14 @@ const modal = {
 	title: 'Export Channel',
 	custom_id: 'export-channel',
 	components: [{
-		type: 1,
-		components: [{
-			type: 4,
+		type: 18,
+		label: 'Select the channel to export from',
+		component: {
+			type: 8,
 			custom_id: 'data',
-			label: 'Channel name or ID',
-			style: 1,
-			min_length: 1,
-			max_length: 100,
+			max_vales: 1,
 			required: true
-		}]
+		}
 	}]
 }
 

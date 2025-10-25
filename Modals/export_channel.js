@@ -48,106 +48,26 @@ module.exports = {
 		const exportOptions = await GetExportCache(client, interaction);
 		if (!exportOptions) return;
 
-		const input = interaction.fields.getTextInputValue('data');
-
-		let targetID = '';
-
-		const isID = REGEX_ID.test(input);
-		if (isID) {
-			// check the id exists in the database
-			const [channel] = await Database.query('SELECT id FROM Channels WHERE id = ? AND guild_id = ?', [input, interaction.guild.id]);
-			if (channel) {
-				targetID = channel.id;
-			} else {
-				// check if the channel exists in the guild
-				const channel = interaction.guild.channels.cache.get(input) ?? await Database.query('SELECT id FROM channels WHERE id = ?', [input]).then(res => res[0]);
-				if (channel) {
-					targetID = channel.id;
-				} else {
-					return interaction.reply({ embeds: [UnknownChannelEmbed], flags: 64 });
-				}
-			}
-		} else {
-			if (!channelCache.has(interaction.guild.id)) {
-				// { id, name }[]
-				const dbChannels = await Database.query('SELECT id, name FROM Channels WHERE guild_id = ?', [interaction.guild.id]);
-				// [ id, name ][]
-				const guildChannels = interaction.guild.channels.cache.map(c => [c.id, c.name]);
-
-				const channelList = new Map(); // channelName -> channelID[] in case there are duplicate names
-				for (const {id, name} of dbChannels) {
-					if (channelList.has(name)) {
-						channelList.get(name).add(id);
-					} else {
-						channelList.set(name, new Set([id]));
-					}
-				}
-
-				for (const [id, name] of guildChannels) {
-					if (channelList.has(name)) {
-						channelList.get(name).add(id);
-					} else {
-						channelList.set(name, new Set([id]));
-					}
-				}
-
-				// convert to array
-				for (const [name, ids] of channelList) {
-					channelList.set(name, Array.from(ids));
-				}
-
-				channelCache.set(interaction.guild.id, channelList, SECONDS.HOUR * 1000); // cache for 1 hour
-			}
-
-			const channelList = channelCache.get(interaction.guild.id);
-
-			if (input in channelList) {
-				// if multiple IDs are found, require the user to specify one
-				if (channelList[input].length > 1) {
-					return interaction.reply({ embeds: [MultipleChannelEmbed], flags: 64 });
-				} else {
-					targetID = channelList[input][0];
-				}
-			} else {
-				// fuzzy search for closet channel name
-				const match = ClosestMatch(input, Array.from( channelList.keys() )); // channel name
-				if (!match) throw new Error('Match not found');
-
-				const selection = channelList.get(match); // id[]
-				if (selection.length > 1) {
-					return interaction.reply({ embeds: [MultipleChannelEmbed], flags: 64 });
-				} else {
-					targetID = selection[0];
-				}
-			}
-		}
-
-		console.log(`Target ID: ${targetID}`);
-
-		const targetChannel = interaction.guild.channels.cache.get(targetID);
+		const targetChannel = interaction.fields.getSelectedChannels('data').first();
 
 		if (
 			!interaction.member.permissions.has('Administrator') &&
-			!(targetChannel?.permissionsFor(interaction.member).has('ViewChannel'))
+			!targetChannel.permissionsFor(interaction.member).has('ViewChannel')
 		) {
 			return interaction.reply({ embeds: [UnknownChannelEmbed], flags: 64 });
 		}
 
-		const channelData = targetChannel ?? (await Database.query('SELECT type FROM Channels WHERE id = ?', [targetID]))[0];
-		if (!channelData) {
-			return interaction.reply({ embeds: [UnknownChannelEmbed], flags: 64 });
-		}
-		if (!ALLOWED_CHANNEL_TYPES.includes(channelData.type)) {
+		if (!ALLOWED_CHANNEL_TYPES.includes(targetChannel.type)) {
 			return interaction.reply({ embeds: [IncompatibleChannelEmbed], flags: 64 });
 		}
 
-		if ( ! await UserCanExport(interaction.member, targetID)) {
+		if ( ! await UserCanExport(interaction.member, targetChannel.id)) {
 			return interaction.reply({ embeds: [NoExport], flags: 64 });
 		}
 
-		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetID])
+		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetChannel.id])
 
-		exportOptions.channelID = targetID;
+		exportOptions.channelID = targetChannel.id;
 		exportOptions.messageCount = Math.min(channelMessageCount, 100);
 		exportOptions.lastMessageID = String( (BigInt(Date.now() - 1420070400000) << 22n) | BigInt(0b1_1111_11111111_11111111) );
 

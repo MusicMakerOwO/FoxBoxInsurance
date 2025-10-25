@@ -65,10 +65,10 @@ module.exports = {
 			return interaction.reply({ embeds: [NoExport], flags: 64 });
 		}
 
-		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetChannel.id])
+		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetChannel.id]);
 
 		exportOptions.channelID = targetChannel.id;
-		exportOptions.messageCount = Math.min(channelMessageCount, 100);
+		exportOptions.messageCount = Math.min(Number(channelMessageCount), 100);
 		exportOptions.lastMessageID = String( (BigInt(Date.now() - 1420070400000) << 22n) | BigInt(0b1_1111_11111111_11111111) );
 
 		client.ttlcache.set(

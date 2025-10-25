@@ -34,10 +34,10 @@ module.exports = {
 
 		const connection = await Database.getConnection();
 
-		const [{ "COUNT(*)": guilds }] = await connection.query(`SELECT COUNT(*) FROM Guilds`);
+		const guilds = await connection.query(`SELECT COUNT(*) as count FROM Guilds`).then(res => res[0].count);
 		const channels = Array.from( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.channels.cache.size, 0);
 		const users = Array.from( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.memberCount, 0);
-		const [{ "COUNT(*)": messages }] = await connection.query(`SELECT COUNT(*) FROM Messages`);
+		const messages = await connection.query(`SELECT COUNT(*) as count FROM Messages`).then(res => res[0].count);
 
 		const embed = {
 			color: COLOR.PRIMARY,

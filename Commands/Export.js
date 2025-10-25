@@ -52,8 +52,8 @@ module.exports = {
 
 		await FlushMessages();
 
-		const [{ "count": channelMessageCount }] = await Database.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [interaction.channel.id]);
-		if (channelMessageCount === 0) {
+		const channelMessageCount = await Database.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [interaction.channel.id]).then(res => res[0].count);
+		if (channelMessageCount === 0n) {
 			return interaction.editReply({
 				embeds: [ NoMessagesEmbed ]
 			});

@@ -42,7 +42,7 @@ async function GenerateExportID(connection, attempts = 5) {
 		if (i !== 3) id.push('-');
 	}
 	const idString = id.join('');
-	const [exists] = await connection.query('SELECT id FROM Exports WHERE id = ?', [idString]);
+	const exists = await connection.query('SELECT id FROM Exports WHERE id = ?', [idString]).then(x => x[0]);
 	return exists ? GenerateExportID(connection, attempts - 1) : idString;
 }
 

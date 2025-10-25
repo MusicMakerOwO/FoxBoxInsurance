@@ -76,11 +76,11 @@ async function SnapshotStats(snapshotID) {
 		}, SECONDS.HOUR * 1000); // cache for 1 hour
 	}
 
-	const [metadata] = await connection.query(`
+	const metadata = await connection.query(`
 		SELECT *
 		FROM Snapshots
 		WHERE id = ?
-	`, [snapshotID]);
+	`, [snapshotID]).then( rows => rows[0] );
 
 	Database.releaseConnection(connection);
 
@@ -299,11 +299,11 @@ async function CreateSnapshot(guild, type = SNAPSHOT_TYPE.AUTOMATIC) {
 		WHERE guild_id = ?
 	`, [guild.id]).then( rows => rows[0]?.id ?? null );
 
-	const [lastSnapshot] = await connection.query(`
+	const lastSnapshot = await connection.query(`
 		SELECT *
 		FROM Snapshots
 		WHERE id = ?
-	`, [latestSnapshotID]);
+	`, [latestSnapshotID]).then( res => res[0] );
 	if (!lastSnapshot) {
 
 		function AddItem(item, arr, simplyFunc) {
@@ -741,7 +741,7 @@ async function GenerateExportID(connection, attempts = 5) {
 		if (i !== 3) id.push('-');
 	}
 	const idString = id.join('');
-	const [exists] = await connection.query('SELECT * FROM SnapshotExports WHERE id = ? LIMIT 1', [idString]);
+	const exists = await connection.query('SELECT * FROM SnapshotExports WHERE id = ? LIMIT 1', [idString]).then( res => res[0] );
 	return exists ? GenerateExportID(connection, attempts - 1) : idString;
 }
 

@@ -27,7 +27,7 @@ async function CalcuateMessageStats() {
 
 	const connection = await Database.getConnection();
 
-	const [MessageStats] = await connection.query(`
+	const MessageStats = await connection.query(`
 		WITH selected_messages AS (
 			SELECT id, user_id, guild_id, channel_id, content, sticker_id, length
 			FROM Messages
@@ -43,9 +43,9 @@ async function CalcuateMessageStats() {
 
 			ROUND(AVG(length), 2) AS avg_length
 		FROM selected_messages
-	`);
+	`).then(res => res[0]);
 
-	const [FileStats] = await connection.query(`
+	const FileStats = await connection.query(`
 		WITH selected_files AS (
 			SELECT Messages.id as message_id, Assets.size as size, Assets.asset_id as file_id
 			FROM Messages
@@ -61,9 +61,9 @@ async function CalcuateMessageStats() {
 			MIN(size) as min_file
 		FROM selected_files
 		WHERE size IS NOT NULL
-	`);
+	`).then(res => res[0]);
 
-	const [EmojiStats] = await connection.query(`
+	const EmojiStats = await connection.query(`
 		WITH selected_emojis AS (
 			SELECT
 				Messages.id as message_id,
@@ -80,9 +80,9 @@ async function CalcuateMessageStats() {
 			COUNT(DISTINCT message_id) as messages
 		FROM selected_emojis
 		WHERE emoji_id IS NOT NULL
-	`);
+	`).then(res => res[0]);
 
-	const [topEmoji] = await connection.query(`
+	const topEmoji = await connection.query(`
 		WITH selected_emojis AS (
 			SELECT
 				Messages.id AS message_id,
@@ -106,9 +106,9 @@ async function CalcuateMessageStats() {
 		SELECT MAX(emoji_count) AS 'max'
 		FROM emoji_counts
 		WHERE emoji_count IS NOT NULL
-	`);
+	`).then(res => res[0]);
 
-	const [timespan] = await connection.query(`
+	const timespan = await connection.query(`
 		WITH selected_messages AS (
 			SELECT id, length
 			FROM Messages
@@ -120,7 +120,7 @@ async function CalcuateMessageStats() {
 			MIN(id) as min_id,
 			COUNT(*) as "count"
 		FROM selected_messages
-	`);
+	`).then(res => res[0]);
 
 	const maxDate = DiscordIDToDate(BigInt(timespan.max_id));
 	const minDate = DiscordIDToDate(BigInt(timespan.min_id));

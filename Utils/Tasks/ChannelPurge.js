@@ -29,7 +29,7 @@ module.exports = async function ChannelPurge() {
 	let noopCount = 0;
 	for (const channelID of ChannelsToPurge) {
 		// check when the last message was, if it was in the last 2 weeks, skip
-		const [lastMessage] = await connection.query("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY id DESC LIMIT 1", [channelID]); // local time string
+		const lastMessage = await connection.query("SELECT created_at FROM Messages WHERE channel_id = ? ORDER BY id DESC LIMIT 1", [channelID]).then( x => x[0] ); // local time string
 
 		const lastMessageDate = new Date(lastMessage.created_at).getSeconds();
 		const diffSeconds = now - lastMessageDate;
@@ -59,7 +59,7 @@ module.exports = async function ChannelPurge() {
 			keepCount = 5000;
 		}
 
-		const [{ count: storedMessageCount }] = await connection.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [channelID]);
+		const storedMessageCount = await connection.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [channelID]).then(res => res[0].count);
 
 		const deleteCount = Math.max(0, storedMessageCount - keepCount);
 		if (deleteCount <= 0) {

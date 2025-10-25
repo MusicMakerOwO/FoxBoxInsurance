@@ -42,12 +42,12 @@ module.exports = {
 
 		await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate some delay for loading, purely cosmetic lol
 
-		const [exists] = await Database.query(`
+		const exists = await Database.query(`
 			SELECT id
 			FROM Snapshots
 			WHERE id = ?
 			AND guild_id = ?
-		`, [snapshotID, interaction.guild.id]);
+		`, [snapshotID, interaction.guild.id]).then(res => res[0]);
 		if (!exists) {
 			return interaction.editReply({
 				embeds: [NoSnapshotEmbed]

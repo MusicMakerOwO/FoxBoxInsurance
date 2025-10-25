@@ -65,7 +65,7 @@ module.exports = {
 			return interaction.reply({ embeds: [NoExport], flags: 64 });
 		}
 
-		const [{ count: channelMessageCount }] = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetChannel.id]);
+		const channelMessageCount = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [targetChannel.id]).then(res => res[0].count);
 
 		exportOptions.channelID = targetChannel.id;
 		exportOptions.messageCount = Math.min(Number(channelMessageCount), 100);

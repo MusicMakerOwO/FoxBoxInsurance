@@ -25,11 +25,11 @@ async function ResolveSnapshot(client, guildID, id) {
 		id = parseInt(id) || 0;
 		if (isNaN(id) || id <= 0) throw new Error(`Invalid snapshot ID provided : ${id}`);
 
-		const [exists] = await Database.query(`
+		const exists = await Database.query(`
 			SELECT 1
 			FROM Snapshots
 			WHERE id = ?
-		`, [id]);
+		`, [id]).then(res => res[0]);
 		if (!exists) return null
 
 		return await SnapshotStats(id);

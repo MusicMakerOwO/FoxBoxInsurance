@@ -14,7 +14,7 @@ module.exports = {
 		const connection = await Database.getConnection();
 
 		const exportID = interaction.values[0];
-		const [exportData] = await connection.query(`SELECT * FROM Exports WHERE id = ?`, [exportID]);
+		const exportData = await connection.query(`SELECT * FROM Exports WHERE id = ?`, [exportID]).then(res => res[0]);
 		if (!exportData) {
 			Database.releaseConnection(connection);
 			return interaction.editReply({ embeds: [NoExportEmbed], components: [] });

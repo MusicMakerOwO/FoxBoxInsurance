@@ -146,7 +146,7 @@ module.exports = {
 			return interaction.reply({ embeds: [embed], flags: 64 });
 		}
 
-		const [{ snapshots_enabled: enabled }] = await Database.query('SELECT snapshots_enabled FROM Guilds WHERE id = ?', [interaction.guild.id]);
+		const enabled = await Database.query('SELECT snapshots_enabled FROM Guilds WHERE id = ?', [interaction.guild.id]).then(res => res[0]?.snapshots_enabled);
 		if (!enabled) {
 			return interaction.reply({ embeds: [disabledEmbed], flags: 64 });
 		}
@@ -224,11 +224,11 @@ module.exports = {
 			}
 
 			if (!client.ttlcache.has(`import-${exportID}`)) {
-				const [exportMetadata] = await Database.query(`
+				const exportMetadata = await Database.query(`
 					SELECT id, snapshot_id, guild_id, hash, algorithm, length, version
 					FROM SnapshotExports
 					WHERE id = ?
-				`, [exportID]);
+				`, [exportID]).then(res => res[0]);
 				if (!exportMetadata || exportMetadata.revoked === 1) {
 					console.log(`Snapshot export not found or revoked: ${exportID}`);
 					return interaction.editReply({

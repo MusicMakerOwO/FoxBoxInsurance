@@ -66,11 +66,11 @@ module.exports = {
 		}
 
 		if (!confirm) {
-			const [{ count: pinnedCount }] = await Database.query(`
+			const pinnedCount = await Database.query(`
 				SELECT COUNT(*) as count
 				FROM Snapshots
 				WHERE guild_id = ? AND pinned = 1
-			`, [interaction.guild.id])
+			`, [interaction.guild.id]).then(res => res[0].count);
 
 			const maxSnapshots = MaxSnapshots(interaction.guild.id);
 
@@ -81,11 +81,11 @@ module.exports = {
 				});
 			}
 
-			const [{ pinned: currentPinned }] = await Database.query(`
+			const currentPinned = await Database.query(`
 				SELECT pinned
 				FROM Snapshots
 				WHERE id = ?
-			`, [snapshotID]);
+			`, [snapshotID]).then(res => res[0].pinned);
 
 			const buttons = {
 				type: 1,

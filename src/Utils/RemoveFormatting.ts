@@ -1,14 +1,14 @@
 const FORMATS = [
 	/\*\*/g, // bold
-	/\_\_/g, // underline
+	/__/g, // underline
 	/\*/g, // italic
-	/\_/g, // italic (underscore)
-	/\~\~/g, // strikethrough
-	/\`/g, // inline code
-	/\`\`\`/g, // code block
+	/_/g, // italic (underscore)
+	/~~/g, // strikethrough
+	/`/g, // inline code
+	/```/g, // code block
 	/\|\|/g, // spoiler
-	/^\> /g, // blockquote
-	/^\>\>\> /g // blockquote (multi-line)
+	/^> /g, // blockquote
+	/^>>> /g // blockquote (multi-line)
 ]
 
 // strip discord formatting from a string

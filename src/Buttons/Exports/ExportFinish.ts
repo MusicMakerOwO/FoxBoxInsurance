@@ -17,7 +17,7 @@ export default {
 	response_type : 'update',
 	hidden        : false,
 	customID      : 'export-finish',
-	execute       : async function(interaction, client, args) {
+	execute       : async function(interaction) {
 		// @ts-expect-error
 		const exportOptions = await GetExportCache(interaction);
 		if (!exportOptions) return {};

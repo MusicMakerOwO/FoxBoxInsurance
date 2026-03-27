@@ -139,8 +139,6 @@ export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<t
 
 	const lastSnapshot = await GetSnapshot(latestSnapshotID);
 
-	// TODO: If there is no previous snapshot then a bot role obviously does not exist, causing the diff to error on
-	// finding said role
 	const guildData = await BuildSnapshotComparison(guild);
 	const snapshotData = await BuildSnapshotComparison(lastSnapshot);
 	const serverDiff = CreateSnapshotDiff(snapshotData, guildData);

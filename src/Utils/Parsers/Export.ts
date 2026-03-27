@@ -140,6 +140,8 @@ export async function ExportChannel(options: ExportOptions) {
         WHERE id IN (${'?,'.repeat(selectedMessageIDs.length - 1)}?)
 	`, selectedMessageIDs.map(m => m.id)) as Pick<SimpleMessage, 'id' | 'user_id' | 'content' | 'sticker_id' | 'reply_to' | 'data' | 'created_at'>[]
 
+	// TODO: Decrypt messages
+
 	// console.log(`Decrypting ${messages.length} messages...`);
 	//
 	// const encryptedUserIDs = messages.filter(m => m.encrypted === 1 && m.content !== null).map(m => m.user_id);
@@ -360,7 +362,7 @@ function ExportHTML(context: ExportContext) {
 	let page = readFileSync(`${__dirname}/../../../page.html`, 'utf-8');
 
 	// {{name}}
-	const templateRegex = /\{\{([a-zA-Z0-9_]+)\}\}/g;
+	const templateRegex = /\{\{([a-zA-Z0-9_]+)}}/g;
 	const templatesUsed = page.match(templateRegex) ?? [];
 	for (const template of templatesUsed) {
 		const key = template.replace(templateRegex, '$1');

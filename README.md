@@ -15,3 +15,14 @@ Discord bots usually revolve around commands like `ban`, `kick`, and `warn`. All
 
 ## Contributing
 We welcome contributions from the community! If you'd like to contribute, please fork the repository and create a pull request. We also have bug bounties available on our [Discord server](https://discord.gg/q7bUuVq4vB), don't hesitate to report any issues you find.
+
+## Folder Structure
+- /Buttons - All button components
+- /Commands - The entry point for all commands
+- /Menus - Any kind of select menus; string, channels, roles, whatever
+- /Modals - All modal submissions
+- /Context - Unused; For contextual usage on messages
+- /Messages - Unused; Prefix commands
+- /CRUD - Basic CRUD operations for various aspects of the bot, namely users, channels, guilds, etc.
+- /Services - These are functionalities that extend 1 or more CRUD operation. For example TOS checks must check both users and guilds and then also compare the TOS versions and their allowed features
+- /Utils - Pretty much anything with a multiple purposes. These should be fairly isolated from each other 

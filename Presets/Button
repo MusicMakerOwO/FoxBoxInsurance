@@ -1,6 +1,0 @@
-module.exports = {
-	customID: 'my-button',
-	execute: async function(interaction, client, args) {
-
-	}
-}

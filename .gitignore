@@ -11,3 +11,6 @@ database.sqlite*
 
 node_modules/
 config.json
+.env
+
+UploadCache/

@@ -1,0 +1,201 @@
+import {ButtonHandler} from "../Typings/HandlerTypes";
+import {COLOR, SECONDS} from "../Utils/Constants";
+import {Database} from "../Database";
+import {APIEmbed} from "discord-api-types/v10";
+
+const STAT_SIZE = 10_000;
+
+function DiscordIDToDate(id = 0n) {
+	return new Date(Number((id >> 22n) + 1420070400000n));
+}
+
+let lastOutput = {};
+let lastRun = 0;
+async function CalcuateMessageStats(): Promise<APIEmbed> {
+	// only compute every 30 minutes
+	if (Date.now() - lastRun < SECONDS.MINUTE * 1000 * 30) {
+		return lastOutput;
+	}
+
+	const connection = await Database.getConnection();
+
+
+
+	const MessageStats = await connection.query(`
+		WITH selected_messages AS (
+			SELECT id, user_id, guild_id, channel_id, content, sticker_id, length
+			FROM Messages
+			ORDER BY id DESC
+			LIMIT ${STAT_SIZE}
+		)
+		SELECT
+			COUNT(*) AS message_count,
+			COUNT(DISTINCT user_id) AS user_count,
+			COUNT(DISTINCT guild_id) AS guild_count,
+			COUNT(DISTINCT channel_id) AS channel_count,
+			COUNT(DISTINCT sticker_id) AS sticker_count,
+
+			ROUND(AVG(length), 2) AS avg_length
+		FROM selected_messages
+	`).then( rows => rows[0] ) as {
+		message_count: bigint,
+		user_count: bigint,
+		guild_count: bigint,
+		channel_count: bigint,
+		sticker_count: bigint,
+		avg_length: number
+	};
+
+	// TODO: Attachments have been merged into Messages table, see SimpleMessage.data in Types/DatabaseTypes
+	const [FileStats] = await connection.query(`
+		WITH selected_files AS (
+			SELECT Messages.id as message_id, Assets.size as size, Assets.asset_id as file_id
+			FROM Messages
+			LEFT OUTER JOIN Attachments ON Messages.id = Attachments.message_id
+			LEFT OUTER JOIN Assets ON Attachments.asset_id = Assets.asset_id
+			ORDER BY Messages.id DESC
+			LIMIT ${STAT_SIZE}
+		)
+		SELECT
+			COUNT(DISTINCT message_id) as message_count,
+			COUNT(DISTINCT file_id) as file_count,
+			MAX(size) as max_file,
+			MIN(size) as min_file
+		FROM selected_files
+		WHERE size IS NOT NULL
+	`);
+
+	const [EmojiStats] = await connection.query(`
+		WITH selected_emojis AS (
+			SELECT
+				Messages.id as message_id,
+				user_id,
+				Emojis.id as emoji_id
+			FROM Messages
+			LEFT OUTER JOIN MessageEmojis ON MessageEmojis.message_id = Messages.id
+			LEFT OUTER JOIN Emojis ON MessageEmojis.emoji_id = Emojis.id
+			ORDER BY Messages.id DESC
+			LIMIT ${STAT_SIZE}
+		)
+		SELECT
+			COUNT(emoji_id) as emojis,
+			COUNT(DISTINCT message_id) as messages
+		FROM selected_emojis
+		WHERE emoji_id IS NOT NULL
+	`);
+
+	const [topEmoji] = await connection.query(`
+		WITH selected_emojis AS (
+			SELECT
+				Messages.id AS message_id,
+				Messages.user_id,
+				Emojis.id AS emoji_id
+			FROM Messages
+			LEFT JOIN MessageEmojis ON MessageEmojis.message_id = Messages.id
+			LEFT JOIN Emojis ON MessageEmojis.emoji_id = Emojis.id
+			WHERE Emojis.id IS NOT NULL
+			ORDER BY Messages.id DESC
+			LIMIT ${STAT_SIZE}
+		),
+		emoji_counts AS (
+			SELECT
+				message_id,
+				user_id,
+				COUNT(emoji_id) AS emoji_count
+			FROM selected_emojis
+			GROUP BY message_id
+		)
+		SELECT MAX(emoji_count) AS 'max'
+		FROM emoji_counts
+		WHERE emoji_count IS NOT NULL
+	`);
+
+	const [timespan] = await connection.query(`
+		WITH selected_messages AS (
+			SELECT id, length
+			FROM Messages
+			ORDER BY id DESC
+			LIMIT ${~~(STAT_SIZE / 10)} -- 1/10 of the messages
+		)
+		SELECT
+			MAX(id) as max_id,
+			MIN(id) as min_id,
+			COUNT(*) as "count"
+		FROM selected_messages
+	`);
+
+	Database.releaseConnection(connection);
+
+	const maxDate = DiscordIDToDate(BigInt(timespan.max_id));
+	const minDate = DiscordIDToDate(BigInt(timespan.min_id));
+	const timeDiff = Math.abs(maxDate.getTime() - minDate.getTime());
+	const rate = Number(timespan.count) / (timeDiff / 1000 / 60); // messages per minute
+
+	const output: APIEmbed = {
+		color: COLOR.PRIMARY,
+		title: '📊 Stats for nerds',
+		description: `\`\`\`
+Last ${MessageStats.message_count} messages
+- Guilds: ${MessageStats.guild_count}
+- Channels: ${MessageStats.channel_count}
+- Users: ${MessageStats.user_count} (${Number(MessageStats.message_count / MessageStats.user_count).toFixed(2)} msg/user)
+
+- Avg Length: ${MessageStats.avg_length} characters
+
+Emoji Stats (${EmojiStats.emojis} emojis) *
+- Max emojis: ${topEmoji.max} emojis
+- Avg emojis: ${(Number(EmojiStats.emojis) / Number(EmojiStats.messages)).toFixed(2)} emojis/msg
+
+Files Stats (${FileStats.file_count} files) **
+- Max size: ${(Number(FileStats.max_file) / 1024 / 1024).toFixed(2)} MB
+- Min size: ${(Number(FileStats.min_file) / 1024).toFixed(2)} KB
+- Avg files: ${(Number(FileStats.file_count) / Number(FileStats.message_count)).toFixed(2)} files/msg
+\`\`\`
+
+**Quick Facts** \`\`\`
+Only ${(Number(MessageStats.sticker_count) / Number(MessageStats.message_count) * 100).toFixed(2)}% of messages have a sticker
+Only ${(Number(FileStats.message_count) / Number(MessageStats.message_count) * 100).toFixed(2)}% of messages have a file
+The average user sent ${(Number(MessageStats.message_count) / Number(MessageStats.user_count)).toFixed(2)} messages
+On average, ${rate.toFixed(2)} messages are sent per minute
+\`\`\`
+-# \\* Only messages with emojis are counted
+-# \\*\\* Only messages with files are counted
+
+Last updated <t:${Math.floor(Date.now() / 1000)}:R>
+Next update <t:${Math.floor((Date.now() + SECONDS.MINUTE * 1000 * 30) / 1000)}:R>`
+	}
+
+	lastOutput = output;
+	lastRun = Date.now();
+
+	return output;
+}
+
+export default {
+	tos_features  : [],
+	guild_features: [],
+	permissions   : [],
+	response_type : 'update',
+	hidden        : false,
+	customID      : 'global-stats',
+	execute       : async function() {
+		const start = process.hrtime.bigint();
+		const stats = await CalcuateMessageStats();
+		const end = process.hrtime.bigint();
+		const elapsed = Number(end - start) / 1e6;
+
+		console.log(`Stats calculated in ${elapsed.toFixed(3)}ms`);
+		return {
+			embeds: [stats],
+			components: [{
+				type: 1,
+				components: [{
+					type: 2,
+					style: 4,
+					label: 'Back',
+					custom_id: 'bot-info',
+				}]
+			}]
+		}
+	}
+} satisfies ButtonHandler as ButtonHandler;

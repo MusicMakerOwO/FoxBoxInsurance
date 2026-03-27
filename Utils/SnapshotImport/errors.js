@@ -1,8 +1,0 @@
-const SNAPSHOT_ERRORS = {
-	CORRUPTED: 1,
-	UNEXPECTED_FIELD: 2,
-}
-
-module.exports = {
-	SNAPSHOT_ERRORS
-}

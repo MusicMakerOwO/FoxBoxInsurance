@@ -1,11 +1,24 @@
 {
 	"dependencies": {
-		"discord.js": "14.16",
+		"discord-api-types": "^0.38.41",
+		"discord.js": "^14.25.1",
 		"dotenv": "^17.2.1",
-		"html-minifier": "^4.0.0",
-		"mariadb": "^3.4.5"
+		"mariadb": "^3.4.5",
+		"source-map-support": "^0.5.21",
+		"vitest": "^4.0.18"
 	},
 	"scripts": {
-		"start": "node index.js"
+		"check": "echo \"Checking for errors ...\" && tsc --noEmit",
+		"check:go": "echo \"Checking for errors ...\" && tsgo --noEmit",
+		"build": "echo \"Checking for errors ...\" && tsc --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsc -b tsconfig.json",
+		"build:go": "echo \"Checking for errors ...\" && tsgo --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsgo -b",
+		"start": "node build/index.js",
+		"linecount": "find . -type f -name '*.ts' -not -path './node_modules/*' -exec wc -l {} + | sort -n -r | head -n 10",
+		"test": "vitest run",
+		"register": "node build/RegisterCommands.js"
+	},
+	"devDependencies": {
+		"@types/node": "^25.3.5",
+		"typescript": "^5.9.3"
 	}
 }

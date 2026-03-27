@@ -15,7 +15,8 @@
 		"start": "node build/index.js",
 		"linecount": "find . -type f -name '*.ts' -not -path './node_modules/*' -exec wc -l {} + | sort -n -r | head -n 10",
 		"test": "vitest run",
-		"register": "node build/RegisterCommands.js"
+		"register": "node build/RegisterCommands.js",
+		"db-setup": "node build/DatabaseSetup.js"
 	},
 	"devDependencies": {
 		"@types/node": "^25.3.5",

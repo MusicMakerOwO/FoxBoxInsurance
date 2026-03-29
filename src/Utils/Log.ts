@@ -19,6 +19,7 @@ const LOG_TYPE = {
 	ERROR: 'ERROR',
 	DEBUG: 'DEBUG',
 	TRACE: 'TRACE',
+	DELETE: 'DELETE',
 }
 
 const LOG_COLOR = {
@@ -27,6 +28,7 @@ const LOG_COLOR = {
 	[LOG_TYPE.ERROR]: COLOR.RED + COLOR.BRIGHT,
 	[LOG_TYPE.DEBUG]: COLOR.GREEN,
 	[LOG_TYPE.TRACE]: COLOR.BLUE,
+	[LOG_TYPE.DELETE]: COLOR.MAGENTA,
 }
 
 // Just so we can make the logs look pretty and aligned

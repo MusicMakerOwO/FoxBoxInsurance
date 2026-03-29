@@ -4,6 +4,7 @@ import {Database} from "../../Database";
 import {TaskScheduler} from "../TaskScheduler";
 import {SnapshotServers} from "./SnapshotServers";
 import {PushStats} from "./PushStats";
+import {ChannelPurge} from "./ChannelPurge";
 
 const TIME_BETWEEN_TASKS = SECONDS.MINUTE * 10; // 10 minutes
 
@@ -12,8 +13,7 @@ const TASKS: [name: string, callback: () => Promise<void>, interval: number ][] 
     // [ 'upload_files'      , require("./UploadFiles")      , SECONDS.HOUR * 1000     ],
     [ 'upload_stats'      , PushStats        , SECONDS.HOUR * 1000     ],
     // [ 'encrypt_messages'  , require("./EncryptMessages")  , SECONDS.HOUR * 1000 * 2 ],
-    // [ 'clean_database'    , require("./CleanDatabase")    , SECONDS.DAY  * 1000     ],
-    // [ 'channel_purge'     , require("./ChannelPurge")     , SECONDS.WEEK * 1000     ],
+    [ 'channel_purge'     , ChannelPurge     , SECONDS.WEEK * 1000     ],
 ] as const;
 
 const LONGEST_NAME_LENGTH = Math.max( ... TASKS.map(t => t[0].length) );

@@ -4,8 +4,6 @@ import {Log} from "../Log";
 
 export async function PurgeSnapshots() {
 
-	const start = Date.now();
-
 	const GuildSnapshots = await Database.query(`
 		SELECT guild_id, COUNT(*) as snapshot_count
 		FROM Snapshots
@@ -45,13 +43,11 @@ export async function PurgeSnapshots() {
 			deleteCount++;
 
 			await DeleteSnapshot(snapshot.id);
-			if (process.env.DEV_MODE) Log('DEBUG', `Deleted snapshot ${snapshot.id} for guild ${guild_id}`);
+			Log('DELETE', `Deleted snapshot ${snapshot.id} for guild ${guild_id}`);
 		}
 	}
 
 	Database.releaseConnection(connection);
 
-	const end = Date.now();
-	const duration = end - start;
-	if (process.env.DEV_MODE) Log('DEBUG', `Purged ${deleteCount} snapshots from ${purgedGuilds} guilds in ${duration}ms`);
+	Log('DELETE', `Purged ${deleteCount} snapshots from ${purgedGuilds} guilds`);
 }

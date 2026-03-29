@@ -13,7 +13,9 @@ export const SECONDS = {
 	HOUR   : 60 * 60,
 	DAY    : 60 * 60 * 24,
 	WEEK   : 60 * 60 * 24 * 7,
+	/** 30 days */
 	MONTH  : 60 * 60 * 24 * 30,
+	/** 365 days */
 	YEAR   : 60 * 60 * 24 * 365
 } as const;
 

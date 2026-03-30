@@ -92,7 +92,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			channel_id: BigInt(message.channel.id),
 			user_id: BigInt(message.author.id),
 
-			content: Buffer.from(message.content),
+			content: message.content.length > 0 ? Buffer.from(message.content) : null,
 
 			sticker_id: sticker ? BigInt(sticker.id) : null,
 

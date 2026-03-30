@@ -5,7 +5,7 @@ import { SimpleMessage } from "../../Typings/DatabaseTypes";
 
 const MAX_MESSAGES_PER_CHANNEL = 10_000n;
 
-export async function ChannelPurge() {
+export async function ChannelPurge(opts: { silent?: boolean } = {}) {
 	const connection = await Database.getConnection();
 	// any messages older than 60 days
 	const expired =  new Date( Date.now() - SECONDS.DAY * 60 * 1000 );
@@ -13,6 +13,7 @@ export async function ChannelPurge() {
 
 	const { affectedRows: expiredMessageCount } = await connection.query('DELETE FROM Messages WHERE created_at < ?', [expired]) as { affectedRows: bigint, insertId: bigint, warningStatus: number };
 	const channelMessageCounts = await connection.query("SELECT COUNT(*) as message_count, channel_id FROM Messages GROUP BY channel_id") as { message_count: bigint, channel_id: SimpleMessage['channel_id'] }[];
+
 	let overflowMessageCount = 0n;
 	const promises: Promise<unknown>[] = [];
 	for (const {channel_id, message_count} of channelMessageCounts) {
@@ -39,6 +40,8 @@ export async function ChannelPurge() {
 
 	await connection.query("COMMIT");
 	Database.releaseConnection(connection);
+
+	if (opts.silent) return;
 
 	// little hack to count the total number of channels in db without a dedicated query
 	Log('DELETE', `Checked ${channelMessageCounts.length + emptyChannels} channels`);

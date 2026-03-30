@@ -12,8 +12,8 @@ export const TOS_FEATURE_DESCRIPTION: { [K in ObjectValues<typeof TOS_FEATURES>]
 const FEATURES_TABLE = new Array<ObjectValues<typeof TOS_FEATURES>[]>(MAX_TOS_VERSION - 1); // first version = 1
 
 const features = new Set<ObjectValues<typeof TOS_FEATURES>>();
-for (let i = 1; i < MAX_TOS_VERSION; i++) {
-	const tos = TOS_VERSIONS[i]!;
+for (let i = 0; i < MAX_TOS_VERSION; i++) {
+	const tos = TOS_VERSIONS[i + 1]!;
 	for (const feature of tos.added) features.add(feature);
 	for (const feature of tos.removed) features.delete(feature);
 	FEATURES_TABLE[i] = Array.from(features);
@@ -21,7 +21,7 @@ for (let i = 1; i < MAX_TOS_VERSION; i++) {
 
 export function GetTOSFeatures(version: number): ObjectValues<typeof TOS_FEATURES>[] | null {
 	if (!version || version <= 0 || version >= MAX_TOS_VERSION) return null;
-	return FEATURES_TABLE[version] || null;
+	return FEATURES_TABLE[version - 1];
 }
 
 export function ListSupportVersionsWithFeature(feature: ObjectValues<typeof TOS_FEATURES>): number[] {

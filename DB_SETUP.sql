@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS Messages (
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
 CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);
 CREATE INDEX IF NOT EXISTS messages_user_id    ON Messages (user_id);
+CREATE INDEX IF NOT EXISTS messages_encryption ON Messages (encryption_version);
 
 CREATE TABLE IF NOT EXISTS Exports (
 	id CHAR(19) NOT NULL PRIMARY KEY, -- xxxx-xxxx-xxxx-xxxx

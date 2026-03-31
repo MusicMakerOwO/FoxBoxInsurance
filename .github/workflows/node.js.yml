@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MARIADB_URI: mariadb://root:root@127.0.0.1:3306/fbi_test
+      PEPPER: ftOIKjYGK38MekzrwDoWqRjTDulOCTXuG4LOzI9jOQg=
 
     services:
       mariadb:

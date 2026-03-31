@@ -1,3 +1,5 @@
+import { EncryptMessages } from "./Utils/Tasks/EncryptMessages";
+
 const preloadStart = process.hrtime.bigint();
 
 import "source-map-support/register";
@@ -59,7 +61,11 @@ client.on('clientReady', function () {
 
 const ErrorCallback = Log.bind(null, 'ERROR');
 
+let isShuttingDown = false;
 async function Shutdown() {
+	if (isShuttingDown) return;
+	isShuttingDown = true;
+
 	console.log();
 
 	const start = process.hrtime.bigint();

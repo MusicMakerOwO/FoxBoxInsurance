@@ -80,7 +80,27 @@ function LoadFailedDownloads() {
 	return failedAssets;
 }
 
-export async function DownloadAssets() {
+/**
+ * Tracks the currently-running DownloadAssets promise so that a second caller
+ * (e.g. the shutdown handler) awaits the same in-flight work instead of
+ * seeing an empty queue and returning immediately.
+ */
+let activeDownload: Promise<void> | undefined;
+
+export function DownloadAssets(): Promise<void> {
+	// If a download run is already in progress (started by the scheduled
+	// timeout), return the same promise instead of starting a second run
+	// that would see an empty queue and return immediately.
+	if (activeDownload) return activeDownload;
+
+	activeDownload = _runDownloadAssets().finally(() => {
+		activeDownload = undefined;
+	});
+
+	return activeDownload;
+}
+
+async function _runDownloadAssets() {
 	clearTimeout(timeout);
 	timeout = undefined;
 
@@ -107,10 +127,6 @@ export async function DownloadAssets() {
 	}
 
 	const queuedAssets: Omit<Asset, 'hash'>[] = [];
-
-	// const connection = await Database.getConnection();
-	//
-	// const promiseQueue: Promise<unknown>[] = [];
 
 	const start = Date.now();
 	for (const asset of queue) {
@@ -162,34 +178,6 @@ export async function DownloadAssets() {
 			height     : asset.height,
 			size       : buffer.length
 		})
-
-		// promiseQueue.push(
-		// 	connection.query(`
-		// 		INSERT INTO Assets (type, discord_id, discord_url, name, width, height, size)
-		// 		VALUES (?, ?, ?, ?, ?, ?, ?)
-		//
-		// 		-- Already exists, update in place, no need for a delete
-		// 		ON DUPLICATE KEY UPDATE
-		// 			type        = VALUES(type),
-		// 			discord_id  = VALUES(discord_id),
-		// 			discord_url = VALUES(discord_url),
-		// 			name        = VALUES(name),
-		// 			width       = VALUES(width),
-		// 			height      = VALUES(height),
-		// 			size        = VALUES(size)
-		// 	`, [
-		// 		asset.type,
-		// 		asset.id,
-		// 		asset.url,
-		// 		RemoveNonASCII(asset.name),
-		// 		asset.width,
-		// 		asset.height,
-		// 		buffer.length
-		// 	]).catch(err => {
-		// 		Log('ERROR', err);
-		// 		Log('ERROR', asset);
-		// 	})
-		// );
 	}
 
 	await Database.batch(`

@@ -18,6 +18,17 @@ import { GetEmoji } from "../../CRUD/Emojis";
 import { createHash } from "node:crypto";
 import { JSONReplacer } from "../../JSON";
 import { readFileSync } from "node:fs";
+import { client } from "../../Client";
+import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys";
+import { Decrypt } from "../Encryption";
+
+function Omit<T extends {}, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
+	const result = { ...data };
+	for (const key of props) {
+		delete result[key];
+	}
+	return result;
+}
 
 function UTCDate(date: Date) {
 	const year = date.getUTCFullYear();
@@ -105,6 +116,14 @@ export async function ExportChannel(options: ExportOptions) {
 
 	const connection = await Database.getConnection();
 
+	const selectedMessageIDs = await connection.query(`
+        SELECT id
+        FROM Messages
+        WHERE channel_id = ?
+        ORDER BY id DESC
+        LIMIT ?
+	`, [options.channelID, options.messageCount]) as Pick<SimpleMessage, 'id'>[]
+
 	const context: ExportContext = {
 		owner  : await connection.query('SELECT id, username, bot FROM Users WHERE id = ?', [options.userID])
 		.then(res => res[0]),
@@ -121,59 +140,35 @@ export async function ExportChannel(options: ExportOptions) {
 
 		options: options,
 
-		messages: []
+		messages: new Array(selectedMessageIDs.length)
 	}
-
-	const selectedMessageIDs = await connection.query(`
-        SELECT id
-        FROM Messages
-        WHERE channel_id = ?
-        ORDER BY id DESC
-        LIMIT ?
-	`, [options.channelID, options.messageCount]) as Pick<SimpleMessage, 'id'>[]
 
 	selectedMessageIDs.reverse();
 
-	const messages = await connection.query(`
-        SELECT id, user_id, content, sticker_id, reply_to, data, created_at
+	const encryptedMessages = await connection.query(`
+        SELECT id, user_id, content, sticker_id, reply_to, data, created_at, encryption_version
         FROM Messages
         WHERE id IN (${'?,'.repeat(selectedMessageIDs.length - 1)}?)
-	`, selectedMessageIDs.map(m => m.id)) as Pick<SimpleMessage, 'id' | 'user_id' | 'content' | 'sticker_id' | 'reply_to' | 'data' | 'created_at'>[]
+	`, selectedMessageIDs.map(m => m.id)) as Pick<SimpleMessage, 'id' | 'user_id' | 'content' | 'sticker_id' | 'reply_to' | 'data' | 'created_at' | 'encryption_version'>[]
 
-	// TODO: Decrypt messages
+	const encryptedUserIDs = encryptedMessages.map(m => m.user_id);
+	const keys = await ResolveUserKeyBulk(encryptedUserIDs);
 
-	// console.log(`Decrypting ${messages.length} messages...`);
-	//
-	// const encryptedUserIDs = messages.filter(m => m.encrypted === 1 && m.content !== null).map(m => m.user_id);
-	// const keys = await ResolveUserKeyBulk(encryptedUserIDs);
-	//
-	// const decryptStart = process.hrtime.bigint();
-	// for (let i = 0; i < messages.length; i++) {
-	// 	const message = messages[i];
-	// 	if (!message.encrypted) continue;
-	// 	if (message.content === null) continue;
-	//
-	// 	const wrappedUserKey = keys[message.user_id];
-	// 	if (!wrappedUserKey) throw new Error(`Failed to get key for user ${message.user_id}`);
-	// 	const userKey = UnwrapUserKey(wrappedUserKey);
-	//
-	// 	const { iv, tag, wrapped_dek } = message;
-	// 	const dek = UnwrapKey(wrapped_dek, userKey);
-	//
-	// 	message.content = DecryptMessage(message.content, tag, iv, dek);
-	// }
-	// const decryptEnd = process.hrtime.bigint();
-	// const decryptTime = Number(decryptEnd - decryptStart) / 1e6;
-	// console.log(`Decrypted ${messages.length} messages in ${decryptTime.toFixed(2)}ms (${(messages.length /
-	// (decryptTime * 1000)).toFixed(2)} msg/s)`);
-
-	context.messages = messages;
+	for (let i = 0; i < encryptedMessages.length; i++) {
+		const message = encryptedMessages[i];
+		if (message.encryption_version && message.content !== null) {
+			const userKey = keys.get(message.user_id);
+			if (!userKey) throw new Error(`Failed to get key for user ${message.user_id}`);
+			message.content = Decrypt(message.content, userKey, message.encryption_version);
+		}
+		context.messages[i] = Omit(message, ['encryption_version']);
+	}
 
 	const userIDs = new Set<SimpleUser['id']>();
 	const stickerIDs = new Set<SimpleSticker['id']>();
 	const emojiIDs = new Set<SimpleEmoji['id']>();
 
-	for (const msg of messages) {
+	for (const msg of encryptedMessages) {
 		userIDs.add(msg.user_id);
 		if (msg.sticker_id) stickerIDs.add(msg.sticker_id);
 		for (const emojiID of msg.data.emoji_ids) {
@@ -183,7 +178,7 @@ export async function ExportChannel(options: ExportOptions) {
 
 	const assetIDs = new Set<bigint>([... userIDs, ... stickerIDs, ... emojiIDs]);
 
-	for (const msg of messages) {
+	for (const msg of encryptedMessages) {
 		for (const attachment of msg.data.attachments) {
 			assetIDs.add(BigInt(attachment.id));
 		}
@@ -200,30 +195,30 @@ export async function ExportChannel(options: ExportOptions) {
 	for (const stickerID of stickerIDs) {
 		const sticker = await GetSticker(stickerID);
 		context.stickers.set(stickerID, sticker ? {
-			id: sticker.id,
-			name: sticker.name,
+			id  : sticker.id,
+			name: sticker.name
 		} : null);
 	}
 	for (const emojiID of emojiIDs) {
 		const emoji = await GetEmoji(emojiID);
 		context.emojis.set(emojiID, emoji ? {
-			id: emoji.id,
-			name: emoji.name,
-			animated: emoji.animated,
+			id      : emoji.id,
+			name    : emoji.name,
+			animated: emoji.animated
 		} : null);
 	}
 
 	for (const assetID of assetIDs) {
 		const asset = await GetAsset(assetID);
 		context.assets.set(assetID, asset ? {
-			discord_id: asset.discord_id,
-			type: asset.type,
+			discord_id : asset.discord_id,
+			type       : asset.type,
 			discord_url: asset.discord_url,
-			name: asset.name,
-			width: asset.width,
-			height: asset.height,
-			size: asset.size,
-			hash: asset.hash
+			name       : asset.name,
+			width      : asset.width,
+			height     : asset.height,
+			size       : asset.size,
+			hash       : asset.hash
 		} : null);
 	}
 
@@ -310,8 +305,12 @@ function ExportText(context: ExportContext) {
 }
 
 export type JSONExport = ReturnType<typeof ExportJSON>;
+
 function ExportJSON(context: ExportContext) {
 	type ExportedMessage = typeof context.messages[0] & { content: string | null }
+	const guild = client.guilds.cache.get(context.guild.id.toString());
+	const serverRoles = Array.from(guild ? guild.roles.cache.entries() : [])
+	.map(([_, x]) => [_, { name: x.name, color: x.color }]);
 	const output = {
 		export  : {
 			owner  : `@${context.owner.username} (${context.owner.id})`,
@@ -324,6 +323,7 @@ You can check if the export has been tampered with by using /verify and the ID a
 		},
 		guild   : context.guild,
 		channel : context.channel,
+		roles   : Object.fromEntries(serverRoles),
 		users   : Object.fromEntries(context.users.entries()
 		.map(([id, x]) => [Number(id), x])),
 		emojis  : Object.fromEntries(context.emojis.entries()
@@ -332,7 +332,7 @@ You can check if the export has been tampered with by using /verify and the ID a
 		.map(([id, x]) => [Number(id), x])),
 		assets  : Object.fromEntries(context.assets.entries()
 		.map(([id, x]) => [Number(id), x])),
-		messages: new Array<ExportedMessage>(context.messages.length),
+		messages: new Array<ExportedMessage>(context.messages.length)
 	};
 	for (let i = 0; i < context.messages.length; i++) {
 		const msg = context.messages[i];

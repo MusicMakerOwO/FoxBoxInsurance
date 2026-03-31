@@ -20,7 +20,7 @@ for (let i = 0; i < MAX_TOS_VERSION; i++) {
 }
 
 export function GetTOSFeatures(version: number): ObjectValues<typeof TOS_FEATURES>[] | null {
-	if (!version || version <= 0 || version >= MAX_TOS_VERSION) return null;
+	if (!version || version <= 0 || version > MAX_TOS_VERSION) return null;
 	return FEATURES_TABLE[version - 1];
 }
 

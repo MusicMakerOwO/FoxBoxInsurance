@@ -11,53 +11,10 @@ import { COLOR, EMOJI } from "./Constants";
 import { GetGuild } from "../CRUD/Guilds";
 import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes";
 import { CanUserAccessTOSFeature } from "../Services/UserTOS";
-import { ListSupportVersionsWithFeature, TOS_FEATURE_DESCRIPTION } from "../CRUD/TOSVersion";
-import { TOS_FEATURES, TOS_VERSIONS } from "../TOSConstants";
-import { ObjectValues } from "../Typings/HelperTypes";
-import { SimpleUser } from "../Typings/DatabaseTypes";
-
-/**
- * Determines the next required TOS version for the user based on disallowed features
- * @returns The next required TOS version number, or null if not found.
- */
-export function GetNextRequiredTOSVersion(
-	disallowedFeatures: ObjectValues<typeof TOS_FEATURES>[],
-	savedUser: Pick<SimpleUser, 'terms_version_accepted'>
-): number | null {
-	const requiredVersions = disallowedFeatures
-	.flatMap(feature => ListSupportVersionsWithFeature(feature))
-	.filter(v => v > savedUser.terms_version_accepted);
-
-	if (requiredVersions.length === 0) return null;
-
-	return Math.min(...requiredVersions);
-}
-
-/** Builds a changelist of TOS features added/removed between two TOS versions */
-export function BuildTOSChangeList(fromVersion: number, toVersion: number): string[] {
-	const changes: string[] = [];
-	const seen = new Set<number>();
-	for (let v = fromVersion + 1; v <= toVersion; v++) {
-		const tosData = TOS_VERSIONS[v];
-		if (!tosData) continue;
-		for (const feature of tosData.added) {
-			if (!seen.has(feature)) {
-				changes.push(`Added ${TOS_FEATURE_DESCRIPTION[feature]}`);
-				seen.add(feature);
-			}
-		}
-		for (const feature of tosData.removed) {
-			if (seen.has(feature)) {
-				changes.push(`Removed ${TOS_FEATURE_DESCRIPTION[feature]}`);
-				seen.delete(feature);
-			}
-		}
-	}
-	return changes;
-}
+import { BuildTOSChangeList, GetNextRequiredTOSVersion } from "../CRUD/TOSVersion";
 
 const USER_TOS_Embed = {
-	color: COLOR.PRIMARY,
+	color      : COLOR.PRIMARY,
 	description: `
 You are required to accept the Terms of Service before using this bot
 
@@ -89,7 +46,7 @@ const USER_TOS_BUTTONS: DiscordActionRow<DiscordButton> = {
 }
 
 /** Returns an interaction response object with the error or null if the user is allowed to execute the command */
-export async function CheckHandlerAccess (
+export async function CheckHandlerAccess(
 	interaction: Exclude<Interaction, AutocompleteInteraction>,
 	handler: CommandHandler | ButtonHandler | SelectMenuHandler | ModalHandler
 ): Promise<InteractionResponse | null> {
@@ -100,7 +57,7 @@ export async function CheckHandlerAccess (
 	}
 
 	const savedUser = (await GetUser(interaction.user.id))!;
-	if (savedUser.terms_version_accepted === 0) {
+	if (handler.tos_features.length > 0 && savedUser.terms_version_accepted === 0) {
 		// Force users to accept TOS
 		return { embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS] };
 	}

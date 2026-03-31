@@ -1,5 +1,6 @@
 import { MAX_TOS_VERSION, TOS_FEATURES, TOS_VERSIONS } from "../TOSConstants";
 import { ObjectValues } from "../Typings/HelperTypes";
+import { SimpleUser } from "../Typings/DatabaseTypes";
 
 export const TOS_FEATURE_DESCRIPTION: { [K in ObjectValues<typeof TOS_FEATURES>]: Lowercase<string> } = {
 	[TOS_FEATURES.MESSAGE_EXPORTS] : 'message exports',
@@ -33,4 +34,50 @@ export function ListSupportVersionsWithFeature(feature: ObjectValues<typeof TOS_
 		}
 	}
 	return supportedVersions;
+}
+
+/**
+ * Determines the next required TOS version for the user based on required features
+ * @returns The next required TOS version number, or null if not found.
+ */
+export function GetNextRequiredTOSVersion(
+	requiredFeatures: ObjectValues<typeof TOS_FEATURES>[],
+	user: Pick<SimpleUser, 'terms_version_accepted'>,
+
+	/** ONLY FOR USE IN TESTING */
+	ListSupportVersionsWithFeatureImpl?: (feature: ObjectValues<typeof TOS_FEATURES>) => number[]
+): number | null {
+	const ListSupport = ListSupportVersionsWithFeatureImpl ?? ListSupportVersionsWithFeature;
+	if (!requiredFeatures.length) return null;
+	const versionSets = requiredFeatures.map(feature =>
+		ListSupport(feature).filter(v => v > user.terms_version_accepted)
+	);
+	if (versionSets.some(set => set.length === 0)) return null;
+	const intersection = versionSets.reduce((a, b) => a.filter(v => b.includes(v)));
+	if (!intersection.length) return null;
+
+	return Math.min(...intersection);
+}
+
+/** Builds a changelist of TOS features added/removed between two TOS versions */
+export function BuildTOSChangeList(fromVersion: number, toVersion: number): string[] {
+	const changes: string[] = [];
+	const seen = new Set<number>();
+	for (let v = fromVersion + 1; v <= toVersion; v++) {
+		const tosData = TOS_VERSIONS[v];
+		if (!tosData) continue;
+		for (const feature of tosData.added) {
+			if (!seen.has(feature)) {
+				changes.push(`Added ${TOS_FEATURE_DESCRIPTION[feature]}`);
+				seen.add(feature);
+			}
+		}
+		for (const feature of tosData.removed) {
+			if (seen.has(feature)) {
+				changes.push(`Removed ${TOS_FEATURE_DESCRIPTION[feature]}`);
+				seen.delete(feature);
+			}
+		}
+	}
+	return changes;
 }

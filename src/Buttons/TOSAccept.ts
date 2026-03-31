@@ -8,7 +8,7 @@ export default {
 	tos_features  : [],
 	guild_features: [],
 	permissions   : [],
-	response_type : 'reply',
+	response_type : 'update',
 	hidden        : true,
 	customID      : 'tos-accept',
 	execute       : async function(interaction, client, args) {

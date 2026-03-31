@@ -184,7 +184,7 @@ async function _runDownloadAssets() {
         INSERT INTO Assets (type, discord_id, discord_url, name, width, height, size)
         VALUES (?, ?, ?, ?, ?, ?, ?)
 
-        -- Already exists, update in place, no need for a delete
+        -- Already exists, update in place, no need for delete
         ON DUPLICATE KEY
             UPDATE type        = VALUES(type),
                    discord_id  = VALUES(discord_id),
@@ -192,7 +192,8 @@ async function _runDownloadAssets() {
                    name        = VALUES(name),
                    width       = VALUES(width),
                    height      = VALUES(height),
-                   size        = VALUES(size)
+                   size        = VALUES(size),
+                   hash        = NULL
 	`, queuedAssets.map(x => [
 		x.type,
 		x.discord_id,

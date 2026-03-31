@@ -92,7 +92,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			channel_id: BigInt(message.channel.id),
 			user_id: BigInt(message.author.id),
 
-			content: message.content.length > 0 ? Buffer.from(message.content) : null,
+			content: message.content.length > 0 ? Buffer.from(message.content, 'utf8') : null,
 
 			sticker_id: sticker ? BigInt(sticker.id) : null,
 
@@ -208,7 +208,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			messageData.map( x => [
 				x.id, x.guild_id, x.channel_id, x.user_id,
-				x.content, x.content?.length, x.sticker_id,
+				x.content, x.length, x.sticker_id,
 				x.reply_to,
 				JSON.stringify(x.data, JSONReplacer)
 			])

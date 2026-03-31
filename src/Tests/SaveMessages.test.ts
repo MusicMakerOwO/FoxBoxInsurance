@@ -209,7 +209,7 @@ const INSERTED_MESSAGE_EMPTY = {
 	guild_id          : 1n,
 	channel_id        : 3n,
 	user_id           : 1234567890n,
-	content           : Buffer.from(''),
+	content           : null,
 	sticker_id        : null,
 	reply_to          : null,
 	encryption_version: null,
@@ -351,7 +351,7 @@ describe("SaveMessages", () => {
 		const savedMessage = await Database.query('SELECT * FROM Messages WHERE id = ?', [API_MESSAGE_EMPTY.id])
 		.then(x => x[0]) as SimpleMessage;
 		expect(savedMessage)
-		.toEqual({ ... INSERTED_MESSAGE_EMPTY, length: Buffer.from(text, 'utf8').length, content: Buffer.from(text) });
+		.toEqual({ ... INSERTED_MESSAGE_EMPTY, length: text.length, content: Buffer.from(text) });
 	});
 
 	it('saves message content with only discord emojis', async () => {

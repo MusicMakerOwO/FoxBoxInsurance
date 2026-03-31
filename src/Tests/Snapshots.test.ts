@@ -25,7 +25,7 @@ const TEST_GUILD_ID = 1n;
 
 describe('Snapshots', async () => {
 
-	await Database.query('INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?)', [TEST_GUILD_ID, 'Test Server', Object.values(GUILD_FEATURES).reduce( (x, y) => x | y, 0)]);
+	await Database.query('INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id = id', [TEST_GUILD_ID, 'Test Server', Object.values(GUILD_FEATURES).reduce( (x, y) => x | y, 0)]);
 
 	// create 8 dummy snapshots with no data
 	for (let i = 0; i < 8; i++) {

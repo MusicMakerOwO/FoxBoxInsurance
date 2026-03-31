@@ -74,8 +74,8 @@ async function Shutdown() {
 	await ProcessMessages().catch(ErrorCallback);
 	await DownloadAssets().catch(ErrorCallback);
 
-	// TODO: Encrypt messages
-	// Log('WARN', 'Encrypting messages...');
+	Log('WARN', 'Encrypting messages...');
+	await EncryptMessages().catch(ErrorCallback);
 
 	Log('WARN', 'Closing database...');
 	await Database.destroy().catch(ErrorCallback);

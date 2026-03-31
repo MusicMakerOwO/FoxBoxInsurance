@@ -238,14 +238,17 @@ describe("ExportMessages", async () => {
 	await connection.query(`
         INSERT INTO Guilds (id, name, features)
         VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE id = id
 	`, [guild.id, guild.name, guild.features]);
 	await connection.query(`
         INSERT INTO Channels (id, name, type, guild_id)
         VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE id = id
 	`, [channel.id, channel.name, channel.type, channel.guild_id]);
 	await connection.query(`
         INSERT INTO Users (id, username, bot)
         VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE id = id
 	`, [user.id, user.username, user.bot]);
 
 	const promises: Promise<unknown>[] = [];
@@ -255,6 +258,7 @@ describe("ExportMessages", async () => {
 			connection.query(`
                 INSERT INTO Emojis (id, name, animated)
                 VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE id = id
 			`, [
 				emoji.id, emoji.name, emoji.animated
 			])
@@ -265,6 +269,7 @@ describe("ExportMessages", async () => {
 		connection.query(`
             INSERT INTO Stickers (id, name)
             VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE id = id
 		`, [
 			sticker.id, sticker.name
 		])
@@ -274,6 +279,7 @@ describe("ExportMessages", async () => {
 		connection.batch(`
             INSERT INTO Messages (id, guild_id, channel_id, user_id, content, sticker_id, reply_to, length, data)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE id = id
 		`, messages.map(msg => [
 			msg.id, msg.guild_id, msg.channel_id, msg.user_id, msg.content, msg.sticker_id, msg.reply_to, msg.length, msg.data
 		]))

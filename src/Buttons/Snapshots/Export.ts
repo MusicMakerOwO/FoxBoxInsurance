@@ -45,8 +45,6 @@ export default {
 
 		const hash = createHash(HASH_ALGORITHM).update(serializedData).digest('hex');
 
-		const fileName = 'snapshot-' + snapshotID;
-
 		void Database.query(`
 			INSERT INTO SnapshotExports (
 				id,
@@ -66,7 +64,7 @@ export default {
 			HASH_ALGORITHM
 		]);
 
-		const lookup = await UploadCDN(fileName, 'json', Buffer.from(serializedData, 'utf8'), 1); // 1 url = 1 download
+		const lookup = await UploadCDN(`snapshot-${snapshotID}.json`, Buffer.from(serializedData, 'utf8'), 1); // 1 url = 1 download
 
 		return {
 			embeds: [{

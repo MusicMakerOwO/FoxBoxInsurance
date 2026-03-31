@@ -2,10 +2,10 @@ const https = require('https');
 
 // remove all non-ASCII characters
 function CleanName(input: string) {
-	return input.replace(/[^a-zA-Z0-9-_]/g, '');
+	return input.replace(/[^a-zA-Z0-9-_.]/g, '');
 }
 
-export async function UploadCDN(name: string, extension: string, data: Buffer, downloadLimit = 0) {
+export async function UploadCDN(fileName: string, data: Buffer, downloadLimit = 0) {
 	// POST cdn.notfbi.dev/upload
 	return new Promise((resolve, reject) => {
 		const request = https.request({
@@ -16,8 +16,7 @@ export async function UploadCDN(name: string, extension: string, data: Buffer, d
 			headers: {
 				'Content-Type': 'application/octet-stream',
 				'Content-Length': data.length,
-				'name': CleanName(name),
-				'ext': CleanName(extension),
+				'file-name': CleanName(fileName),
 				'key': process.env.CDN_KEY,
 				'download-limit': downloadLimit || null, // 0 -> null -> no limit
 			}

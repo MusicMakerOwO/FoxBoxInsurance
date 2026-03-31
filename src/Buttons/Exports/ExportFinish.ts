@@ -22,12 +22,10 @@ export default {
 		const exportOptions = await GetExportCache(interaction);
 		if (!exportOptions) return {};
 
-
 		// flush all the caches first to make sure we have the latest data
 		// We don't want any missing assets or holes in the data
 		await DownloadAssets(); // download files
 		// await UploadFiles(); // upload files to the CDN
-		// await LinkAssets(); // link tables together
 
 		let file;
 		try {
@@ -42,12 +40,12 @@ export default {
 An error occurred while generating your export :broken_heart:
 The error has been reported automatically and a fix is being worked on`
 				}],
+				components: []
 			}
 		}
 
 		// upload to the cdn server for easy access
-		const [name, extension] = file.name.split('.');
-		const lookup = await UploadCDN(name, extension, file.data, 1); // 1 url = 1 download
+		const lookup = await UploadCDN(file.name, file.data, 1); // 1 url = 1 download
 
 		const hash = createHash('sha1').update(file.data).digest('hex');
 

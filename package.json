@@ -3,6 +3,7 @@
 		"discord-api-types": "^0.38.41",
 		"discord.js": "^14.25.1",
 		"dotenv": "^17.2.1",
+		"html-minifier-next": "^6.1.2",
 		"mariadb": "^3.4.5",
 		"source-map-support": "^0.5.21",
 		"vitest": "^4.0.18"

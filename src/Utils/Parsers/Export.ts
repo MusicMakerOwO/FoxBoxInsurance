@@ -21,6 +21,7 @@ import { readFileSync } from "node:fs";
 import { client } from "../../Client";
 import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys";
 import { Decrypt } from "../Encryption";
+import { minify } from "html-minifier-next";
 
 function Omit<T extends {}, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
 	const result = { ...data };
@@ -230,7 +231,7 @@ export async function ExportChannel(options: ExportOptions) {
 			fileData = Buffer.from(JSON.stringify(ExportJSON(context), JSONReplacer, 0));
 			break;
 		case FORMAT.HTML :
-			fileData = Buffer.from(ExportHTML(context));
+			fileData = Buffer.from( await ExportHTML(context));
 			break;
 		default:
 			throw new Error('Invalid format');
@@ -341,10 +342,17 @@ You can check if the export has been tampered with by using /verify and the ID a
 	return ObjectConvertBigInt(output) as JSONStringify<typeof output>;
 }
 
-function ExportHTML(context: ExportContext) {
+async function ExportHTML(context: ExportContext) {
 	const lookups = ExportJSON(context);
 	const template = readFileSync(`${__dirname}/../../../export.html`, 'utf-8');
-	return template.replace(/\{\{EXPORT_DATA}}/, JSON.stringify(lookups));
+	const result = template.replace(/\{\{EXPORT_DATA}}/, JSON.stringify(lookups));
+
+	// ~65KB reduction in my testing
+	// 265KB -> 200KB
+	return await minify(result, {
+		minifyJS: true,
+		minifyCSS: true
+	})
 }
 
 function ObjectConvertBigInt(obj: unknown): unknown {

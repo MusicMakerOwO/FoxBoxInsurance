@@ -246,39 +246,86 @@ export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']) {
 
 		// merge data forward with next snapshot
 
-		const tables = ['SnapshotRoles', 'SnapshotChannels', 'SnapshotPermissions', 'SnapshotBans'];
-
 		const nextSnapshotID = availableSnapshotIDs[availableSnapshotIDs.indexOf(snapshotID) + 1];
 
-		for (const table of tables) {
-			promiseQueue.push(
-				connection.query(`
-                    DELETE
-                    FROM ${table}
-                    WHERE snapshot_id = ?
-                      AND EXISTS (SELECT 1
-                                  FROM ${table} AS next
+		promiseQueue.push(
+			// Move roles forward
+			connection.query(`
+                DELETE
+                FROM SnapshotRoles
+                WHERE snapshot_id = ?
+                  AND EXISTS (SELECT 1
+                              FROM SnapshotRoles AS next
+                              WHERE next.snapshot_id = ?
+                                AND next.id = SnapshotRoles.id)
+			`, [snapshotID, nextSnapshotID]),
+			connection.query(`
+                UPDATE SnapshotRoles
+                SET snapshot_id = ?
+                WHERE snapshot_id = ?
+                  AND NOT EXISTS (SELECT 1
+                                  FROM SnapshotRoles AS next
                                   WHERE next.snapshot_id = ?
-                                    AND next.id = ${table}.id)
-				`, [snapshotID, nextSnapshotID]),
+                                    AND next.id = SnapshotRoles.id)
+			`, [nextSnapshotID, snapshotID, nextSnapshotID]),
+			connection.query(`
+                DELETE
+                FROM SnapshotRoles
+                WHERE snapshot_id = ?
+			`, [snapshotID]),
 
-				connection.query(`
-                    UPDATE ${table}
-                    SET snapshot_id = ?
-                    WHERE snapshot_id = ?
-                      AND NOT EXISTS (SELECT 1
-                                      FROM ${table} AS next
-                                      WHERE next.snapshot_id = ?
-                                        AND next.id = ${table}.id)
-				`, [nextSnapshotID, snapshotID, nextSnapshotID]),
 
-				connection.query(`
-                    DELETE
-                    FROM ${table}
-                    WHERE snapshot_id = ?
-				`, [snapshotID])
-			);
-		}
+			// Move channels forward
+			connection.query(`
+                DELETE
+                FROM SnapshotChannels
+                WHERE snapshot_id = ?
+                  AND EXISTS (SELECT 1
+                              FROM SnapshotChannels AS next
+                              WHERE next.snapshot_id = ?
+                                AND next.id = SnapshotChannels.id)
+			`, [snapshotID, nextSnapshotID]),
+			connection.query(`
+                UPDATE SnapshotChannels
+                SET snapshot_id = ?
+                WHERE snapshot_id = ?
+                  AND NOT EXISTS (SELECT 1
+                                  FROM SnapshotChannels AS next
+                                  WHERE next.snapshot_id = ?
+                                    AND next.id = SnapshotChannels.id)
+			`, [nextSnapshotID, snapshotID, nextSnapshotID]),
+			connection.query(`
+                DELETE
+                FROM SnapshotChannels
+                WHERE snapshot_id = ?
+			`, [snapshotID]),
+
+
+			// Move bans forward
+			connection.query(`
+                DELETE
+                FROM SnapshotBans
+                WHERE snapshot_id = ?
+                  AND EXISTS (SELECT 1
+                              FROM SnapshotBans AS next
+                              WHERE next.snapshot_id = ?
+                                AND next.id = SnapshotBans.id)
+			`, [snapshotID, nextSnapshotID]),
+			connection.query(`
+                UPDATE SnapshotBans
+                SET snapshot_id = ?
+                WHERE snapshot_id = ?
+                  AND NOT EXISTS (SELECT 1
+                                  FROM SnapshotBans AS next
+                                  WHERE next.snapshot_id = ?
+                                    AND next.id = SnapshotBans.id)
+			`, [nextSnapshotID, snapshotID, nextSnapshotID]),
+			connection.query(`
+                DELETE
+                FROM SnapshotBans
+                WHERE snapshot_id = ?
+			`, [snapshotID])
+		);
 
 		promiseQueue.push(
 			connection.query(`

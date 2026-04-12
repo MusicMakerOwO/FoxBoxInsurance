@@ -1876,8 +1876,10 @@
         {
           re: /https?:\/\/[^\s<>()[\]{}|\\^`"]+/,
           fn: (m) => {
-            const s = el("span", { style: { color: "#72767d" } });
-            s.textContent = m[0];
+            const href = m[0];
+            const s = el("span", { style: { color: "#72767d", textDecoration: "underline", cursor: "pointer" } });
+            s.textContent = href;
+            s.addEventListener("click", () => window.open(href, "_blank", "noopener,noreferrer"));
             return s;
           },
         },

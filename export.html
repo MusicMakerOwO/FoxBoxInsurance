@@ -3295,6 +3295,7 @@
         const row = el("div", {
           class: `msg ${grouped ? "grouped" : "not-grouped"}`,
         });
+		row.oncontextmenu = (e) => userContextMenu(e, user, msg);
         const left = el("div", { class: "msg-left" });
         if (grouped) {
           const ts = el("span", { class: "msg-timestamp-hover" });
@@ -3306,7 +3307,6 @@
             src: avatarUrl,
             crossorigin: "anonymous",
           });
-          img.oncontextmenu = (e) => userContextMenu(e, user, msg);
           img.onerror = () => (img.src = getDefaultAvatar(msg.user_id ?? "0"));
           left.appendChild(img);
         }

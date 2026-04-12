@@ -16,7 +16,7 @@ import { GetAsset } from "../../CRUD/Assets";
 import { GetSticker } from "../../CRUD/Stickers";
 import { GetEmoji } from "../../CRUD/Emojis";
 import { createHash } from "node:crypto";
-import { JSONReplacer } from "../../JSON";
+import { JSONReplacer, JSONStringify } from "../../JSON";
 import { readFileSync } from "node:fs";
 import { client } from "../../Client";
 import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys";
@@ -341,7 +341,7 @@ You can check if the export has been tampered with by using /verify and the ID a
 			content: msg.content?.toString() ?? null
 		} as ExportedMessage
 	}
-	return output;
+	return ObjectConvertBigInt(output) as JSONStringify<typeof output>;
 }
 
 function ExportHTML(context: ExportContext) {
@@ -374,4 +374,17 @@ function ExportHTML(context: ExportContext) {
 	}
 
 	return page;
+}
+
+function ObjectConvertBigInt(obj: unknown): unknown {
+	if (typeof obj === 'bigint') return obj.toString();
+	if (Array.isArray(obj)) return obj.map(ObjectConvertBigInt);
+	if (obj && typeof obj === 'object' && !(obj instanceof Date)) {
+		const result: Record<string, unknown> = {};
+		for (const [key, value] of Object.entries(obj)) {
+			result[key] = ObjectConvertBigInt(value);
+		}
+		return result;
+	}
+	return obj;
 }

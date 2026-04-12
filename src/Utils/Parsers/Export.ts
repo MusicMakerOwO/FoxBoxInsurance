@@ -64,8 +64,6 @@ const MONTHS = [
 	'December'
 ] as const;
 
-const missingAsset = readFileSync(`${__dirname}/../../../missing.png`);
-
 const HASH_ALGORITHM = 'sha256';
 
 export type ExportOptions = {
@@ -305,7 +303,6 @@ function ExportText(context: ExportContext) {
 }
 
 export type JSONExport = ReturnType<typeof ExportJSON>;
-
 function ExportJSON(context: ExportContext) {
 	type ExportedMessage = typeof context.messages[0] & { content: string | null }
 	const guild = client.guilds.cache.get(context.guild.id.toString());
@@ -346,34 +343,8 @@ You can check if the export has been tampered with by using /verify and the ID a
 
 function ExportHTML(context: ExportContext) {
 	const lookups = ExportJSON(context);
-
-	const TEMPLATES = {
-		username   : context.owner.username,
-		userid     : context.owner.id,
-		guildname  : context.guild.name,
-		guildid    : context.guild.id,
-		channelid  : context.channel.id,
-		channelname: context.channel.name,
-		exportid   : context.id,
-		lookup     : JSON.stringify(lookups, JSONReplacer, 4),
-		missing    : missingAsset.toString('base64')
-	} as const;
-
-	let page = readFileSync(`${__dirname}/../../../page.html`, 'utf-8');
-
-	// {{name}}
-	const templateRegex = /\{\{([a-zA-Z0-9_]+)}}/g;
-	const templatesUsed = page.match(templateRegex) ?? [];
-	for (const template of templatesUsed) {
-		const key = template.replace(templateRegex, '$1');
-		if (key in TEMPLATES) {
-			page = page.replaceAll(template, TEMPLATES[key as keyof typeof TEMPLATES].toString());
-		} else {
-			throw new Error(`Template ${key} not found`);
-		}
-	}
-
-	return page;
+	const template = readFileSync(`${__dirname}/../../../export.html`, 'utf-8');
+	return template.replace(/\{\{EXPORT_DATA}}/, JSON.stringify(lookups));
 }
 
 function ObjectConvertBigInt(obj: unknown): unknown {

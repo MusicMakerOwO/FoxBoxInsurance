@@ -201,7 +201,8 @@ export type SimpleMessageExport = {
 	format: ObjectValues<typeof FORMAT>,
 	hash: string,
 	lookup: string,
-	created_at: Date,
+	/** Unix timestamp in seconds */
+	created_at: number,
 }
 
 export type SnapshotExportMetadata = {

@@ -74,8 +74,8 @@ export default {
 			const channel = await GetChannel(exportData.channel_id);
 			embed.description += `
 **Export ID:** \`${exportData.id}\`
-<t:${Math.floor(exportData.created_at.getTime() / 1000)}:D>
 ${guild?.name ?? "Unknown"} - #${channel?.name ?? "Unknown"}
+<t:${Math.floor(exportData.created_at)}:D>
 `
 		}
 

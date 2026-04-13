@@ -41,7 +41,7 @@ export default {
 **Messages** : ${exportData.message_count}
 **Format** : ${FORMAT_NAMES[exportData.format] || 'Unknown'}
 
-**Created At** : <t:${Math.floor(exportData.created_at.getTime() / 1000)}:f>`
+**Created At** : <t:${Math.floor(exportData.created_at)}:f>`
 		}
 
 		return { embeds: [embed], components: [] }

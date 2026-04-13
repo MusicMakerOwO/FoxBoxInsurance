@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS Exports (
 	channel_id BIGINT UNSIGNED NOT NULL,
 	user_id BIGINT UNSIGNED NOT NULL,
 	message_count SMALLINT UNSIGNED NOT NULL,
-	format VARCHAR(10) NOT NULL,
+	format TINYINT NOT NULL,
 	hash TEXT NOT NULL UNIQUE, -- The hash of the file
 	lookup TEXT NOT NULL UNIQUE, -- The file ID on the CDN server
     created_at INT UNSIGNED NOT NULL DEFAULT UNIX_TIMESTAMP()

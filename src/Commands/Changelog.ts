@@ -197,7 +197,8 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 		date: "2026 April 13th",
 		changes: [
 			"Update changelog to make it easier to find versions",
-			"Fixed a bug that a failed automatic snapshot would abort the remaining servers"
+			"Fixed a bug that a failed automatic snapshot would abort the remaining servers",
+			"Removed the \"all\" option from changelogs",
 		]
 	}
 } as const;
@@ -242,22 +243,6 @@ export default {
 	},
 	execute: async function(interaction) {
 		const input = interaction.options.getString('version') || 'latest';
-
-		if (input === 'all') {
-			// show all versions
-			const embed = {
-				color: COLOR.PRIMARY,
-				title: `Fox Box Insurance : Historical Changelogs`,
-				description: ''
-			}
-
-			for (const [version, data] of Object.entries(CHANGELOG).sort((a, b) => b[0].localeCompare(a[0]))) {
-				embed.description += `**${version}** - \`${data.date}\`\n`;
-				embed.description += `${data.changes.map(x => `\\- ${x}`).join('\n')}\n\n`;
-			}
-
-			return { embeds: [embed] };
-		}
 
 		const majorMatch = input.match(/^(\d+)\.0$/);
 		if (majorMatch) {

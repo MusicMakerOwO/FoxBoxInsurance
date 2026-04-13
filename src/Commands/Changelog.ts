@@ -3,7 +3,7 @@ import {COLOR} from "../Utils/Constants";
 import {CommandHandler} from "../Typings/HandlerTypes";
 
 const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
-	"v2.0.1": {
+	"2.0.1": {
 		date: "2025 May 3rd",
 		changes: [
 			"This command lol",
@@ -12,32 +12,32 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Made some commands publicly visible"
 		]
 	},
-	"v2.0.2": {
+	"2.0.2": {
 		date: "2025 May 5th",
 		changes: [
 			"Better time handling for automated tasks"
 		]
 	},
-	"v2.1.0": {
+	"2.1.0": {
 		date: "2025 May 7th",
 		changes: [
 			"Better handling for failed messages",
 			"Put the wrong link below lmao"
 		]
 	},
-	"v2.1.1": {
+	"2.1.1": {
 		date: "2025 May 8th",
 		changes: [
 			"Database optimizations :>"
 		]
 	},
-	"v2.2.0": {
+	"2.2.0": {
 		date: "2025 May 8th",
 		changes: [
 			"Rebuilt the changelog command to show past versions"
 		]
 	},
-	"v2.2.1": {
+	"2.2.1": {
 		date: "2025 May 8th",
 		changes: [
 			"Fixed time collisions for automated tasks",
@@ -45,7 +45,7 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed typo in previous changelog"
 		]
 	},
-	"v2.3.0": {
+	"2.3.0": {
 		date: "2025 May 9th",
 		changes: [
 			"Added database backups",
@@ -53,33 +53,33 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Updated access requirements for some commands",
 		]
 	},
-	"v2.4.0": {
+	"2.4.0": {
 		date: "2025 May 11th",
 		changes: [
 			"Added a prompt to accept the TOS after inviting",
 			"Bug that bot tries to read DMs (it can't lol)",
 		]
 	},
-	"v2.4.1": {
+	"2.4.1": {
 		date: "2025 May 13th",
 		changes: [
 			"Small bug fixes"
 		]
 	},
-	"v2.4.2": {
+	"2.4.2": {
 		date: "2025 May 18th",
 		changes: [
 			"Adjusted internal logs to be more readable",
 			"Small database optimizations",
 		]
 	},
-	"v2.4.3": {
+	"2.4.3": {
 		date: "2025 May 26th",
 		changes: [
 			"Adjusted internal configs for (slightly) better performance"
 		]
 	},
-	"v2.4.4": {
+	"2.4.4": {
 		date: "2025 June 28th",
 		changes: [
 			"Couple of small fixes to message exporting",
@@ -87,26 +87,26 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Popup message if server has not accepted the TOS"
 		]
 	},
-	"v2.4.5": {
+	"2.4.5": {
 		date: "2025 June 29th",
 		changes: [
 			"Fixed a bug with stale data in cache"
 		]
 	},
-	"v2.4.6": {
+	"2.4.6": {
 		date: "2025 July 1st",
 		changes: [
 			"Little changes for (slightly) better performance",
 			"Fixed a bug where accepting the TOS would have no effect"
 		]
 	},
-	"v2.4.7": {
+	"2.4.7": {
 		date: "2025 July 5th",
 		changes: [
 			"Security patch that exposes encryption tags in JSON exports"
 		]
 	},
-	"v3.0.0": {
+	"3.0.0": {
 		date: "2025 July 8th",
 		changes: [
 			"Huge update to the bot, lots of stuff changed lol",
@@ -117,7 +117,7 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Messages will never be exported in snapshots"
 		]
 	},
-	"v3.0.1": {
+	"3.0.1": {
 		date: "2025 July 11th",
 		changes: [
 			"Bunch of little bug fixes",
@@ -125,20 +125,20 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Minor touches to internal logs, nothing to note"
 		]
 	},
-	"v3.0.2": {
+	"3.0.2": {
 		date: "2025 July 22th",
 		changes: [
 			"Fixed a bug where TOS could not be accepted from DMs (credit to @titsou.js)",
 			"Fixed a display issue allowing you to accept the TOS twice (credit to @titsou.js)",
 		]
 	},
-	"v3.0.3": {
+	"3.0.3": {
 		date: "2025 August 1st",
 		changes: [
 			"Updated server costs in /donate with the addition of email hosting"
 		]
 	},
-	"v4.0.0": {
+	"4.0.0": {
 		date: "2025 September 11th",
 		changes: [
 			"Switched databases",
@@ -146,19 +146,19 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"New and stronger encryption for messages"
 		]
 	},
-	"v4.0.1": {
+	"4.0.1": {
 		date: "2025 September 11th",
 		changes: [
 			"Better error message for deleting a pinned snapshot (credit to @titsou.js)"
 		]
 	},
-	"v4.0.2": {
+	"4.0.2": {
 		date: "2025 September 18th",
 		changes: [
 			"Fixed a bug where restoring a snapshot would not update message data internally"
 		]
 	},
-	"v4.0.3": {
+	"4.0.3": {
 		date: "2025 October 1st",
 		changes: [
 			"Fixed website not loading properly (credit to @justabettergamingchair)",
@@ -168,7 +168,7 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Bad data parsing when reading export metadata"
 		]
 	},
-	"v5.0.0": {
+	"5.0.0": {
 		date: "2026 April 12th",
 		changes: [
 			"Rebuilt the database for better storage and speeds",
@@ -192,10 +192,23 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Adjusted the export format selection to be easier to read",
 			"All new HTML exports (credit to @banana.dev ❤️)",
 		]
+	},
+	"5.0.1": {
+		date: "2026 April 13th",
+		changes: [
+			"Update changelog to make it easier to find versions",
+			"Fixed a bug that a failed automatic snapshot would abort the remaining servers"
+		]
 	}
 } as const;
 
 export const LATEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => b.localeCompare(a))[0];
+
+function ParseSemver(input: string): [major: string, minor: string, patch: string] {
+	const parts = input.split('.');
+	if (parts.length !== 3) throw new Error(`Invalid semver: ${input}`);
+	return parts as ReturnType<typeof ParseSemver>;
+}
 
 export default {
 	tos_features  : [],
@@ -204,18 +217,29 @@ export default {
 	response_type : 'reply',
 	hidden        : false,
 	data          : new SlashCommandBuilder()
-		.setName('changelog')
-		.setDescription('New here? Check out what has changed!')
-		.addStringOption(x => x
-			.setName('version')
-			.setDescription('The version you want to check')
-			.setRequired(false)
-			.addChoices([
+	.setName('changelog')
+	.setDescription('New here? Check out what has changed!')
+	.addStringOption(x => x
+		.setName('version')
+		.setDescription('The version you want to check')
+		.setRequired(false)
+		.setAutocomplete(true)
+	),
+	autocomplete: async function(interaction) {
+		let input = interaction.options.getFocused(false);
+		if (input.startsWith('v')) input = input.replace(/^[A-Za-z]+/, '');
+
+		if (!input) {
+			const majors = Array.from( new Set(Object.keys(CHANGELOG).map(v => ParseSemver(v)[0] )) );
+			return [
 				{ name: 'Latest', value: 'latest' },
-				{ name: 'All', value: 'all' },
-				... Object.entries(CHANGELOG).sort((a, b) => b[0].localeCompare(a[0])).map(([version]) => ({ name: version, value: version })),
-			])
-		),
+				... majors.map(major => ({ name: `v${major}`, value: `${major}.0.0` }))
+			]
+		} else {
+			const versions = Object.keys(CHANGELOG).filter(v => v.startsWith(input) || v.startsWith(`v${input}`)).sort((a, b) => a.localeCompare(b)).slice(0, 25);
+			return versions.map(v => ({ name: `v${v} - ${CHANGELOG[v].date}`, value: v }));
+		}
+	},
 	execute: async function(interaction) {
 		const input = interaction.options.getString('version') || 'latest';
 
@@ -235,6 +259,31 @@ export default {
 			return { embeds: [embed] };
 		}
 
+		const majorMatch = input.match(/^(\d+)\.0$/);
+		if (majorMatch) {
+			const majorNum = majorMatch[1];
+			const entries = Object.entries(CHANGELOG)
+			.filter(([v]) => v.startsWith(`${majorNum}.`))
+			.sort((a, b) => b[0].localeCompare(a[0]));
+
+			if (!entries.length) {
+				return { content: `No changelog found for major version \`${majorNum}.x\``, ephemeral: true };
+			}
+
+			const embed = {
+				color: COLOR.PRIMARY,
+				title: `Fox Box Insurance : v${majorNum}.x`,
+				description: ''
+			};
+
+			for (const [ver, data] of entries) {
+				embed.description += `**${ver}** - \`${data.date}\`\n`;
+				embed.description += `${data.changes.map(x => `\\- ${x}`).join('\n')}\n\n`;
+			}
+
+			return { embeds: [embed] };
+		}
+
 		const version = input === 'latest' ? LATEST_VERSION : input;
 
 		const data = CHANGELOG[version];
@@ -248,7 +297,7 @@ export default {
 
 		const embed = {
 			color: COLOR.PRIMARY,
-			title: `Fox Box Insurance : ${version}`,
+			title: `Fox Box Insurance : v${version}`,
 			description: `
 Updated: \`${data.date}\`
 

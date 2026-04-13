@@ -71,7 +71,7 @@ export default {
 				emoji: { name: EMOJI.EXPORT }
 			});
 			const guild = await GetGuild(exportData.guild_id);
-			const channel = await GetChannel(exportData.guild_id);
+			const channel = await GetChannel(exportData.channel_id);
 			embed.description += `
 **Export ID:** \`${exportData.id}\`
 ${guild} - #${channel}

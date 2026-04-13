@@ -31,9 +31,13 @@ export async function SnapshotServers() {
 	if (process.env.DEV_MODE) console.log(`Backing up ${snapshotQueue.length} servers : ${snapshotQueue.map(g => g.id).join(', ')}`);
 
 	for (const guild of snapshotQueue) {
-		const snapshotID = await CreateSnapshot(guild, SNAPSHOT_TYPE.AUTOMATIC);
-		if (!snapshotID) {
-			Log('ERROR', `Failed to create snapshot for ${guild.name}: No snapshot returned`);
+		try {
+			const snapshotID = await CreateSnapshot(guild, SNAPSHOT_TYPE.AUTOMATIC)
+			if (!snapshotID) {
+				Log('ERROR', `Failed to create snapshot for ${guild.name}: No snapshot returned`);
+			}
+		} catch (error) {
+			Log('ERROR', error);
 		}
 	}
 

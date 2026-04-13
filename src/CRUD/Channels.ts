@@ -13,7 +13,7 @@ export async function SaveChannel(channel: GuildChannel | SimpleChannel) {
 
 	if (channel instanceof GuildChannel) {
 		// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
-		await connection.query(`INSERT INTO Channels (guild_id, id, name, type) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?`, [channel.guildId, channel.id, channel.name, channel.type]);
+		await connection.query(`INSERT INTO Channels (guild_id, id, name, type) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`, [channel.guildId, channel.id, channel.name, channel.type]);
 		const saved = await connection.query(`SELECT * FROM Channels WHERE id = ?`, [channel.id]).then( x => x[0]) as SimpleChannel;
 		cache.set(saved.id, saved);
 		INVALID_CHANNEL_IDS.delete(channel.id);

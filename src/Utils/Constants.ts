@@ -33,18 +33,33 @@ export const FORMAT = {
 	TEXT : 1,
 	JSON : 2,
 	HTML : 4,
+
+	/**
+	 * @deprecated This format is no longer available and will error if attempted
+	 */
+	CSV  : 3,
 } as const;
 
 export const FORMAT_NAMES: { [K in keyof typeof FORMAT as (typeof FORMAT)[K]]: string } = {
 	[FORMAT.TEXT] : 'TXT',
 	[FORMAT.JSON] : 'JSON',
-	[FORMAT.HTML] : 'HTML'
+	[FORMAT.HTML] : 'HTML',
+
+	/**
+	 * @deprecated This format is no longer available and will error if attempted
+	 */
+	[FORMAT.CSV] : 'CSV'
 } as const;
 
 export const FORMAT_EMOJIS: { [K in keyof typeof FORMAT as (typeof FORMAT)[K]]: string } = {
 	[FORMAT.TEXT] : '📄',
 	[FORMAT.JSON] : '🗂️',
 	[FORMAT.HTML] : '🌐',
+
+	/**
+	 * @deprecated This format is no longer available and will error if attempted
+	 */
+	[FORMAT.CSV] : '📊'
 } as const;
 
 export const SNAPSHOT_TYPE = {

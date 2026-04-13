@@ -167,6 +167,31 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Channel exports missing creation dates",
 			"Bad data parsing when reading export metadata"
 		]
+	},
+	"v5.0.0": {
+		date: "2026 April 12th",
+		changes: [
+			"Rebuilt the database for better storage and speeds",
+			"Switched from JavaScript to TypeScript",
+			"Rebuilt all internal components for better testing",
+			"Rebuild message exports to be more efficient",
+			"Added versioning for internal message encryption",
+			"Reworked how user encryption keys are generated/stored",
+			"Server owner is no longer required to accept TOS",
+			"Added automatic internal testing",
+			"Added TOS versioning",
+			"Added toggleable server features",
+			"Updated message deletion logic (10k messages/channel or 60 days, whichever comes first)",
+			"Rebuilt how snapshots are created (better testing & easier to work with)",
+			"Rebuilt how snapshots are imported",
+			"Bumped snapshot export version for the new file format",
+			"Changed the text in `/invite` to be less cheesy",
+			"You can now decline a TOS update and continue using the bot as is",
+			"Removed snapshot restoration to be added back in a later release",
+			"Removed CSV format for exports because they make no sense and no one used them anyways",
+			"Adjusted the export format selection to be easier to read",
+			"All new HTML exports (credit to @banana.dev ❤️)",
+		]
 	}
 } as const;
 

@@ -57,6 +57,8 @@ export default {
 		}
 
 		const availableSnapshots = await ListSnapshotsForGuild(interaction.guildId!);
+		// sort in order of newest -> oldest
+		availableSnapshots.sort( (a, b) => b.id - a.id);
 		for (const snapshot of availableSnapshots) {
 			items.push({ type: snapshot.type as 0 | 1, id: snapshot.id });
 		}

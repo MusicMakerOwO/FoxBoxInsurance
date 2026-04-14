@@ -167,14 +167,14 @@ Created at <t:${~~(createdAt / 1000)}:d>`;
 					style: 2,
 					emoji: { name: EMOJI.NEXT_PAGE },
 					custom_id: `snapshot-list_${page + 1}`,
-					disabled: ((page + 1) * PAGE_SIZE) < items.length
+					disabled: ((page + 1) * PAGE_SIZE) > items.length
 				},
 				{
 					type: 2,
 					style: 2,
 					emoji: { name: EMOJI.LAST_PAGE },
 					custom_id: `snapshot-list_last`,
-					disabled: ((page + 1) * PAGE_SIZE) < items.length
+					disabled: ((page + 1) * PAGE_SIZE) > items.length
 				}
 			]
 		}

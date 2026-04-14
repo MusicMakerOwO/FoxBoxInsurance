@@ -76,6 +76,8 @@ Create one using \`/snapshot create\``
 			}
 		}
 
+		if ( ! isFinite(page) ) page = Math.floor(items.length / PAGE_SIZE);
+
 		const visibleItems = items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
 		const maxSnapshots = await MaxSnapshotsForGuild(interaction.guildId!);

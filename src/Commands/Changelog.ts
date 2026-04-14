@@ -200,6 +200,15 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed a bug that a failed automatic snapshot would abort the remaining servers",
 			"Removed the \"all\" option from changelogs",
 		]
+	},
+	"5.0.2": {
+		date: "2026 April 14th",
+		changes: [
+			"Fixed global message stats to use the new database format",
+			"Fixed snapshot list to appear in order of newest -> oldest",
+			"Fixed page buttons on snapshot listing",
+			"Updated the snapshot listing embed slightly to be more condensed"
+		]
 	}
 } as const;
 

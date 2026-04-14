@@ -118,7 +118,7 @@ Create one using \`/snapshot create\``
 
 				const queuedDeletion = await isSnapshotQueuedForDeletion(item.id);
 
-				embed.description += `\n
+				embed.description += `
 ${queuedDeletion ? `**${EMOJI.WARNING} This snapshot is pending deletion**` : ''}
 ${emoji} **Snapshot #${item.id}** - \`${SNAPSHOT_TYPE_NAME[snapshotData.type]}\` ${SNAPSHOT_TYPE_EMOJI[snapshotData.type]}
 | Channels: ${snapshotData.channels.size}

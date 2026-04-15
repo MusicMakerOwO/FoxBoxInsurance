@@ -39,6 +39,7 @@ export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: n
 		});
 
 		function OnError(reason: unknown) {
+			if (reason === null) return; // not an error, callback from the write()
 			reject(reason);
 			request.destroy();
 		}

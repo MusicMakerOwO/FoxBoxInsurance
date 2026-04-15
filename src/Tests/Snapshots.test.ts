@@ -63,6 +63,17 @@ describe('Snapshots', async () => {
 		expect(deleteUnpinned).toBe(true);
 	})
 
+	it('queues deletion from oldest snapshots first', async () => {
+		// unpin all snapshots
+		for (const ID of SNAPSHOT_IDs) await SetSnapshotPinStatus(ID, false);
+		const oldest = await isSnapshotQueuedForDeletion(SNAPSHOT_IDs[0]);
+		const second_oldest = await isSnapshotQueuedForDeletion(SNAPSHOT_IDs[1]);
+		const newest = await isSnapshotQueuedForDeletion(lastSnapshotID);
+		expect(oldest).toBe(true);
+		expect(second_oldest).toBe(false);
+		expect(newest).toBe(false);
+	})
+
 	it('returns null if a given snapshot does not exist', async () => {
 		const invalid = await GetSnapshot(-1);
 		expect(invalid).toBeNull()

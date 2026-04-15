@@ -46,6 +46,7 @@ export async function ListSnapshotsForGuild(guildID: SimpleGuild['id'] | Guild['
         SELECT *
         FROM Snapshots
         WHERE guild_id = ?
+        ORDER BY id ASC
 	`, [BigInt(guildID)]) as SnapshotMetadata[];
 }
 
@@ -393,15 +394,17 @@ export async function isSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['
 	const availableSnapshots = await ListSnapshotsForGuild(guildID);
 	if (availableSnapshots.length <= maxSnapshotCount) return false; // not enough snapshots to delete
 
-	// we only have to check the last snapshots because anything before will stay no matter what
-	for (let i = maxSnapshotCount; i < availableSnapshots.length; i++) {
-		const snapshot = availableSnapshots[i];
-		if (snapshot.id === snapshotID) {
-			return !snapshot.pinned; // can only delete if not pinned
-		}
+	const overflowCount = availableSnapshots.length - maxSnapshotCount;
+
+	// Snapshots are already ordered oldest-first (ASC). Collect the oldest
+	// non-pinned snapshots up to the number that need to be removed.
+	const deletionCandidates: SnapshotMetadata['id'][] = [];
+	for (const snapshot of availableSnapshots) {
+		if (deletionCandidates.length >= overflowCount) break;
+		if (!snapshot.pinned) deletionCandidates.push(snapshot.id);
 	}
 
-	return false;
+	return deletionCandidates.includes(snapshotID);
 }
 
 export async function IsSnapshotDeletable(snapshotID: SnapshotMetadata['id']) {
@@ -435,7 +438,7 @@ export async function SetSnapshotPinStatus(snapshotID: SnapshotMetadata['id'], p
 	const snapshots = await ListSnapshotsForGuild(guildID);
 	const pinCount = snapshots.reduce((acc, snapshot) => acc + snapshot.pinned, 0);
 	const maxSnapshots = await MaxSnapshotsForGuild(guildID);
-	if (pinCount >= maxSnapshots) throw new Error('Cannot pin snapshot - Slots are already full');
+	if (pinned && pinCount >= maxSnapshots) throw new Error('Cannot pin snapshot - Slots are already full');
 
 	await Database.query(`
         UPDATE Snapshots

@@ -98,6 +98,21 @@ export default {
 			}
 		}
 
+		const botRole = interaction.guild!.roles.cache.find(x => x.tags?.botId === client.user.id );
+		if (!botRole) {
+			return {
+				embeds: [{
+					color: COLOR.ERROR,
+					title: 'No Bot Role Found',
+					description: `
+Due to discord limitations you are required to have a bot role in your server. This is often caused if you invite the bot without any permissions.
+
+You can re-invite the bot with this link: https://notfbi.dev/invite
+Or you can use [this link](https://discord.com/oauth2/authorize?client_id=1065103018212732938&permissions=3072&integration_type=0&scope=bot) if you prefer to give the bot minimal permissions`
+				}]
+			}
+		}
+
 		if (subcommand === 'list' || subcommand === 'manage') {
 
 			// if (isGuildRestoring(interaction.guild.id)) {

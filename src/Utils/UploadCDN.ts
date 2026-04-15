@@ -37,15 +37,15 @@ export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: n
 			});
 		});
 
-		function OnError(reason: string) {
-			reject(`Failed to upload asset: ${reason}`);
+		function OnError(reason: unknown) {
+			reject(reason);
 			request.destroy();
 		}
 
 		request.on('error', OnError);
 		request.on('timeout', OnError);
 
-		request.write(data);
+		request.write(data, OnError);
 		request.end();
 	});
 }

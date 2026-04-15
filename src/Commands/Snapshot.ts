@@ -9,6 +9,7 @@ import {Log} from "../Utils/Log";
 import {SaveImportForGuild} from "../CRUD/SnapshotImports";
 import { TOS_FEATURES } from "../TOSConstants";
 import { DiscordPermissions } from "../Utils/DiscordConstants";
+import { GetFeatureFlag } from "../Services/GuildFeatures";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -93,15 +94,15 @@ export default {
 			}
 		}
 
-		// if ((savedGuild.features & GUILD_FEATURES.MANAGE_SNAPSHOTS) !== 0 ) {
-		// 	return {
-		// 		embeds: [{
-		// 			color: COLOR.ERROR,
-		// 			title: 'Snapshots Disabled',
-		// 			description: 'Snapshots are disabled on this server\nPlease enable them first'
-		// 		}],
-		// 	}
-		// }
+		if ( ! GetFeatureFlag(savedGuild, GUILD_FEATURES.MANAGE_SNAPSHOTS) ) {
+			return {
+				embeds: [{
+					color: COLOR.ERROR,
+					title: 'Snapshots Disabled',
+					description: 'Snapshots are disabled on this server\nPlease enable them first'
+				}],
+			}
+		}
 
 		if (subcommand === 'list' || subcommand === 'manage') {
 

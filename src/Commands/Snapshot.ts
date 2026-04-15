@@ -1,7 +1,7 @@
 import {COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE} from "../Utils/Constants";
 import {ButtonInteraction, SlashCommandBuilder} from "discord.js";
 import {CommandHandler} from "../Typings/HandlerTypes";
-import {GetGuild, SaveGuild} from "../CRUD/Guilds";
+import {GetGuild} from "../CRUD/Guilds";
 import {GUILD_FEATURES} from "../Typings/DatabaseTypes";
 import {CreateSnapshot, JSONSnapshot} from "../CRUD/Snapshots";
 import {BuildSnapshotFromImport} from "../Utils/Snapshots/Imports/Parse";
@@ -9,7 +9,7 @@ import {Log} from "../Utils/Log";
 import {SaveImportForGuild} from "../CRUD/SnapshotImports";
 import { TOS_FEATURES } from "../TOSConstants";
 import { DiscordPermissions } from "../Utils/DiscordConstants";
-import { GetFeatureFlag } from "../Services/GuildFeatures";
+import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -78,13 +78,7 @@ export default {
 			const enabled = subcommand === 'enable';
 			const emoji = subcommand === 'enable' ? EMOJI.SUCCESS : EMOJI.ERROR;
 
-			if (enabled) {
-				savedGuild.features |= GUILD_FEATURES.MANAGE_SNAPSHOTS;
-			} else {
-				savedGuild.features &= ~GUILD_FEATURES.MANAGE_SNAPSHOTS;
-			}
-
-			void SaveGuild(savedGuild)
+			void SetFeatureFlag(savedGuild, GUILD_FEATURES.MANAGE_SNAPSHOTS, true);
 
 			return {
 				embeds: [{

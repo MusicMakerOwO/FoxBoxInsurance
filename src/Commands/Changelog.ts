@@ -216,7 +216,8 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed a rare bug that `UploadCDN()` would not emit an error",
 			"Cleaned up some service code in regard to `/snapshot`",
 			"Added an error if no bot role was found in the server (caused if you invite without permissions)",
-			"Fixed a missing feature check when using `/snapshot`"
+			"Fixed a missing feature check when using `/snapshot`",
+			"Snapshots where wrongly marked in queue for deletion",
 		]
 	}
 } as const;

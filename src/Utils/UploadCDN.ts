@@ -1,4 +1,5 @@
 import https from "node:https";
+import { IncomingMessage } from "node:http";
 
 // remove all non-ASCII characters
 function CleanName(input: string) {
@@ -20,7 +21,7 @@ export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: n
 				'key': process.env.CDN_KEY,
 				'download-limit': String(downloadLimit || null), // 0 -> null -> no limit
 			}
-		}, (response: any) => {
+		}, (response: IncomingMessage) => {
 			const data: string[] = [];
 			response.on('data', (chunk: string) => data.push(chunk));
 			response.on('end', () => {

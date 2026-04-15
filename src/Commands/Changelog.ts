@@ -209,6 +209,15 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed page buttons on snapshot listing",
 			"Updated the snapshot listing embed slightly to be more condensed"
 		]
+	},
+	"5.0.3": {
+		date: "2026 April 15th",
+		changes: [
+			"Fixed a rare bug that `UploadCDN()` would not emit an error",
+			"Cleaned up some service code in regard to `/snapshot`",
+			"Added an error if no bot role was found in the server (caused if you invite without permissions)",
+			"Fixed a missing feature check when using `/snapshot`"
+		]
 	}
 } as const;
 

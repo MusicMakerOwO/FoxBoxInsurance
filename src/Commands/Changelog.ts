@@ -219,6 +219,13 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed a missing feature check when using `/snapshot`",
 			"Snapshots where wrongly marked in queue for deletion",
 		]
+	},
+	"5.0.4": {
+		date: "2026 April 16th",
+		changes: [
+			"Fixed UploadStats() to push stats to website",
+			"Fixed snapshot deletion button",
+		]
 	}
 } as const;
 

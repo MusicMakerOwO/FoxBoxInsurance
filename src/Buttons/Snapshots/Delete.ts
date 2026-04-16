@@ -62,6 +62,7 @@ export default {
 					components: [{
 						type: 2,
 						style: 2,
+						label: 'Back',
 						custom_id: 'snapshot-list',
 					}]
 				}]

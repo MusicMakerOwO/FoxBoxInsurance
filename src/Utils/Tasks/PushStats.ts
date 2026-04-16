@@ -13,7 +13,7 @@ export async function PushStats() {
 	const snapshotCount = await connection.query('SELECT COUNT(*) as count FROM Snapshots').then(rows => Number(rows[0].count));
 
 	try {
-		await fetch('https://api.notfbi.dev/', {
+		await fetch('https://api.notfbi.dev/stats', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

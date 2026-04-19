@@ -61,10 +61,16 @@ class DatabaseWrapper {
 		await this.Initialize();
 
 		const connection = await this.connection_pool!.getConnection();
-		await connection.beginTransaction();
-		await callback(connection);
-		await connection.commit();
-		Database.releaseConnection(connection);
+		try {
+			await connection.beginTransaction();
+			await callback(connection);
+			await connection.commit();
+		} catch (error) {
+			await connection.rollback();
+			throw error;
+		} finally {
+			Database.releaseConnection(connection);
+		}
 	}
 
 	async destroy() {

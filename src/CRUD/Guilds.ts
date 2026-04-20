@@ -68,5 +68,5 @@ export async function DiscardGuild(id: string | bigint) {
  * THIS CANNOT BE UNDONE!!!
  */
 export async function DANGER_PurgeGuild(id: string | bigint) {
-	await Database.query('DELETE FROM Channels WHERE id = ?', [ BigInt(id) ]);
+	await Database.query('DELETE FROM Guilds WHERE id = ?', [ BigInt(id) ]);
 }

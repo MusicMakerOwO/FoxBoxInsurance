@@ -36,7 +36,7 @@ export function ParseRole(data: Record<string, unknown>): Omit<SnapshotRole, 'sn
 
 	// https://support.discord.com/hc/en-us/articles/33694251638295-Discord-Account-Caps-Server-Caps-and-More#h_01K0YRW1XP13WNJE84D7J97VN7
 	if (!ValidBigInt(data.id)) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
-	if (!ValidString(data.name, { min_length: 2, max_length: 100 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
+	if (!ValidString(data.name, { min_length: 1, max_length: 100 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 	if (!ValidNumber(data.color, { min: 0x000000, max: 0xFFFFFF })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 	if (!ValidBoolean(data.hoist)) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 	if (!ValidNumber(data.position, { min: 0 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
@@ -69,7 +69,7 @@ export function ParseChannel(data: Record<string, unknown>): Omit<SnapshotChanne
 	if (!CompareBlueprint(data, blueprint)) throw new Error(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 
 	if (!ValidBigInt(data.id)) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
-	if (!ValidString(data.name, { min_length: 2, max_length: 100 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
+	if (!ValidString(data.name, { min_length: 1, max_length: 100 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 	if (!ValidNumber(data.type, { min: 0 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 	if (!ValidNumber(data.position, { min: 0 })) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 	if (!ValidBoolean(data.nsfw)) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);

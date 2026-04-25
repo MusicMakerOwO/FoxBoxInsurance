@@ -6,7 +6,6 @@ import {GUILD_FEATURES} from "../Typings/DatabaseTypes";
 import {CreateSnapshot, JSONSnapshot} from "../CRUD/Snapshots";
 import {BuildSnapshotFromImport} from "../Utils/Snapshots/Imports/Parse";
 import {Log} from "../Utils/Log";
-import {SaveImportForGuild} from "../CRUD/SnapshotImports";
 import { TOS_FEATURES } from "../TOSConstants";
 import { DiscordPermissions } from "../Utils/DiscordConstants";
 import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures";
@@ -205,7 +204,7 @@ ${error.message}
 				return {};
 			}
 
-			SaveImportForGuild(interaction.guildId!, importData);
+			client.importCache.set(importData.id, importData);
 
 			const importSnapshot = client.buttons.get('import')!;
 			return importSnapshot.execute(interaction as unknown as ButtonInteraction, client, [importData.id]);

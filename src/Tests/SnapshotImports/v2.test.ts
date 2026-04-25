@@ -58,7 +58,7 @@ describe('Roles', () => {
 	it('throws CORRUPTED if name is too short', () => {
 		const input = {
 			id         : '1',
-			name       : 'A',
+			name       : '',
 			color      : 0,
 			hoist      : 0,
 			position   : 0,

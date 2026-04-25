@@ -43,7 +43,10 @@ It will be removed from your list <t:${~~(Date.now() / 1000) + SECONDS.MINUTE * 
 					type: 2,
 					style: 2,
 					label: 'View Snapshots',
-					emoji: { name: EMOJI.OPEN },
+					emoji: {
+						name: 'launch',
+						id: EMOJI.OPEN
+					},
 					custom_id: 'snapshot-list'
 				}]
 			}]

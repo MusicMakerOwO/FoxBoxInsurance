@@ -103,7 +103,7 @@ export const EMOJI = {
 
 	DELETE        : '🗑️',
 	EDIT          : '✏️',
-	OPEN          : '<:launch:1382570390861254787>',
+	OPEN          : '1382570390861254787',
 } as const;
 
 export const LOADING_MESSAGES = [

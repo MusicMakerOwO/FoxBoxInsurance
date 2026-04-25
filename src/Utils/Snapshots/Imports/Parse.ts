@@ -37,7 +37,7 @@ export async function BuildSnapshotFromImport(input: unknown) {
 	const exportMetadata = await Database.query(`SELECT * FROM SnapshotExports WHERE id = ?`, [data.id]).then(x => x[0]) as SnapshotExportMetadata | null;
 	if (!exportMetadata || exportMetadata.revoked) throw new Error('Something went wrong trying to parse the snapshot');
 
-	const str = JSON.stringify(exportMetadata);
+	const str = JSON.stringify(data);
 	if (exportMetadata.length !== str.length) {
 		void Database.query('UPDATE SnapshotExports SET revoked = ? WHERE id = ?', [true, exportMetadata.id]);
 		throw new Error(SNAPSHOT_ERRORS.CORRUPTED);

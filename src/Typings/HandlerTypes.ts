@@ -15,7 +15,7 @@ import { TOS_FEATURES } from "../TOSConstants";
 import { GUILD_FEATURES } from "./DatabaseTypes";
 import { DiscordPermissions } from "../Utils/DiscordConstants";
 
-type NoReply<T extends Interaction> = Omit<T, 'reply' | 'editReply' | 'deferReply' | 'deferUpdate' | 'respond'>;
+type NoReply<T extends Interaction> = Omit<T, 'reply' | 'editReply' | 'deferReply' | 'deferUpdate' | 'respond' | 'followUp'>;
 
 interface ComponentSettings {
 	usage?: string;

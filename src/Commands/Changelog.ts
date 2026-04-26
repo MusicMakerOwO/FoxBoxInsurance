@@ -228,7 +228,7 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 		]
 	},
 	"5.0.5": {
-		date: "2026 April 20th",
+		date: "2026 April 24th",
 		changes: [
 			"Updated internal database management to better handle errors (credit to @sevryn.devyxi)",
 			"Fixed an internal function confusing servers and channels (credit to @sevryn.devyxi)",
@@ -237,6 +237,13 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed a bug where the bot forgets about an import before confirmation (credit to @banana.dev)",
 			"Fixed a badly formatted emoji on import confirmation",
 			"Fixed a bug where imports would be pre-emptively saved to the server before clicking 'confirm'",
+		]
+	},
+	"5.0.6": {
+		date: "2026 April 26th",
+		changes: [
+			"Fixed a hash collision on message exports (credit to @banana.dev)",
+			"Added feedback if you type a message count too large/small (credit to @banana.dev)",
 		]
 	}
 } as const;

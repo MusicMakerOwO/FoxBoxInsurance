@@ -5,6 +5,7 @@ import {ButtonInteraction} from "discord.js";
 import {CreateExportCacheKey} from "../Typings/CacheEntries";
 import { TOS_FEATURES } from "../TOSConstants";
 import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
+import { COLOR, EMOJI } from "../Utils/Constants";
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -17,8 +18,32 @@ export default {
 
 		const input = interaction.fields.getTextInputValue('data');
 
-		const cleanInput = input.replace(/\D/g, ''); // 10,000 -> 10000
-		const inputNumber = Math.max(20, Math.min(10_000, parseInt(cleanInput))); // [1, 10_000]
+		const targetMessageCount = parseInt(input.replace(/\D/g, '')) || 100; // 10,000 -> 10000
+
+		if (targetMessageCount < 20) {
+			// @ts-expect-error
+			void interaction.followUp({
+				embeds: [{
+					color: COLOR.ERROR,
+					description: `${EMOJI.WARNING} Cannot export less than 20 messages`
+				}],
+				flags: 64
+			});
+			return {};
+		}
+		if (targetMessageCount > 10_000) {
+			// @ts-expect-error
+			void interaction.followUp({
+				embeds: [{
+					color: COLOR.ERROR,
+					description: `${EMOJI.WARNING} Cannot export more than 10,000 messages`
+				}],
+				flags: 64
+			});
+			return {};
+		}
+
+		const inputNumber = Math.max(20, Math.min(10_000, targetMessageCount)); // [20, 10_000]
 
 		// @ts-expect-error
 		const exportOptions = await GetExportCache(interaction);

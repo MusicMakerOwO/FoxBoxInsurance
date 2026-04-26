@@ -240,7 +240,7 @@ export async function ExportChannel(options: ExportOptions) {
 	// memes_export.txt
 	const fileName = context.channel.name + '_export.' + FORMAT_NAMES[options.format].toLowerCase();
 	const hash = createHash('sha256')
-	.update(fileName)
+	.update(fileData)
 	.digest('hex');
 
 	Database.releaseConnection(connection);

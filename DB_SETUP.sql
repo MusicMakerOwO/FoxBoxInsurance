@@ -132,6 +132,7 @@ CREATE TABLE IF NOT EXISTS Exports (
 	message_count SMALLINT UNSIGNED NOT NULL,
 	format TINYINT NOT NULL,
 	hash TEXT NOT NULL UNIQUE, -- The hash of the file
+    hash_algorithms TINYTEXT NOT NULL, -- SHA256, CRC, etc.
 	lookup TEXT NOT NULL UNIQUE, -- The file ID on the CDN server
     created_at INT UNSIGNED NOT NULL DEFAULT UNIX_TIMESTAMP()
 );

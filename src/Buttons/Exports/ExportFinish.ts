@@ -47,12 +47,10 @@ The error has been reported automatically and a fix is being worked on`
 		// upload to the cdn server for easy access
 		const lookup = await UploadCDN(file.name, file.data, 1); // 1 url = 1 download
 
-		const hash = createHash('sha1').update(file.data).digest('hex');
-
 		// insert the export into the database
 		await Database.query(`
-			INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash, lookup)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash_algorithm, hash, lookup)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`, [
 			file.id,
 			exportOptions.guildID,
@@ -60,7 +58,8 @@ The error has been reported automatically and a fix is being worked on`
 			exportOptions.userID,
 			exportOptions.messageCount,
 			exportOptions.format,
-			hash,
+			file.hash[0],
+			file.hash[1],
 			lookup
 		]);
 

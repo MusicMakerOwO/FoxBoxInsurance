@@ -245,6 +245,14 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed a hash collision on message exports (credit to @banana.dev)",
 			"Added feedback if you type a message count too large/small (credit to @banana.dev)",
 		]
+	},
+	"5.0.7": {
+		date: "2026 April 27th",
+		changes: [
+			"Fixed hash collisions on message exports (again)",
+			"Updated `/verify` for easier future updates",
+			"Fixed a memory leak causing the database to lock up"
+		]
 	}
 } as const;
 

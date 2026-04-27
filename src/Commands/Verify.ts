@@ -5,6 +5,7 @@ import { Database } from "../Database";
 import { Log } from "../Utils/Log";
 import { createHash } from "node:crypto";
 import { APIEmbed } from "discord-api-types/v10";
+import { SimpleMessageExport } from "../Typings/DatabaseTypes";
 
 const FailedEmbed = {
 	color      : COLOR.ERROR,
@@ -51,12 +52,12 @@ export default {
 		const exportID = interaction.options.getString('export_id')!;
 		const file = interaction.options.getAttachment('file')!;
 
-		const storedHash = await Database.query(`
+		const metadata = await Database.query(`
             SELECT hash
             FROM Exports
             WHERE id = ?`, [exportID])
-		.then(x => x[0]?.hash) as string | null;
-		if (!storedHash) {
+		.then(x => x[0]) as Pick<SimpleMessageExport, 'hash' | 'hash_algorithm'>;
+		if (!metadata) {
 			return { embeds: [NoExportEmbed] };
 		}
 
@@ -75,10 +76,10 @@ export default {
 
 		let embed: APIEmbed = CleanEmbed;
 
-		const hash = createHash('sha1')
+		const hash = createHash(metadata.hash_algorithm)
 		.update(fileData)
 		.digest('hex');
-		if (hash !== storedHash) {
+		if (hash !== metadata.hash) {
 			embed = ModifiedEmbed;
 		}
 

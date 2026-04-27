@@ -44,17 +44,22 @@ class DatabaseWrapper {
 		await this.Initialize();
 
 		const connection = await this.connection_pool!.getConnection();
-		const result = await connection.query(sql, params);
-		Database.releaseConnection(connection);
-		return result;
+		try {
+			return await connection.query(sql, params);
+		} finally {
+			Database.releaseConnection(connection);
+		}
 	}
 
 	async batch(sql: string, paramsArray: unknown[][] = [[]]) {
 		await this.Initialize();
 
 		const connection = await this.connection_pool!.getConnection();
-		await connection.batch(sql, paramsArray);
-		Database.releaseConnection(connection);
+		try {
+			await connection.batch(sql, paramsArray);
+		} finally {
+			Database.releaseConnection(connection);
+		}
 	}
 
 	async transaction(callback: (connection: PoolConnection) => Awaitable<void>) {

@@ -3,7 +3,6 @@ import {COLOR} from "../../Utils/Constants";
 import {DownloadAssets} from "../../Utils/Processing/Images";
 import {ButtonHandler} from "../../Typings/HandlerTypes";
 import {UploadCDN} from "../../Utils/UploadCDN";
-import {createHash} from "node:crypto";
 import {Log} from "../../Utils/Log";
 import {Database} from "../../Database";
 import {ExportChannel} from "../../Utils/Parsers/Export";
@@ -27,7 +26,7 @@ export default {
 		await DownloadAssets(); // download files
 		// await UploadFiles(); // upload files to the CDN
 
-		let file;
+		let file: Awaited<ReturnType<typeof ExportChannel>>;
 		try {
 			file = await ExportChannel(exportOptions);
 		} catch (error) {

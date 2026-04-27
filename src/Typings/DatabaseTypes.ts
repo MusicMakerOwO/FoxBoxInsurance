@@ -200,6 +200,7 @@ export type SimpleMessageExport = {
 	message_count: number,
 	format: ObjectValues<typeof FORMAT>,
 	hash: string,
+	hash_algorithm: string,
 	lookup: string,
 	/** Unix timestamp in seconds */
 	created_at: number,

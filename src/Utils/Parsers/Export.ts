@@ -351,7 +351,10 @@ async function ExportHTML(context: ExportContext) {
 	// 265KB -> 200KB
 	return await minify(result, {
 		minifyJS: true,
-		minifyCSS: true
+		minifyCSS: true,
+
+		// For some reason the cache causes hash collisions and I cannot tell you how that is possible o_o
+		cacheJS: 1
 	})
 }
 

@@ -253,6 +253,14 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Updated `/verify` for easier future updates",
 			"Fixed a memory leak causing the database to lock up"
 		]
+	},
+	"5.0.8": {
+		date: "2026 June 2nd",
+		changes: [
+			"Added some internal debug logs",
+			"Fixed an issue with typescript versioning",
+			"Fixed a bug preventing HTML exports displaying some of the assets"
+		]
 	}
 } as const;
 

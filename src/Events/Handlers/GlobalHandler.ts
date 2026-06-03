@@ -52,6 +52,10 @@ export default {
 				type = 'modal';
 				break;
 			default:
+				// @ts-ignore | "Property 'type' does not exist on type 'never'"
+				// That's kind of the point of this default case lmao
+				//
+				// This error only occurs with TypeScript 7.0
 				Log('WARN', `Unknown interaction type: ${interaction.type} - Unsure how to handle this...`);
 				type = 'unknown';
 				break;

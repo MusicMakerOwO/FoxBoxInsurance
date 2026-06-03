@@ -323,13 +323,13 @@ You can check if the export has been tampered with by using /verify and the ID a
 		channel : context.channel,
 		roles   : Object.fromEntries(serverRoles),
 		users   : Object.fromEntries(context.users.entries()
-		.map(([id, x]) => [Number(id), x])),
+		.map(([id, x]) => [String(id), x])),
 		emojis  : Object.fromEntries(context.emojis.entries()
-		.map(([id, x]) => [Number(id), x])),
+		.map(([id, x]) => [String(id), x])),
 		stickers: Object.fromEntries(context.stickers.entries()
-		.map(([id, x]) => [Number(id), x])),
+		.map(([id, x]) => [String(id), x])),
 		assets  : Object.fromEntries(context.assets.entries()
-		.map(([id, x]) => [Number(id), x])),
+		.map(([id, x]) => [String(id), x])),
 		messages: new Array<ExportedMessage>(context.messages.length)
 	};
 	for (let i = 0; i < context.messages.length; i++) {

@@ -37,6 +37,7 @@ export async function SnapshotServers() {
 				Log('ERROR', `Failed to create snapshot for ${guild.name}: No snapshot returned`);
 			}
 		} catch (error) {
+			Log('ERROR', `Cannot snapshot guild: ${guild.id}`);
 			Log('ERROR', error);
 		}
 	}

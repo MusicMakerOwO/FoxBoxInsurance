@@ -63,7 +63,8 @@ const user: SimpleUser = {
 	bot                   : 0,
 	terms_version_accepted: 0,
 	wrapped_key           : null,
-	rotation_hour         : 0
+	rotation_hour         : 0,
+	opt_out_collection    : 0
 }
 
 const embed: APIEmbed = {

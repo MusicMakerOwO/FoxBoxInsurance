@@ -74,7 +74,8 @@ export type SimpleUser = {
 	bot: 1 | 0,
 	terms_version_accepted: number,
 	wrapped_key: Buffer | null,
-	rotation_hour: number
+	rotation_hour: number,
+	opt_out_collection: 1 | 0
 }
 
 export type SimpleEmoji = {
@@ -169,20 +170,6 @@ export type SnapshotChannelOverwrite = {
 	type: typeof OVERWRITE_TYPE.ROLE
 		| typeof OVERWRITE_TYPE.USER
 }
-
-// export type SnapshotPermission = {
-// 	snapshot_id: number,
-// 	deleted: 1 | 0,
-//
-// 	channel_id: bigint,
-// 	id: bigint,
-//
-// 	/** Role = 0, User = 1 */
-// 	type: 0 | 1,
-//
-// 	allow: bigint,
-// 	deny: bigint,
-// }
 
 export type SnapshotBan = {
 	snapshot_id: number,

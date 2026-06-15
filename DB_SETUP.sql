@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS Users (
 	bot BOOLEAN NOT NULL DEFAULT 0,
 	terms_version_accepted TINYINT UNSIGNED NOT NULL DEFAULT 0, -- 0 is not accepted
 	wrapped_key VARBINARY(512),
+    opt_out_collection BOOLEAN NOT NULL DEFAULT FALSE,
     rotation_hour TINYINT UNSIGNED GENERATED ALWAYS AS ( id % 24 ) STORED -- The hour of the day (0-23) the user's key should be rotated
 );
 CREATE INDEX IF NOT EXISTS users_hour ON Users(rotation_hour ASC);

@@ -8,6 +8,7 @@ import {Log} from "../Utils/Log";
 import {PoolConnection} from "mariadb";
 import {JSONReplacer} from "../JSON";
 import {ASSET_TYPE, QueueDownload} from "../Utils/Processing/Images";
+import { GetUser } from "../CRUD/Users";
 
 export default {
 	name: 'messageCreate',
@@ -67,7 +68,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 	const users       = new Map<   User['id'], User             >();
 	const stickers    = new Map<Sticker['id'], Sticker          >();
 	const emojis      = new Map<  Emoji['id'], SimpleEmoji      >();
-	const messageData = new Array<Omit<SimpleMessage, 'encryption_version'>>(messages.length);
+	const messageData = new Array<SimpleMessage>(messages.length);
 
 	for (let i = messages.length - 1; i >= 0; i--) { // reverse loop to get the most recent data first
 		const message = messages[i];
@@ -86,30 +87,54 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			emojiIDs.push(id);
 		}
 
-		messageData[i] = {
-			id: BigInt(message.id),
-			guild_id: BigInt(message.guild.id),
-			channel_id: BigInt(message.channel.id),
-			user_id: BigInt(message.author.id),
+		const savedUser = await GetUser(message.author.id) ?? { opt_out_collection: false }
 
-			content: message.content.length > 0 ? Buffer.from(message.content, 'utf8') : null,
+		if (!savedUser.opt_out_collection) {
+			messageData[i] = {
+				id: BigInt(message.id),
+				guild_id: BigInt(message.guild.id),
+				channel_id: BigInt(message.channel.id),
+				user_id: BigInt(message.author.id),
 
-			sticker_id: sticker ? BigInt(sticker.id) : null,
+				content: message.content.length > 0 ? Buffer.from(message.content, 'utf8') : null,
+				reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
 
-			reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
+				sticker_id: sticker ? BigInt(sticker.id) : null,
 
-			length: message.content.length,
+				length: message.content.length,
+				created_at: message.createdAt,
+				data: {
+					attachments: Array.from(message.attachments.values()).map( x => ({ id: x.id, name: x.name })),
+					emoji_ids: emojiIDs,
+					embeds: message.embeds.map(x => x.toJSON()).filter(
+						// ignore embeds from gif links
+						x => !x.url?.startsWith("https:\/\/tenor\.com\/view\/")
+					),
+					components: message.components.map(x => x.toJSON())
+				},
+				encryption_version: null
+			}
+		} else {
+			messageData[i] = {
+				id: BigInt(message.id),
+				guild_id: BigInt(message.guild.id),
+				channel_id: BigInt(message.channel.id),
+				user_id: BigInt(message.author.id),
 
-			created_at: message.createdAt,
+				content: null,
+				reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
 
-			data: {
-				attachments: Array.from(message.attachments.values()).map( x => ({ id: x.id, name: x.name })),
-				emoji_ids: emojiIDs,
-				embeds: message.embeds.map(x => x.toJSON()).filter(
-					// ignore embeds from gif links
-					x => !x.url?.startsWith("https:\/\/tenor\.com\/view\/")
-				),
-				components: message.components.map(x => x.toJSON())
+				sticker_id: null,
+
+				length: 0,
+				created_at: message.createdAt,
+				data: {
+					attachments: [],
+					emoji_ids: [],
+					embeds: [],
+					components: []
+				},
+				encryption_version: null
 			}
 		}
 	}

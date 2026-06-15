@@ -17,6 +17,7 @@ import {
 	SimpleUser
 } from "../Typings/DatabaseTypes";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
+import { DiscardUser } from "../CRUD/Users";
 
 dotenv.config({ path: `${__dirname}/../../.env`, quiet: true });
 
@@ -295,7 +296,8 @@ describe("SaveMessages", () => {
 			bot                   : +!!API_USER.bot,
 			terms_version_accepted: 0,
 			wrapped_key           : null,
-			rotation_hour         : 18
+			rotation_hour         : 18,
+			opt_out_collection    : 0
 		});
 	});
 
@@ -524,6 +526,40 @@ describe("SaveMessages", () => {
 				... INSERTED_MESSAGE_EMPTY.data,
 				attachments: [{ id: API_ATTACHMENT.id, name: API_ATTACHMENT.filename }]
 			}
+		});
+	});
+
+	it('redacts message data for users who opted out of collection', async () => {
+		await Database.query(
+			`INSERT INTO Users (id, username, bot, opt_out_collection)
+			 VALUES (?, ?, ?, ?)
+			 ON DUPLICATE KEY UPDATE
+			 username = VALUES(username),
+			 bot = VALUES(bot),
+			 opt_out_collection = VALUES(opt_out_collection)`,
+			[BigInt(API_USER.id), API_USER.username, +!!API_USER.bot, true]
+		);
+		await DiscardUser(API_USER.id);
+
+		// @ts-expect-error
+		await MessageCreate.execute(new Message<true>(client, {
+			... API_MESSAGE_EMPTY,
+			content    : `hello <:${API_EMOJIS[0].name}:${API_EMOJIS[0].id}>`,
+			stickers   : [API_STICKER],
+			attachments: [API_ATTACHMENT],
+			embeds     : [{ title: 'Not Saved', type: EmbedType.Rich }]
+		}));
+		await ProcessMessages({ quiet: true });
+
+		const savedMessage = await Database.query('SELECT * FROM Messages WHERE id = ?', [API_MESSAGE_EMPTY.id])
+		.then(x => x[0]) as SimpleMessage;
+		expect(savedMessage)
+		.toEqual({
+			... INSERTED_MESSAGE_EMPTY,
+			content   : null,
+			sticker_id: null,
+			length    : 0,
+			data      : { attachments: [], emoji_ids: [], embeds: [], components: [] }
 		});
 	});
 

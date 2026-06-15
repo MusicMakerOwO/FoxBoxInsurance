@@ -261,6 +261,14 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Fixed an issue with typescript versioning",
 			"Fixed a bug preventing HTML exports displaying some of the assets"
 		]
+	},
+	"5.1.0": {
+		date: "2026 June 15th",
+		changes: [
+			"Updated Terms of Service to better cooperation with Discord's TOS",
+			"Added the ability to opt out of data collection (redacts all future messages)",
+			"Reduced message retention from 60 days to 30 days",
+		]
 	}
 } as const;
 

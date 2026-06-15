@@ -7,6 +7,7 @@ export const TOS_FEATURE_DESCRIPTION: { [K in ObjectValues<typeof TOS_FEATURES>]
 	[TOS_FEATURES.SERVER_SNAPSHOTS]: 'server snapshots',
 	[TOS_FEATURES.IMPORT_SNAPSHOTS]: 'snapshot imports',
 	[TOS_FEATURES.TOS_VERSIONING]  : 'tos versioning',
+	[TOS_FEATURES.DATA_COLLECTION_OPT_OUT]  : 'opt out of data collection',
 } as const;
 
 // Precompute features table for O(1) lookup

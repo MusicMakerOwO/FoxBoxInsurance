@@ -12,7 +12,11 @@ export async function EncryptMessages() {
 
 	const userKeys = await ResolveUserKeyBulk(unencryptedMessages.map(m => m.user_id));
 
-	const updateValues: [Buffer | null, number, bigint][] = [];
+	const updateValues: [
+		content: Buffer | null,
+		encryption_version: number,
+		message_id: bigint
+	][] = [];
 
 	const start = process.hrtime.bigint();
 	for (const message of unencryptedMessages) {

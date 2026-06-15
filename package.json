@@ -9,10 +9,8 @@
 		"vitest": "^4.0.18"
 	},
 	"scripts": {
-		"check": "echo \"Checking for errors ...\" && tsc --noEmit",
-		"check:go": "echo \"Checking for errors ...\" && tsgo --noEmit",
-		"build": "echo \"Checking for errors ...\" && tsc --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsc -b tsconfig.json",
-		"build:go": "echo \"Checking for errors ...\" && tsgo --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsgo -b",
+		"check": "echo \"Checking for errors ...\" && tsgo --noEmit",
+		"build": "echo \"Checking for errors ...\" && tsgo --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsgo -b",
 		"start": "node build/index.js",
 		"linecount": "find . -type f -name '*.ts' -not -path './node_modules/*' -exec wc -l {} + | sort -n -r | head -n 10",
 		"test": "vitest run",
@@ -21,6 +19,6 @@
 	},
 	"devDependencies": {
 		"@types/node": "^25.3.5",
-		"typescript": "^5.9.3"
+		"@typescript/native-preview": "^7.0.0-dev.20260615.1"
 	}
 }

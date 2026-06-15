@@ -13,7 +13,7 @@ describe("GetNextRequiredTOSVersion", () => {
 
 	it("returns null if no required version is greater than user's version", async () => {
 		const disallowed: ObjectValues<typeof TOS_FEATURES>[] = [TOS_FEATURES.MESSAGE_EXPORTS];
-		const user = { terms_version_accepted: 2 };
+		const user = { terms_version_accepted: 3 };
 		expect(GetNextRequiredTOSVersion(disallowed, user)).toBe(null);
 		vi.resetModules();
 	});

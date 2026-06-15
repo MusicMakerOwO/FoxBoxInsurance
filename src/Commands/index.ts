@@ -9,6 +9,7 @@ export { default as Snapshot } from './Snapshot';
 export { default as Terms } from './Terms';
 export { default as Verify } from './Verify';
 export { default as Vote } from './Vote';
+export { default as DataCollection } from './DataCollection';
 
 export { default as DisableUser } from './Users/Disable';
 export { default as EnableUser } from './Users/Enable';

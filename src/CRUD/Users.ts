@@ -18,7 +18,7 @@ export async function SaveUser(user: User | SimpleUser) {
 		cache.set(saved.id, saved);
 		INVALID_USER_IDS.delete(user.id);
 	} else {
-		await connection.query(`UPDATE Users SET username = ?, terms_version_accepted = ?, wrapped_key = ? WHERE id = ?`, [user.username, user.terms_version_accepted, user.wrapped_key, user.id]);
+		await connection.query(`UPDATE Users SET username = ?, terms_version_accepted = ?, wrapped_key = ?, opt_out_collection = ? WHERE id = ?`, [user.username, user.terms_version_accepted, user.wrapped_key, user.opt_out_collection, user.id]);
 		cache.set(user.id, user);
 	}
 

@@ -1,7 +1,7 @@
 import {EventHandler} from "../Typings/HandlerTypes";
 import {GetGuild} from "../CRUD/Guilds";
 import { Channel, Emoji, Guild, GuildBasedChannel, Message, MessageFlags, Sticker, User } from "discord.js";
-import { GUILD_FEATURES, SimpleEmoji, SimpleMessage } from "../Typings/DatabaseTypes";
+import { GUILD_FEATURES, MessageHistory, SimpleEmoji, SimpleMessage } from "../Typings/DatabaseTypes";
 import {SECONDS} from "../Utils/Constants";
 import {Database} from "../Database";
 import {Log} from "../Utils/Log";
@@ -19,7 +19,10 @@ export default {
 
 		const savedGuild = await GetGuild(message.guildId);
 		if (!savedGuild) return;
-		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_SAVING) === 0) return;
+		if (
+			(savedGuild.features & GUILD_FEATURES.MESSAGE_SAVING) === 0 ||
+			(savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) === 0
+		) return;
 
 		if (message.flags.has(MessageFlags.Ephemeral)) return;
 
@@ -68,7 +71,10 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 	const users       = new Map<   User['id'], User             >();
 	const stickers    = new Map<Sticker['id'], Sticker          >();
 	const emojis      = new Map<  Emoji['id'], SimpleEmoji      >();
+
+	// Uninitialized arrays, be sure to sanitize when reading!
 	const messageData = new Array<SimpleMessage>(messages.length);
+	const messageHistory = new Array<MessageHistory>(messages.length);
 
 	for (let i = messages.length - 1; i >= 0; i--) { // reverse loop to get the most recent data first
 		const message = messages[i];
@@ -88,53 +94,66 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 		}
 
 		const savedUser = await GetUser(message.author.id) ?? { opt_out_collection: false }
+		const savedGuild = (await GetGuild(message.guild.id))!;
 
-		if (!savedUser.opt_out_collection) {
-			messageData[i] = {
-				id: BigInt(message.id),
-				guild_id: BigInt(message.guild.id),
+		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 ) {
+			messageHistory[i] = {
+				created_at: BigInt(message.createdTimestamp), // seconds
+				guild_id  : BigInt(message.guild.id),
 				channel_id: BigInt(message.channel.id),
-				user_id: BigInt(message.author.id),
-
-				content: message.content.length > 0 ? Buffer.from(message.content, 'utf8') : null,
-				reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
-
-				sticker_id: sticker ? BigInt(sticker.id) : null,
-
-				length: message.content.length,
-				created_at: message.createdAt,
-				data: {
-					attachments: Array.from(message.attachments.values()).map( x => ({ id: x.id, name: x.name })),
-					emoji_ids: emojiIDs,
-					embeds: message.embeds.map(x => x.toJSON()).filter(
-						// ignore embeds from gif links
-						x => !x.url?.startsWith("https:\/\/tenor\.com\/view\/")
-					),
-					components: message.components.map(x => x.toJSON())
-				},
-				encryption_version: null
 			}
-		} else {
-			messageData[i] = {
-				id: BigInt(message.id),
-				guild_id: BigInt(message.guild.id),
-				channel_id: BigInt(message.channel.id),
-				user_id: BigInt(message.author.id),
+		}
 
-				content: null,
-				reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
+		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 ) {
+			if (!savedUser.opt_out_collection) {
+				messageData[i] = {
+					id: BigInt(message.id),
+					guild_id: BigInt(message.guild.id),
+					channel_id: BigInt(message.channel.id),
+					user_id: BigInt(message.author.id),
 
-				sticker_id: null,
+					content: message.content.length > 0 ? Buffer.from(message.content, 'utf8') : null,
+					reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
 
-				length: 0,
-				created_at: message.createdAt,
-				data: {
-					attachments: [],
-					emoji_ids: [],
-					embeds: [],
-					components: []
-				},
-				encryption_version: null
+					sticker_id: sticker ? BigInt(sticker.id) : null,
+
+					length: message.content.length,
+					created_at: message.createdAt,
+					data: {
+						attachments: Array.from(message.attachments.values())
+						.map(x => ({ id: x.id, name: x.name })),
+						emoji_ids: emojiIDs,
+						embeds: message.embeds.map(x => x.toJSON())
+						.filter(
+							// ignore embeds from gif links
+							x => !x.url?.startsWith("https:\/\/tenor\.com\/view\/")
+						),
+						components: message.components.map(x => x.toJSON())
+					},
+					encryption_version: null
+				}
+			} else {
+				messageData[i] = {
+					id: BigInt(message.id),
+					guild_id: BigInt(message.guild.id),
+					channel_id: BigInt(message.channel.id),
+					user_id: BigInt(message.author.id),
+
+					content: null,
+					reply_to: message.reference && message.reference.messageId ? BigInt(message.reference.messageId) : null,
+
+					sticker_id: null,
+
+					length: 0,
+					created_at: message.createdAt,
+					data: {
+						attachments: [],
+						emoji_ids: [],
+						embeds: [],
+						components: []
+					},
+					encryption_version: null
+				}
 			}
 		}
 	}
@@ -231,13 +250,23 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
                       reply_to,
                       data
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			messageData.map( x => [
+			// `filter( () => true )` removes all uninitialized entries regardless of their value
+			// No comparison needed, JS just simply skips them lol
+			messageData.filter( () => true ).map( x => [
 				x.id, x.guild_id, x.channel_id, x.user_id,
 				x.content, x.length, x.sticker_id,
 				x.reply_to,
 				JSON.stringify(x.data, JSONReplacer)
 			])
 		);
+
+		promises.push( BulkInsert( connection,
+			`INSERT INTO MessageHistory (created_at, guild_id, channel_id) VALUES (?, ?, ?)`,
+			// `filter( () => true )` removes all uninitialized entries regardless of their value
+			// No comparison needed, JS just simply skips them lol
+			messageHistory.filter( () => true ).map(x => [x.created_at, x.guild_id, x.channel_id])
+		));
+
 
 		await connection.query('COMMIT');
 	} catch (error) {
@@ -247,7 +276,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 		Database.releaseConnection(connection);
 	}
 
-	if (!opts.quiet) Log('TRACE', `Inserted ${messageData.length} messages :D`);
+	if (!opts.quiet) Log('TRACE', `Inserted ${messageData.filter( () => true ).length} messages :D`);
 }
 
 async function BulkInsert(connection: PoolConnection, sql: string, rows: unknown[][]) {

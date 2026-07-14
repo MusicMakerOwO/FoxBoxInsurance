@@ -234,3 +234,14 @@ CREATE TABLE IF NOT EXISTS SnapshotExports (
 	revoked BOOLEAN NOT NULL DEFAULT 0 -- 1 if the export is revoked
 );
 CREATE INDEX IF NOT EXISTS snapshot_exports_user_id ON SnapshotExports (user_id);
+
+
+
+-- No primary key
+CREATE TABLE MessageHistory (
+    created_at BIGINT UNSIGNED NOT NULL,
+    guild_id BIGINT UNSIGNED NOT NULL,
+    channel_id BIGINT UNSIGNED NOT NULL
+);
+CREATE INDEX IF NOT EXISTS messagehistory_guild_id ON MessageHistory(guild_id);
+CREATE INDEX IF NOT EXISTS messagehistory_channel_id ON MessageHistory(channel_id);

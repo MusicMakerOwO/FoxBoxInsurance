@@ -14,7 +14,8 @@ import {
 	SimpleEmoji,
 	SimpleGuild,
 	SimpleMessage, SimpleSticker,
-	SimpleUser
+	SimpleUser,
+	MessageHistory
 } from "../Typings/DatabaseTypes";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
 import { DiscardUser } from "../CRUD/Users";
@@ -225,10 +226,11 @@ client.user = {
 }
 
 async function ClearTestData() {
-	await Database.query('DELETE FROM Messages WHERE id = ?', [BigInt(API_MESSAGE_EMPTY.id)]);
-	await Database.query('DELETE FROM Channels WHERE id = ?', [BigInt(API_CHANNEL.id)]);
+	await Database.query('DELETE FROM MessageHistory WHERE guild_id = ? OR guild_id = ?', [BigInt(API_GUILD.id), 9999n]);
+	await Database.query('DELETE FROM Messages WHERE id IN (?, ?, ?, ?, ?, ?, ?)', [BigInt(API_MESSAGE_EMPTY.id), 1001n, 1002n, 1003n, 4001n, 4002n, 3001n]);
+	await Database.query('DELETE FROM Channels WHERE id IN (?, ?, ?)', [BigInt(API_CHANNEL.id), 9998n, 4444n]);
 	await Database.query('DELETE FROM Users WHERE id = ?', [BigInt(API_USER.id)]);
-	await Database.query('DELETE FROM Guilds WHERE id = ?', [BigInt(API_GUILD.id)]);
+	await Database.query('DELETE FROM Guilds WHERE id IN (?, ?)', [BigInt(API_GUILD.id), 9999n]);
 	await Database.query(`
         DELETE
         FROM Emojis
@@ -560,6 +562,163 @@ describe("SaveMessages", () => {
 			sticker_id: null,
 			length    : 0,
 			data      : { attachments: [], emoji_ids: [], embeds: [], components: [] }
+		});
+	});
+
+	describe('MessageHistory', () => {
+		it('saves message history for guilds with MESSAGE_HISTORY feature enabled', async () => {
+			// @ts-expect-error
+			const message = new Message<true>(client, API_MESSAGE_EMPTY);
+			await MessageCreate.execute(message);
+			await ProcessMessages({ quiet: true });
+
+			const savedHistory = await Database.query(
+				'SELECT * FROM MessageHistory WHERE guild_id = ? AND channel_id = ?',
+				[BigInt(API_GUILD.id), BigInt(API_CHANNEL.id)]
+			).then(x => x as MessageHistory[]);
+
+			expect(savedHistory.length).toBeGreaterThan(0);
+			const history = savedHistory[0];
+			expect(history.guild_id).toBe(BigInt(API_GUILD.id));
+			expect(history.channel_id).toBe(BigInt(API_CHANNEL.id));
+			expect(typeof history.created_at).toBe('bigint');
+		});
+
+		it('saves multiple message history entries for multiple messages', async () => {
+			const messages = [
+				{ ... API_MESSAGE_EMPTY, id: '1001', timestamp: '2026-03-19T19:36:57.000000+00:00' },
+				{ ... API_MESSAGE_EMPTY, id: '1002', timestamp: '2026-03-19T19:37:57.000000+00:00' },
+				{ ... API_MESSAGE_EMPTY, id: '1003', timestamp: '2026-03-19T19:38:57.000000+00:00' }
+			];
+
+			for (const msg of messages) {
+				// @ts-expect-error
+				await MessageCreate.execute(new Message<true>(client, msg));
+			}
+			await ProcessMessages({ quiet: true });
+
+			const savedMessages = await Database.query(
+				'SELECT * FROM Messages WHERE guild_id = ? AND channel_id = ? ORDER BY id',
+				[BigInt(API_GUILD.id), BigInt(API_CHANNEL.id)]
+			).then(x => x as SimpleMessage[]);
+
+			expect(savedMessages.length).toBe(3);
+		});
+
+		it('saves message history with correct guild association', async () => {
+			// @ts-expect-error
+			await MessageCreate.execute(new Message<true>(client, API_MESSAGE_EMPTY));
+			await ProcessMessages({ quiet: true });
+
+			const savedHistory = await Database.query(
+				'SELECT * FROM MessageHistory WHERE guild_id = ?',
+				[BigInt(API_GUILD.id)]
+			).then(x => x as MessageHistory[]);
+
+			expect(savedHistory.length).toBeGreaterThan(0);
+			for (const history of savedHistory) {
+				expect(history.guild_id).toBe(BigInt(API_GUILD.id));
+			}
+		});
+
+		it('saves message history with correct channel association', async () => {
+			const channel2 = {
+				... API_CHANNEL,
+				id: '4444'
+			} as unknown as APIChannel;
+
+			// @ts-expect-error
+			const testChannel2 = new TextChannel(
+				client.guilds.cache.get(API_GUILD.id)!,
+				channel2,
+				client
+			);
+			client.channels.cache.set(channel2.id, testChannel2);
+
+			// @ts-expect-error
+			await MessageCreate.execute(new Message<true>(client, {
+				... API_MESSAGE_EMPTY,
+				id: '4001',
+				timestamp: '2026-03-19T19:36:57.000000+00:00'
+			}));
+			// @ts-expect-error
+			await MessageCreate.execute(new Message<true>(client, {
+				... API_MESSAGE_EMPTY,
+				id: '4002',
+				channel_id: channel2.id,
+				timestamp: '2026-03-19T19:37:57.000000+00:00'
+			}));
+			await ProcessMessages({ quiet: true });
+
+			const history1 = await Database.query(
+				'SELECT * FROM MessageHistory WHERE guild_id = ? AND channel_id = ?',
+				[BigInt(API_GUILD.id), BigInt(API_CHANNEL.id)]
+			).then(x => x as MessageHistory[]);
+
+			const history2 = await Database.query(
+				'SELECT * FROM MessageHistory WHERE guild_id = ? AND channel_id = ?',
+				[BigInt(API_GUILD.id), BigInt(channel2.id)]
+			).then(x => x as MessageHistory[]);
+
+			expect(history1.length).toBeGreaterThan(0);
+			expect(history2.length).toBeGreaterThan(0);
+			expect(history1[0].channel_id).toBe(BigInt(API_CHANNEL.id));
+			expect(history2[0].channel_id).toBe(BigInt(channel2.id));
+			expect(history1[0].guild_id).toBe(history2[0].guild_id);
+
+			// Cleanup - delete messages first due to foreign key constraints
+			await Database.query('DELETE FROM Messages WHERE channel_id = ?', [BigInt(channel2.id)]);
+			await Database.query('DELETE FROM Channels WHERE id = ?', [BigInt(channel2.id)]);
+		});
+
+		it('does not save message history for guilds without MESSAGE_HISTORY feature', async () => {
+			// Create a guild without MESSAGE_HISTORY feature
+			const guildWithoutHistory = {
+				... API_GUILD,
+				id: '9999'
+			} as unknown as APIGuild;
+
+			const channelWithoutHistory = {
+				... API_CHANNEL,
+				id: '9998',
+				guild_id: guildWithoutHistory.id
+			} as unknown as APIChannel;
+
+			// @ts-expect-error
+			const testGuild = new Guild(client, guildWithoutHistory);
+			// @ts-expect-error
+			const testChannel = new TextChannel(testGuild, channelWithoutHistory, client);
+
+			client.guilds.cache.set(guildWithoutHistory.id, testGuild);
+			client.channels.cache.set(channelWithoutHistory.id, testChannel);
+
+			// Insert guild with MESSAGE_HISTORY disabled (only MESSAGE_SAVING enabled)
+			await Database.query(
+				`INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?)
+				 ON DUPLICATE KEY UPDATE name = VALUES(name), features = VALUES(features)`,
+				[BigInt(guildWithoutHistory.id), guildWithoutHistory.name, GUILD_FEATURES.MESSAGE_SAVING]
+			);
+
+			// @ts-expect-error
+			await MessageCreate.execute(new Message<true>(client, {
+				... API_MESSAGE_EMPTY,
+				id: '3001',
+				guild_id: guildWithoutHistory.id,
+				channel_id: channelWithoutHistory.id
+			}));
+			await ProcessMessages({ quiet: true });
+
+			const savedHistory = await Database.query(
+				'SELECT * FROM MessageHistory WHERE guild_id = ?',
+				[BigInt(guildWithoutHistory.id)]
+			).then(x => x as MessageHistory[]);
+
+			expect(savedHistory.length).toBe(0);
+
+			// Cleanup - delete messages first due to foreign key constraints
+			await Database.query('DELETE FROM Messages WHERE guild_id = ?', [BigInt(guildWithoutHistory.id)]);
+			await Database.query('DELETE FROM Channels WHERE id = ?', [BigInt(channelWithoutHistory.id)]);
+			await Database.query('DELETE FROM Guilds WHERE id = ?', [BigInt(guildWithoutHistory.id)]);
 		});
 	});
 

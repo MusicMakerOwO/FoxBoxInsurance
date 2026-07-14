@@ -1,3 +1,4 @@
+export { default as Activity } from './Activity';
 export { default as Changelog } from './Changelog';
 export { default as Donate } from './Donate';
 export { default as Export } from './Export';

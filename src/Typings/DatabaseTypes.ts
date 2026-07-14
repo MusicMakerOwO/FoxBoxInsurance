@@ -22,7 +22,9 @@ export const GUILD_FEATURES = {
 	/** Allows users the ability to export any channel they can access normally (i.e. can view channel and is not banned from exporting) */
 	EXPORT_MESSAGES: 1 << 3,
 	/** If this is enabled, no newer messages will be saved but channels can still export existing data */
-	MESSAGE_SAVING: 1 << 4
+	MESSAGE_SAVING: 1 << 4,
+	/** Allows historical timestamps for message, indexable by guild and channel */
+	MESSAGE_HISTORY: 1 << 5,
 } as const;
 
 export type Asset = {
@@ -204,4 +206,10 @@ export type SnapshotExportMetadata = {
 	hash: string,
 	algorithm: string,
 	revoked: 1 | 0
+}
+
+export type MessageHistory = {
+	created_at: bigint,
+	guild_id: bigint,
+	channel_id: bigint,
 }

@@ -39,7 +39,7 @@ export async function GetMessageBulk(ids: SimpleMessage['id'][]) {
 
 	if (missingIDs.length === 0) return result;
 
-	const data = await Database.query(`SELECT * FROM Messages WHERE id IN (${'?,'.repeat(missingIDs.length - 1)} ?)`) as SimpleMessage[];
+	const data = await Database.query(`SELECT * FROM Messages WHERE id IN (${'?,'.repeat(missingIDs.length - 1)} ?)`, missingIDs ) as SimpleMessage[];
 	for (const message of data) {
 		cache.set(message.id, message);
 		result.set(message.id, message);

@@ -77,8 +77,8 @@ export default {
 			const enabled = subcommand === 'enable';
 			const emoji = subcommand === 'enable' ? EMOJI.SUCCESS : EMOJI.ERROR;
 
-			void SetFeatureFlag(savedGuild, GUILD_FEATURES.MANAGE_SNAPSHOTS, true);
-
+			void SetFeatureFlag(savedGuild, GUILD_FEATURES.MANAGE_SNAPSHOTS, enabled);
+			
 			return {
 				embeds: [{
 					color: COLOR.PRIMARY,

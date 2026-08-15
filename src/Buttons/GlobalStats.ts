@@ -9,7 +9,7 @@ const STAT_SIZE = 10_000;
 function FileSize(bytes: number): string {
 	if (bytes < 1024) return `${bytes} byte(s)`;
 
-	const units = ['KB', 'MB', 'GB', 'TB', 'TB'];
+	const units = ['KB', 'MB', 'GB'];
 	let size = bytes / 1024;
 	let unitIndex = 0;
 

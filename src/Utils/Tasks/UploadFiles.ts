@@ -1,12 +1,12 @@
 import { existsSync } from "node:fs";
-import { Asset } from "../../Typings/DatabaseTypes";
-import { Log } from "../Log";
+import { Asset } from "../../Typings/DatabaseTypes.js";
+import { Log } from "../Log.js";
 import { readFile, rm } from "node:fs/promises";
-import { Database } from "../../Database";
-import { UPLOAD_CACHE_PATH } from "../Constants";
-import { UploadCDN } from "../UploadCDN";
+import { Database } from "../../Database.js";
+import { UPLOAD_CACHE_PATH } from "../Constants.js";
+import { UploadCDN } from "../UploadCDN.js";
 
-export async function UploadFiles() {
+export async function UploadFiles(): Promise<void> {
 	const pendingUploads = await Database.query('SELECT * FROM Assets WHERE hash IS NULL') as Asset[];
 	Log('TRACE', `Uploading ${pendingUploads.length} files to the CDN`);
 

@@ -1,4 +1,4 @@
-import { Awaitable } from '../Typings/HelperTypes';
+import { Awaitable } from '../Typings/HelperTypes.js';
 
 export const TaskScheduler = new class {
 
@@ -30,7 +30,7 @@ export const TaskScheduler = new class {
 
         this.timeout = setTimeout(() => {
 			this.#runNextTask();
-		}, timeUntilNext);
+		}, timeUntilNext).unref();
     }
 
     #runNextTask() {

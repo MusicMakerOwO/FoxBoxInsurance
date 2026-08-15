@@ -1,4 +1,4 @@
-import {SelectMenuHandler} from "../Typings/HandlerTypes";
+import {SelectMenuHandler} from "../Typings/HandlerTypes.js";
 import {ChatInputCommandInteraction} from "discord.js";
 
 export default {
@@ -11,7 +11,7 @@ export default {
 	execute       : async function(interaction, client) {
 		const commandName = interaction.values[0];
 		const helpCommand = client.commands.get('help')!;
-		// @ts-ignore - Hack to pass data around between interactions
+		// @ts-expect-error - Hack to pass data around between interactions
 		interaction.options = {
 			getString: () => commandName
 		}

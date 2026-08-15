@@ -1,10 +1,10 @@
-import {COLOR} from "../../Utils/Constants";
+import {COLOR} from "../../Utils/Constants.js";
 import {SlashCommandBuilder} from "discord.js";
-import {BlockUserFromExport} from "../../Services/ExportAccess";
-import {CommandHandler} from "../../Typings/HandlerTypes";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
-import { DiscordPermissions } from "../../Utils/DiscordConstants";
+import {BlockUserFromExport} from "../../Services/ExportAccess.js";
+import {CommandHandler} from "../../Typings/HandlerTypes.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],

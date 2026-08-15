@@ -1,16 +1,16 @@
-import {EventHandler} from "../../Typings/HandlerTypes";
-import {Log} from "../../Utils/Log";
-import {Database} from "../../Database";
+import {EventHandler} from "../../Typings/HandlerTypes.js";
+import {Log} from "../../Utils/Log.js";
+import {Database} from "../../Database.js";
 import {Interaction} from "discord.js";
-import { client } from "../../Client";
+import { client } from "../../Client.js";
 
 export default {
 	name: 'interactionCreate',
 	execute: async function (interaction: Interaction) {
 
-		// @ts-ignore
+		// @ts-expect-error | customId only exists on some Interaction subtypes, not the base Interaction type
 		const args: string[] = interaction.customId?.split("_") ?? [];
-		// @ts-ignore
+		// @ts-expect-error | commandName only exists on some Interaction subtypes, not the base Interaction type
 		const name: string = args.shift() ?? interaction.commandName;
 
 		let type: string = 'unknown';
@@ -19,11 +19,11 @@ export default {
 			case 4: // Autocomplete
 			case 2: // Slash Commands + Context Menus
 				if (interaction.commandType === 1) {
-					// @ts-ignore | Private properties
+					// @ts-expect-error | Private properties
 					const subcommand: string = interaction.options._subcommand || "";
-					// @ts-ignore
+					// @ts-expect-error | Private properties
 					const subcommandGroup: string = interaction.options._subcommandGroup || "";
-					// @ts-ignore
+					// @ts-expect-error | Private properties
 					const commandArgs: { value: string }[] = interaction.options._hoistedOptions || [];
 					const args = `${subcommandGroup} ${subcommand} ${commandArgs.map(arg => arg.value).join(" ")}`.trim();
 					Log('INFO', `${interaction.user.tag} (${interaction.user.id}) > /${interaction.commandName} ${args}`);
@@ -52,7 +52,7 @@ export default {
 				type = 'modal';
 				break;
 			default:
-				// @ts-ignore | "Property 'type' does not exist on type 'never'"
+				// @ts-expect-error | "Property 'type' does not exist on type 'never'"
 				// That's kind of the point of this default case lmao
 				//
 				// This error only occurs with TypeScript 7.0

@@ -1,10 +1,10 @@
-import {ButtonHandler} from "../../../Typings/HandlerTypes";
-import {COLOR, EMOJI} from "../../../Utils/Constants";
-import {GetSnapshot} from "../../../CRUD/Snapshots";
-import { TOS_FEATURES } from "../../../TOSConstants";
-import { DiscordActionRow, DiscordButton } from "../../../Typings/DiscordTypes";
-import { GUILD_FEATURES } from "../../../Typings/DatabaseTypes";
-import { DiscordPermissions } from "../../../Utils/DiscordConstants";
+import {ButtonHandler} from "../../../Typings/HandlerTypes.js";
+import {COLOR, EMOJI} from "../../../Utils/Constants.js";
+import {GetSnapshot} from "../../../CRUD/Snapshots.js";
+import { TOS_FEATURES } from "../../../TOSConstants.js";
+import { DiscordActionRow, DiscordButton } from "../../../Typings/DiscordTypes.js";
+import { GUILD_FEATURES } from "../../../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../../../Utils/DiscordConstants.js";
 
 function ShortText(text = '', maxLength = 100) {
 	if (text.length <= maxLength) return text;

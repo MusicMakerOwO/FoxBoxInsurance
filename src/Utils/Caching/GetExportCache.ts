@@ -1,10 +1,10 @@
 import { ModalSubmitInteraction } from "discord.js";
 import { ButtonInteraction } from "discord.js";
-import { client } from "../../Client";
-import { CreateExportCacheKey } from "../../Typings/CacheEntries";
-import { COLOR } from "../Constants";
+import { client } from "../../Client.js";
+import { ChannelExport, CreateExportCacheKey } from "../../Typings/CacheEntries.js";
+import { COLOR } from "../Constants.js";
 
-export async function GetExportCache(interaction: ButtonInteraction | ModalSubmitInteraction) {
+export async function GetExportCache(interaction: ButtonInteraction | ModalSubmitInteraction): Promise<ChannelExport | null> {
 	const exportOptions = client.exportCache.get( CreateExportCacheKey(interaction.channelId!, interaction.user.id) );
 	if (!exportOptions) {
 		await interaction.editReply({

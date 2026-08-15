@@ -1,4 +1,4 @@
-import {ObjectValues} from "./Typings/HelperTypes";
+import {ObjectValues} from "./Typings/HelperTypes.js";
 
 export const TOS_FEATURES = {
 	MESSAGE_EXPORTS: 1,

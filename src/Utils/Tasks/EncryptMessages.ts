@@ -1,10 +1,10 @@
-import { Log } from "../Log";
-import { Database } from "../../Database";
-import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys";
-import { SimpleMessage } from "../../Typings/DatabaseTypes";
-import { Encrypt } from "../Encryption";
+import { Log } from "../Log.js";
+import { Database } from "../../Database.js";
+import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys.js";
+import { SimpleMessage } from "../../Typings/DatabaseTypes.js";
+import { Encrypt } from "../Encryption/index.js";
 
-export async function EncryptMessages() {
+export async function EncryptMessages(): Promise<void> {
 	const unencryptedMessages = await Database.query("SELECT id, user_id, content FROM Messages WHERE encryption_version IS NULL") as Pick<SimpleMessage, 'id' | 'user_id' | 'content'>[];
 	if (unencryptedMessages.length === 0) return;
 

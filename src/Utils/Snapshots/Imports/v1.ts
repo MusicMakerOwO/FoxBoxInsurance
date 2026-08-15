@@ -1,16 +1,16 @@
-import { JSONSnapshot } from "../../../CRUD/Snapshots";
-import { SNAPSHOT_ERRORS } from "./Errors";
-import { SNAPSHOT_TYPE } from "../../Constants";
+import { JSONSnapshot } from "../../../CRUD/Snapshots.js";
+import { SNAPSHOT_ERRORS } from "./Errors.js";
+import { SNAPSHOT_TYPE } from "../../Constants.js";
 import {
 	OVERWRITE_TYPE,
 	SnapshotBan,
 	SnapshotChannel, SnapshotChannelOverwrite,
 	SnapshotExportMetadata,
 	SnapshotRole
-} from "../../../Typings/DatabaseTypes";
-import { CompareBlueprint, JSONBlueprint } from "./CompareBlueprint";
-import { ValidBigInt, ValidBoolean, ValidNumber, ValidString } from "./ParseUtils";
-import { JSONStringify } from "../../../JSON";
+} from "../../../Typings/DatabaseTypes.js";
+import { CompareBlueprint, JSONBlueprint } from "./CompareBlueprint.js";
+import { ValidBigInt, ValidBoolean, ValidNumber, ValidString } from "./ParseUtils.js";
+import { JSONStringify } from "../../../JSON.js";
 
 function Omit<T extends object, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
 	const result = { ...data };

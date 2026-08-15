@@ -1,14 +1,14 @@
-import {COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE} from "../Utils/Constants";
+import {COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE} from "../Utils/Constants.js";
 import {ButtonInteraction, SlashCommandBuilder} from "discord.js";
-import {CommandHandler} from "../Typings/HandlerTypes";
-import {GetGuild} from "../CRUD/Guilds";
-import {GUILD_FEATURES} from "../Typings/DatabaseTypes";
-import {CreateSnapshot, JSONSnapshot} from "../CRUD/Snapshots";
-import {BuildSnapshotFromImport} from "../Utils/Snapshots/Imports/Parse";
-import {Log} from "../Utils/Log";
-import { TOS_FEATURES } from "../TOSConstants";
-import { DiscordPermissions } from "../Utils/DiscordConstants";
-import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
+import {GetGuild} from "../CRUD/Guilds.js";
+import {GUILD_FEATURES} from "../Typings/DatabaseTypes.js";
+import {CreateSnapshot, JSONSnapshot} from "../CRUD/Snapshots.js";
+import {BuildSnapshotFromImport} from "../Utils/Snapshots/Imports/Parse.js";
+import {Log} from "../Utils/Log.js";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { DiscordPermissions } from "../Utils/DiscordConstants.js";
+import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -142,7 +142,7 @@ Or you can use [this link](https://discord.com/oauth2/authorize?client_id=106510
 			// 	});
 			// }
 
-			// @ts-expect-error
+			// @ts-expect-error | editReply is stripped by NoReply<...>, but we need an early progress update before the handler's own return value replies
 			void interaction.editReply({ embeds: [ RandomLoadingEmbed() ] });
 
 			const snapshotID = await CreateSnapshot(interaction.guild!, SNAPSHOT_TYPE.MANUAL);
@@ -175,7 +175,7 @@ Or you can use [this link](https://discord.com/oauth2/authorize?client_id=106510
 			let data: unknown;
 			try {
 				data = JSON.parse(fileContent);
-			} catch (error) {
+			} catch {
 				return { embeds: [CorruptedEmbed] }
 			}
 

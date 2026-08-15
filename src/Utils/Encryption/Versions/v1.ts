@@ -1,6 +1,6 @@
 import {createCipheriv, createDecipheriv, randomBytes} from "node:crypto";
 
-export function Encrypt(content: Buffer, key: Buffer) {
+export function Encrypt(content: Buffer, key: Buffer): Buffer {
 	const iv = randomBytes(12);
 	const cipher = createCipheriv('aes-256-gcm', key, iv);
 	const cipherText = Buffer.concat([cipher.update(content), cipher.final()]);
@@ -8,7 +8,7 @@ export function Encrypt(content: Buffer, key: Buffer) {
 	return Buffer.concat([iv, cipherText, tag]); // 12 + length(wrapped) + 16
 }
 
-export function Decrypt(wrappedBlob: Buffer, key: Buffer) {
+export function Decrypt(wrappedBlob: Buffer, key: Buffer): Buffer {
 	const iv = wrappedBlob.subarray(0, 12);
 	const tag = wrappedBlob.subarray(wrappedBlob.length - 16);
 	// encrypted key is in the middle

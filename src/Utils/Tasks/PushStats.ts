@@ -1,7 +1,7 @@
-import {Database} from "../../Database";
-import {Log} from "../Log";
+import {Database} from "../../Database.js";
+import {Log} from "../Log.js";
 
-export async function PushStats() {
+export async function PushStats(): Promise<void> {
 	if (!process.env.API_KEY) return Log('ERROR', 'Missing API_KEY in .env file - Stats are disabled');
 	if (process.env.DEV_MODE) return Log('DEBUG', 'Posting stats are disabled in dev mode');
 

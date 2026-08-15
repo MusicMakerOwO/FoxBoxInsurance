@@ -1,7 +1,7 @@
-import {CommandHandler} from "../Typings/HandlerTypes";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
 import {SlashCommandBuilder} from "discord.js";
-import {COLOR} from "../Utils/Constants";
-import {DiscordActionRow, DiscordStringSelect} from "../Typings/DiscordTypes";
+import {COLOR} from "../Utils/Constants.js";
+import {DiscordActionRow, DiscordStringSelect} from "../Typings/DiscordTypes.js";
 
 export default {
 	tos_features  : [],

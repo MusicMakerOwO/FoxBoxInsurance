@@ -5,13 +5,13 @@ import {
 	InteractionResponse,
 	ModalHandler,
 	SelectMenuHandler
-} from "../Typings/HandlerTypes";
-import { GetUser } from "../CRUD/Users";
-import { COLOR, EMOJI } from "./Constants";
-import { GetGuild } from "../CRUD/Guilds";
-import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes";
-import { CanUserAccessTOSFeature } from "../Services/UserTOS";
-import { BuildTOSChangeList, GetNextRequiredTOSVersion } from "../CRUD/TOSVersion";
+} from "../Typings/HandlerTypes.js";
+import { GetUser } from "../CRUD/Users.js";
+import { COLOR, EMOJI } from "./Constants.js";
+import { GetGuild } from "../CRUD/Guilds.js";
+import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes.js";
+import { CanUserAccessTOSFeature } from "../Services/UserTOS.js";
+import { BuildTOSChangeList, GetNextRequiredTOSVersion } from "../CRUD/TOSVersion.js";
 
 const USER_TOS_Embed = {
 	color      : COLOR.PRIMARY,

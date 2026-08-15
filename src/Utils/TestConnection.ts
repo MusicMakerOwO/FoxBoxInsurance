@@ -1,4 +1,5 @@
-const https = require('node:https');
+import https from 'node:https';
+import { IncomingMessage } from "node:http";
 
 let connected = false;
 let lastTest = 0;
@@ -12,7 +13,7 @@ export async function TestConnection(): Promise<boolean> {
 			path: '/',
 			method: 'HEAD', // only fetches headers, ignore the rest of the webpage
 			timeout: 5000
-		}, function (response: any) {
+		}, function (response: IncomingMessage) {
 			lastTest = Date.now();
 			connected = response.statusCode === 200;
 			response.destroy();

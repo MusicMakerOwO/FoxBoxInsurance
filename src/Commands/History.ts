@@ -1,5 +1,5 @@
 import {ButtonInteraction, SlashCommandBuilder} from "discord.js";
-import {CommandHandler} from "../Typings/HandlerTypes";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
 
 export default {
 	tos_features  : [],

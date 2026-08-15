@@ -1,6 +1,6 @@
-import {ButtonHandler} from "../Typings/HandlerTypes";
-import {COLOR} from "../Utils/Constants";
-import { GetUser, SaveUser } from "../CRUD/Users";
+import {ButtonHandler} from "../Typings/HandlerTypes.js";
+import {COLOR} from "../Utils/Constants.js";
+import { GetUser, SaveUser } from "../CRUD/Users.js";
 
 export default {
 	tos_features  : [],

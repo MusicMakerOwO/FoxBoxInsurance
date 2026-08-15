@@ -1,19 +1,19 @@
-import { Database } from "../Database";
-import { DIFF_CHANGE_TYPE, SNAPSHOT_TYPE } from "../Utils/Constants";
+import { Database } from "../Database.js";
+import { DIFF_CHANGE_TYPE, SNAPSHOT_TYPE } from "../Utils/Constants.js";
 import { AnonymousGuild, Guild } from "discord.js";
-import { Log } from "../Utils/Log";
-import { LRUCache } from "../Utils/DataStructures/LRUCache";
+import { Log } from "../Utils/Log.js";
+import { LRUCache } from "../Utils/DataStructures/LRUCache.js";
 import {
 	SimpleGuild,
 	SnapshotBan,
 	SnapshotChannel,
 	SnapshotMetadata,
 	SnapshotRole
-} from "../Typings/DatabaseTypes";
-import { ObjectValues } from "../Typings/HelperTypes";
+} from "../Typings/DatabaseTypes.js";
+import { ObjectValues } from "../Typings/HelperTypes.js";
 import { PoolConnection } from "mariadb";
-import { CreateSnapshotDiff } from "../Utils/Snapshots/GuildDiff";
-import { BuildSnapshotComparison } from "../Utils/Snapshots/BuildSnapshotComparison";
+import { CreateSnapshotDiff } from "../Utils/Snapshots/GuildDiff.js";
+import { BuildSnapshotComparison } from "../Utils/Snapshots/BuildSnapshotComparison.js";
 
 function Omit<T extends object, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
 	const result = { ...data };
@@ -50,7 +50,7 @@ export async function ListSnapshotsForGuild(guildID: SimpleGuild['id'] | Guild['
 	`, [BigInt(guildID)]) as SnapshotMetadata[];
 }
 
-export async function GetSnapshot(snapshot_id: Snapshot['id']) {
+export async function GetSnapshot(snapshot_id: Snapshot['id']): Promise<Snapshot | null> {
 	if (cache.has(snapshot_id)) return cache.get(snapshot_id)!;
 
 	const guildID = await ResolveGuildFromSnapshotID(snapshot_id).catch(() => 0n); // 0 for unknown guild
@@ -131,7 +131,7 @@ export async function GetSnapshot(snapshot_id: Snapshot['id']) {
 	return result;
 }
 
-export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<typeof SNAPSHOT_TYPE> = SNAPSHOT_TYPE.AUTOMATIC) {
+export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<typeof SNAPSHOT_TYPE> = SNAPSHOT_TYPE.AUTOMATIC): Promise<SnapshotMetadata['id']> {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
 
 	const availableSnapshots = await ListSnapshotsForGuild(guild.id);
@@ -223,7 +223,7 @@ export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<t
 	}
 }
 
-export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']) {
+export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']): Promise<void> {
 	const guildID = await ResolveGuildFromSnapshotID(snapshotID);
 
 	const availableSnapshotIDs = (await ListSnapshotsForGuild(guildID)).map(x => x.id);
@@ -386,7 +386,7 @@ export async function ExportSnapshot(snapshotID: SnapshotMetadata['id']): Promis
 	return snapshotExport;
 }
 
-export async function isSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['id']) {
+export async function isSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['id']): Promise<boolean> {
 	const guildID = await ResolveGuildFromSnapshotID(snapshotID);
 
 	const maxSnapshotCount = await MaxSnapshotsForGuild(guildID);
@@ -407,14 +407,14 @@ export async function isSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['
 	return deletionCandidates.includes(snapshotID);
 }
 
-export async function IsSnapshotDeletable(snapshotID: SnapshotMetadata['id']) {
+export async function IsSnapshotDeletable(snapshotID: SnapshotMetadata['id']): Promise<boolean> {
 	const snapshot = await GetSnapshot(snapshotID);
 	if (!snapshot) return false;
 	return !snapshot.pinned;
 }
 
 const guildCache = new Map<SnapshotMetadata['id'], SnapshotMetadata['guild_id']>(); // snapshotID -> guildID
-async function ResolveGuildFromSnapshotID(snapshotID: SnapshotMetadata['id']) {
+async function ResolveGuildFromSnapshotID(snapshotID: SnapshotMetadata['id']): Promise<SnapshotMetadata['guild_id']> {
 	if (guildCache.has(snapshotID)) return guildCache.get(snapshotID)!;
 
 	const guildID = await Database.query(`
@@ -428,12 +428,12 @@ async function ResolveGuildFromSnapshotID(snapshotID: SnapshotMetadata['id']) {
 	return guildID;
 }
 
-export async function MaxSnapshotsForGuild(guildID: SimpleGuild['id'] | Guild['id']) {
+export async function MaxSnapshotsForGuild(_guildID: SimpleGuild['id'] | Guild['id']): Promise<number> {
 	// database stuff later lol
 	return 7;
 }
 
-export async function SetSnapshotPinStatus(snapshotID: SnapshotMetadata['id'], pinned: boolean) {
+export async function SetSnapshotPinStatus(snapshotID: SnapshotMetadata['id'], pinned: boolean): Promise<void> {
 	const guildID = await ResolveGuildFromSnapshotID(snapshotID);
 	const snapshots = await ListSnapshotsForGuild(guildID);
 	const pinCount = snapshots.reduce((acc, snapshot) => acc + snapshot.pinned, 0);

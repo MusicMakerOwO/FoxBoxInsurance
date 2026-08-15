@@ -3,10 +3,10 @@ import {
 	SnapshotBan,
 	SnapshotChannel,
 	SnapshotRole
-} from "../../Typings/DatabaseTypes";
-import { ObjectValues } from "../../Typings/HelperTypes";
-import { client } from "../../Client";
-import { DIFF_CHANGE_TYPE } from "../Constants";
+} from "../../Typings/DatabaseTypes.js";
+import { ObjectValues } from "../../Typings/HelperTypes.js";
+import { client } from "../../Client.js";
+import { DIFF_CHANGE_TYPE } from "../Constants.js";
 
 const ALLOWED_CHANNEL_TYPES = new Set([
 	ChannelType.GuildText,
@@ -19,7 +19,7 @@ const ALLOWED_CHANNEL_TYPES = new Set([
 	ChannelType.GuildMedia
 ]);
 
-type DiffEntry<T extends {}> = Omit<T, 'snapshot_id' | 'deleted'> & { change_type: ObjectValues<typeof DIFF_CHANGE_TYPE> }
+type DiffEntry<T extends object> = Omit<T, 'snapshot_id' | 'deleted'> & { change_type: ObjectValues<typeof DIFF_CHANGE_TYPE> }
 
 export type GuildDiff = {
 	roles: Map<SnapshotRole   ['id'], DiffEntry<SnapshotRole>>,
@@ -70,7 +70,7 @@ function MoveBotRoleToTop(roleList: SnapshotComparable['roles']) {
 	}
 }
 
-export type ComparableEntry<T extends {}> = Omit<T, 'snapshot_id' | 'deleted'>;
+export type ComparableEntry<T extends object> = Omit<T, 'snapshot_id' | 'deleted'>;
 
 export type SnapshotComparable = {
 	roles:       | Map<SnapshotRole   ['id'], ComparableEntry<SnapshotRole>>;

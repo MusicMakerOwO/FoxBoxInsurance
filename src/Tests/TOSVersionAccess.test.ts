@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { ObjectValues } from "../Typings/HelperTypes";
-import { TOS_FEATURES } from "../TOSConstants";
-import { GetNextRequiredTOSVersion } from "../CRUD/TOSVersion";
+import { ObjectValues } from "../Typings/HelperTypes.js";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { GetNextRequiredTOSVersion } from "../CRUD/TOSVersion.js";
 
 describe("GetNextRequiredTOSVersion", () => {
 	it("returns the next required version if feature is added after user's version", async () => {

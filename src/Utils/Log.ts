@@ -34,7 +34,7 @@ const LOG_COLOR = {
 // Just so we can make the logs look pretty and aligned
 const LONGEST_LOG_TYPE = Math.max(...Object.keys(LOG_TYPE).map((type) => type.length));
 
-function GetTimestamp() {
+function GetTimestamp(): string {
 	const date = new Date();
 	const year = date.getFullYear().toString().padStart(4, '0');
 	const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -45,7 +45,7 @@ function GetTimestamp() {
 	return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function Log(type: keyof typeof LOG_TYPE, ... messages: unknown[]) {
+function Log(type: keyof typeof LOG_TYPE, ... messages: unknown[]): void {
 	if (!LOG_TYPE[type]) {
 		console.error(`${COLOR.RED}Invalid log type: ${type}. Valid types are: ${Object.keys(LOG_TYPE).join(', ')}${COLOR.RESET}`);
 		return;

@@ -1,9 +1,9 @@
-import {DeleteSnapshot, GetSnapshot, IsSnapshotDeletable} from "../../CRUD/Snapshots";
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {COLOR, EMOJI} from "../../Utils/Constants";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
-import { DiscordPermissions } from "../../Utils/DiscordConstants";
+import {DeleteSnapshot, GetSnapshot, IsSnapshotDeletable} from "../../CRUD/Snapshots.js";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {COLOR, EMOJI} from "../../Utils/Constants.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 
 // snapshot-delete_0
 // snapshot-delete_0_confirm

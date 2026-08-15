@@ -1,5 +1,5 @@
 /** Replaces bigints and buffers with strings */
-export function JSONReplacer(this: any, key: string, value: unknown) {
+export function JSONReplacer(this: unknown, key: string, value: unknown): unknown {
 	if (typeof value === 'bigint') return value.toString();
 	if (value && typeof value === 'object' &&
 		'type' in value && value.type === 'Buffer'&&

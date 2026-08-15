@@ -1,12 +1,12 @@
-import {CommandHandler} from "../Typings/HandlerTypes";
-import {COLOR, FORMAT} from "../Utils/Constants";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
+import {COLOR, FORMAT} from "../Utils/Constants.js";
 import {ButtonInteraction, GuildMember, SlashCommandBuilder} from "discord.js";
-import {ProcessMessages} from "../Events/Messages";
-import {CanMemberExportChannel} from "../Services/ExportAccess";
-import {Database} from "../Database";
-import {CreateExportCacheKey} from "../Typings/CacheEntries";
-import {TOS_FEATURES} from "../TOSConstants";
-import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
+import {ProcessMessages} from "../Events/Messages.js";
+import {CanMemberExportChannel} from "../Services/ExportAccess.js";
+import {Database} from "../Database.js";
+import {CreateExportCacheKey} from "../Typings/CacheEntries.js";
+import {TOS_FEATURES} from "../TOSConstants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
 const DISCORD_EPOCH_OFFSET = 1420070400000;
 const DISCORD_ID_FILLING = BigInt( 0b1_1111_11111111_11111111 );
@@ -33,7 +33,7 @@ export default {
 
 		await ProcessMessages(); // save messages
 
-		const channelMessageCount = await Database.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [ BigInt(interaction.channel!.id) ]).then(x => x[0].count ) as BigInt;
+		const channelMessageCount = await Database.query("SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?", [ BigInt(interaction.channel!.id) ]).then(x => x[0].count ) as bigint;
 		if (channelMessageCount === 0n) {
 			return {
 				embeds: [{

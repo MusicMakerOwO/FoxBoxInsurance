@@ -1,7 +1,10 @@
-import * as Commands from "./Commands";
+import * as Commands from "./Commands/index.js";
 import { RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord-api-types/v10";
-import { Log } from "./Utils/Log";
+import { Log } from "./Utils/Log.js";
 import { InteractionContextType } from "discord.js";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import * as dotenv from "dotenv";
 dotenv.config({ path: `${__dirname}/../.env` });
@@ -26,7 +29,7 @@ for (const command of Object.values(Commands)) {
 	}
 }
 
-( async() => {
+void ( async() => {
 	const response = await fetch(PUBLIC_ROUTE, {
 		method: "PUT",
 		headers: {

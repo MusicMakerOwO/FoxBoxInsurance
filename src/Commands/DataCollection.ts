@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
-import { CommandHandler } from "../Typings/HandlerTypes";
-import { COLOR } from "../Utils/Constants";
+import { CommandHandler } from "../Typings/HandlerTypes.js";
+import { COLOR } from "../Utils/Constants.js";
 
 export default {
 	response_type: 'reply',
@@ -11,7 +11,7 @@ export default {
 	data: new SlashCommandBuilder()
 	.setName("data-collection")
 	.setDescription("Set your preferences on data collection"),
-	execute: async (interaction) => {
+	execute: async (_interaction) => {
 		return {
 			embeds: [{
 				color: COLOR.PRIMARY,

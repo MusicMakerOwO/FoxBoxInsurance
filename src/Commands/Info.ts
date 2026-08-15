@@ -1,4 +1,4 @@
-import {CommandHandler} from "../Typings/HandlerTypes";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
 import {ButtonInteraction, SlashCommandBuilder} from "discord.js";
 
 export default {

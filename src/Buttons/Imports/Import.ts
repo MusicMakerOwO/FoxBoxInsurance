@@ -1,7 +1,7 @@
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {COLOR, EMOJI} from "../../Utils/Constants";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {COLOR, EMOJI} from "../../Utils/Constants.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.IMPORT_SNAPSHOTS ],

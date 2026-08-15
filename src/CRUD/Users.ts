@@ -1,14 +1,14 @@
-import {LRUCache} from "../Utils/DataStructures/LRUCache";
-import {client} from "../Client";
-import {Database} from "../Database";
-import {SimpleUser} from "../Typings/DatabaseTypes";
+import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
+import {client} from "../Client.js";
+import {Database} from "../Database.js";
+import {SimpleUser} from "../Typings/DatabaseTypes.js";
 import {User} from "discord.js";
 
 const cache = new LRUCache<SimpleUser['id'], SimpleUser>(1000);
 
 const INVALID_USER_IDS = new Set<User['id']>();
 
-export async function SaveUser(user: User | SimpleUser) {
+export async function SaveUser(user: User | SimpleUser): Promise<void> {
 	const connection = await Database.getConnection();
 
 	if (user instanceof User) {
@@ -25,7 +25,7 @@ export async function SaveUser(user: User | SimpleUser) {
 	Database.releaseConnection(connection);
 }
 
-export async function GetUser(id: string | bigint) {
+export async function GetUser(id: string | bigint): Promise<SimpleUser | null | undefined> {
 	id = BigInt(id);
 	if (cache.has(id)) return cache.get(id)!;
 
@@ -58,7 +58,7 @@ export async function GetUser(id: string | bigint) {
  * Removes the provided user from cache if it exists, however the data will still exist in database.
  * If you intend to delete all the related data, use `DANGER_PurgeUser()` instead.
  */
-export async function DiscardUser(id: string | bigint) {
+export async function DiscardUser(id: string | bigint): Promise<void> {
 	id = BigInt(id);
 	cache.delete(id);
 	INVALID_USER_IDS.delete(id.toString());
@@ -69,7 +69,7 @@ export async function DiscardUser(id: string | bigint) {
  *
  * THIS CANNOT BE UNDONE!!!
  */
-export async function DANGER_PurgeUser(id: string | bigint) {
+export async function DANGER_PurgeUser(id: string | bigint): Promise<void> {
 	id = BigInt(id);
 	await Database.query('DELETE FROM Users WHERE id = ?', [id]);
 }

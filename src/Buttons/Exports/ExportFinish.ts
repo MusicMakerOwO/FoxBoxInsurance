@@ -1,13 +1,13 @@
-import {GetExportCache} from "../../Utils/Caching/GetExportCache";
-import {COLOR} from "../../Utils/Constants";
-import {DownloadAssets} from "../../Utils/Processing/Images";
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {UploadCDN} from "../../Utils/UploadCDN";
-import {Log} from "../../Utils/Log";
-import {Database} from "../../Database";
-import {ExportChannel} from "../../Utils/Parsers/Export";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
+import {GetExportCache} from "../../Utils/Caching/GetExportCache.js";
+import {COLOR} from "../../Utils/Constants.js";
+import {DownloadAssets} from "../../Utils/Processing/Images.js";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {UploadCDN} from "../../Utils/UploadCDN.js";
+import {Log} from "../../Utils/Log.js";
+import {Database} from "../../Database.js";
+import {ExportChannel} from "../../Utils/Parsers/Export.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -17,7 +17,7 @@ export default {
 	hidden        : false,
 	customID      : 'export-finish',
 	execute       : async function(interaction) {
-		// @ts-expect-error
+		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
 		const exportOptions = await GetExportCache(interaction);
 		if (!exportOptions) return {};
 

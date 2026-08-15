@@ -1,12 +1,12 @@
 import {ButtonInteraction, ChannelType, GuildChannel, GuildMember} from "discord.js";
-import {COLOR} from "../Utils/Constants";
-import {GetExportCache} from "../Utils/Caching/GetExportCache";
-import {Database} from "../Database";
-import {CanMemberExportChannel} from "../Services/ExportAccess";
-import {InteractionResponse, ModalHandler} from "../Typings/HandlerTypes";
-import {CreateExportCacheKey} from "../Typings/CacheEntries";
-import {TOS_FEATURES} from "../TOSConstants";
-import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
+import {COLOR} from "../Utils/Constants.js";
+import {GetExportCache} from "../Utils/Caching/GetExportCache.js";
+import {Database} from "../Database.js";
+import {CanMemberExportChannel} from "../Services/ExportAccess.js";
+import {InteractionResponse, ModalHandler} from "../Typings/HandlerTypes.js";
+import {CreateExportCacheKey} from "../Typings/CacheEntries.js";
+import {TOS_FEATURES} from "../TOSConstants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
 const UnknownChannelEmbed = {
 	color: COLOR.ERROR,
@@ -43,7 +43,7 @@ export default {
 	customID      : 'export-channel',
 	execute       : async function(interaction, client) {
 
-		// @ts-expect-error
+		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
 		const exportOptions = await GetExportCache(interaction);
 		if (!exportOptions) return {};
 

@@ -1,14 +1,14 @@
-import {COLOR} from "../../Utils/Constants";
-import {Database} from "../../Database";
-import {ExportSnapshot, GetSnapshot} from "../../CRUD/Snapshots";
-import {SnapshotParsers} from "../../Utils/Snapshots/Imports/Parse";
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {JSONReplacer} from "../../JSON";
+import {COLOR} from "../../Utils/Constants.js";
+import {Database} from "../../Database.js";
+import {ExportSnapshot, GetSnapshot} from "../../CRUD/Snapshots.js";
+import {SnapshotParsers} from "../../Utils/Snapshots/Imports/Parse.js";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {JSONReplacer} from "../../JSON.js";
 import {createHash} from "node:crypto";
-import {UploadCDN} from "../../Utils/UploadCDN";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
-import { DiscordPermissions } from "../../Utils/DiscordConstants";
+import {UploadCDN} from "../../Utils/UploadCDN.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 
 const HASH_ALGORITHM = 'sha256';
 

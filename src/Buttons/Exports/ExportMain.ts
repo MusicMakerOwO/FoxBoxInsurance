@@ -1,9 +1,9 @@
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {GetExportCache} from "../../Utils/Caching/GetExportCache";
-import {Database} from "../../Database";
-import { COLOR, EMOJI, FORMAT_EMOJIS, FORMAT_NAMES } from "../../Utils/Constants";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {GetExportCache} from "../../Utils/Caching/GetExportCache.js";
+import {Database} from "../../Database.js";
+import { COLOR, EMOJI, FORMAT_EMOJIS, FORMAT_NAMES } from "../../Utils/Constants.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -13,7 +13,7 @@ export default {
 	hidden        : false,
 	customID      : 'export-main',
 	execute       : async function(interaction) {
-		// @ts-expect-error
+		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
 		const exportOptions = await GetExportCache(interaction);
 		if (!exportOptions) return {};
 

@@ -1,8 +1,8 @@
 import {Guild} from "discord.js";
-import {Database} from "../Database";
-import {COLOR, SECONDS} from "../Utils/Constants";
-import {LATEST_VERSION} from "../Commands/Changelog";
-import {ButtonHandler} from "../Typings/HandlerTypes";
+import {Database} from "../Database.js";
+import {COLOR, SECONDS} from "../Utils/Constants.js";
+import {LATEST_VERSION} from "../Commands/Changelog.js";
+import {ButtonHandler} from "../Typings/HandlerTypes.js";
 
 function CalculateUptime (seconds: number) {
 	return {
@@ -27,10 +27,10 @@ export default {
 
 		const connection = await Database.getConnection();
 
-		const guilds = await connection.query(`SELECT COUNT(*) as count FROM Guilds`).then((rows: any) => rows[0].count) as bigint;
+		const guilds = await connection.query(`SELECT COUNT(*) as count FROM Guilds`).then((rows: [{ count: bigint }]) => rows[0].count);
 		const channels = Array.from<Guild>( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.channels.cache.size, 0);
 		const users = Array.from<Guild>( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.memberCount, 0);
-		const messages = await connection.query(`SELECT COUNT(*) as count FROM Messages`).then((rows: any) => rows[0].count) as bigint;
+		const messages = await connection.query(`SELECT COUNT(*) as count FROM Messages`).then((rows: [{ count: bigint }]) => rows[0].count);
 
 		const embed = {
 			color: COLOR.PRIMARY,

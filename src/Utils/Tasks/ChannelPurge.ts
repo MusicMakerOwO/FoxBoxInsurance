@@ -1,11 +1,11 @@
-import { Database } from "../../Database";
-import { SECONDS } from "../Constants";
-import { Log } from "../Log";
-import { SimpleMessage } from "../../Typings/DatabaseTypes";
+import { Database } from "../../Database.js";
+import { SECONDS } from "../Constants.js";
+import { Log } from "../Log.js";
+import { SimpleMessage } from "../../Typings/DatabaseTypes.js";
 
 const MAX_MESSAGES_PER_CHANNEL = 10_000n;
 
-export async function ChannelPurge(opts: { silent?: boolean } = {}) {
+export async function ChannelPurge(opts: { silent?: boolean } = {}): Promise<void> {
 	const connection = await Database.getConnection();
 	// any messages older than 60 days
 	const expired =  new Date( Date.now() - SECONDS.DAY * 60 * 1000 );

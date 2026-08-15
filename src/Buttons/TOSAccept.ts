@@ -1,8 +1,8 @@
-import {ButtonHandler} from "../Typings/HandlerTypes";
-import {COLOR} from "../Utils/Constants";
+import {ButtonHandler} from "../Typings/HandlerTypes.js";
+import {COLOR} from "../Utils/Constants.js";
 import {APIEmbed} from "discord-api-types/v10";
-import {MAX_TOS_VERSION} from "../TOSConstants";
-import {SetUserTOSVersion} from "../Services/UserTOS";
+import {MAX_TOS_VERSION} from "../TOSConstants.js";
+import {SetUserTOSVersion} from "../Services/UserTOS.js";
 
 export default {
 	tos_features  : [],

@@ -1,7 +1,7 @@
-import {JSONSnapshot} from "./Snapshots";
+import {JSONSnapshot} from "./Snapshots.js";
 import {Guild} from "discord.js";
-import {SECONDS} from "../Utils/Constants";
-import {Log} from "../Utils/Log";
+import {SECONDS} from "../Utils/Constants.js";
+import {Log} from "../Utils/Log.js";
 
 const IMPORT_EXPIRATION = SECONDS.HOUR * 1000;
 
@@ -14,7 +14,7 @@ const importCache = new Map<JSONSnapshot['id'], JSONSnapshot>();
  */
 const guildOwnership = new Map<Guild['id'], ExpirationEntry>();
 
-export function SaveImportForGuild(guildID: Guild['id'], data: JSONSnapshot) {
+export function SaveImportForGuild(guildID: Guild['id'], data: JSONSnapshot): void {
 	if (!importCache.has(data.id)) importCache.set(data.id, data);
 
 	const ownership = guildOwnership.get(guildID) ?? new Map() as ExpirationEntry;
@@ -22,7 +22,7 @@ export function SaveImportForGuild(guildID: Guild['id'], data: JSONSnapshot) {
 	guildOwnership.set(guildID, ownership);
 }
 
-export function GetImportsForGuild(guildID: Guild['id']) {
+export function GetImportsForGuild(guildID: Guild['id']): Map<JSONSnapshot['id'], JSONSnapshot & { expires_at: number }> {
 	const imports = new Map<JSONSnapshot['id'], JSONSnapshot & { expires_at: number }>();
 
 	const ownership = guildOwnership.get(guildID) ?? new Map() as ExpirationEntry;

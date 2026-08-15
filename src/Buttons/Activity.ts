@@ -1,8 +1,8 @@
-import { ButtonHandler } from "../Typings/HandlerTypes";
-import { Axis, RenderGraph } from "../Utils/Activity/GraphCreator";
-import { AggregateMessageHistory } from "../Utils/Activity/AggregateMessageHistory";
-import { COLOR, SECONDS } from "../Utils/Constants";
-import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes";
+import { ButtonHandler } from "../Typings/HandlerTypes.js";
+import { Axis, RenderGraph } from "../Utils/Activity/GraphCreator.js";
+import { AggregateMessageHistory } from "../Utils/Activity/AggregateMessageHistory.js";
+import { COLOR, SECONDS } from "../Utils/Constants.js";
+import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes.js";
 
 const Month = [
 	'Jan',

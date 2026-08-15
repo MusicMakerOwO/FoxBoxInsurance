@@ -1,5 +1,5 @@
-import {CommandHandler} from "../Typings/HandlerTypes";
-import {COLOR} from "../Utils/Constants";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
+import {COLOR} from "../Utils/Constants.js";
 import {SlashCommandBuilder} from "discord.js";
 
 export default {

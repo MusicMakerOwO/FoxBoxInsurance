@@ -1,12 +1,12 @@
-import {SnapshotExportMetadata} from "../../../Typings/DatabaseTypes";
-import {JSONSnapshot} from "../../../CRUD/Snapshots";
-import {LRUCache} from "../../DataStructures/LRUCache";
-import {SNAPSHOT_ERRORS} from "./Errors";
-import {Database} from "../../../Database";
+import {SnapshotExportMetadata} from "../../../Typings/DatabaseTypes.js";
+import {JSONSnapshot} from "../../../CRUD/Snapshots.js";
+import {LRUCache} from "../../DataStructures/LRUCache.js";
+import {SNAPSHOT_ERRORS} from "./Errors.js";
+import {Database} from "../../../Database.js";
 import {createHash} from "node:crypto";
 
-import v1 from "./v1";
-import v2 from "./v2";
+import v1 from "./v1.js";
+import v2 from "./v2.js";
 
 export const SnapshotParsers: Record<number, (metadata: SnapshotExportMetadata, data: Record<string, unknown> & { id: string, version: number }) => JSONSnapshot> = {
 	1: v1,
@@ -22,7 +22,7 @@ function HasRequiredFields(data: object): data is { id: string, version: number 
 	);
 }
 
-export async function BuildSnapshotFromImport(input: unknown) {
+export async function BuildSnapshotFromImport(input: unknown): Promise<JSONSnapshot> {
 	if (!input || typeof input !== "object") throw new Error(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 	if (!HasRequiredFields(input)) throw new Error(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 
@@ -54,7 +54,7 @@ export async function BuildSnapshotFromImport(input: unknown) {
 	return snapshotData;
 }
 
-function DeepFreeze<T extends {}>(obj: T) {
+function DeepFreeze<T extends object>(obj: T) {
 	Object.freeze(obj);
 	for (const key of Object.keys(obj) as (keyof T)[]) {
 		if (typeof obj[key] === 'object' && obj[key] !== null) {

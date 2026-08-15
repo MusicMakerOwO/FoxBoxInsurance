@@ -1,8 +1,8 @@
 import { Guild } from "discord.js";
-import { SnapshotComparable } from "./GuildDiff";
-import { FetchAllBans } from "./FetchAllBans";
-import { SimplifyBan, SimplifyChannel, SimplifyRole } from "./SimplifyGuildData";
-import { Snapshot } from "../../CRUD/Snapshots";
+import { SnapshotComparable } from "./GuildDiff.js";
+import { FetchAllBans } from "./FetchAllBans.js";
+import { SimplifyBan, SimplifyChannel, SimplifyRole } from "./SimplifyGuildData.js";
+import { Snapshot } from "../../CRUD/Snapshots.js";
 
 export async function BuildSnapshotComparison(data: Guild | Snapshot | null): Promise<SnapshotComparable> {
 	const comparison: SnapshotComparable = {

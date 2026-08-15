@@ -1,17 +1,17 @@
 import { vi, describe, it, expect, assert } from 'vitest';
-import { CreateSnapshotDiff, SnapshotComparable } from "../Utils/Snapshots/GuildDiff";
+import { CreateSnapshotDiff, SnapshotComparable } from "../Utils/Snapshots/GuildDiff.js";
 import {
 	OVERWRITE_TYPE,
 	SnapshotBan,
 	SnapshotChannel,
 	SnapshotChannelOverwrite,
 	SnapshotRole
-} from "../Typings/DatabaseTypes";
-import { DIFF_CHANGE_TYPE } from "../Utils/Constants";
-import { ObjectValues } from "../Typings/HelperTypes";
-import { JSONStringify } from "../JSON";
+} from "../Typings/DatabaseTypes.js";
+import { DIFF_CHANGE_TYPE } from "../Utils/Constants.js";
+import { ObjectValues } from "../Typings/HelperTypes.js";
+import { JSONStringify } from "../JSON.js";
 
-// @ts-ignore
+// @ts-expect-error | vi.mock's factory return shape doesn't match the real Client export
 vi.mock(import('../Client.js'), () => ({
 	client: {
 		user: {
@@ -20,7 +20,7 @@ vi.mock(import('../Client.js'), () => ({
 	}
 }))
 
-type StripMetadata<T extends {}> = Omit<T, 'snapshot_id' | 'deleted'>;
+type StripMetadata<T extends object> = Omit<T, 'snapshot_id' | 'deleted'>;
 
 const BOT_ROLE: StripMetadata<SnapshotRole> = {
 	id: 1089343117142020319n,
@@ -70,7 +70,7 @@ const permission: JSONStringify<SnapshotChannelOverwrite> = {
 	type      : OVERWRITE_TYPE.ROLE
 }
 
-function MockDiffEntry<T extends {}>(data: T, type: ObjectValues<typeof DIFF_CHANGE_TYPE>): (T & { change_type: ObjectValues<typeof DIFF_CHANGE_TYPE> }) {
+function MockDiffEntry<T extends object>(data: T, type: ObjectValues<typeof DIFF_CHANGE_TYPE>): (T & { change_type: ObjectValues<typeof DIFF_CHANGE_TYPE> }) {
 	return { ... data, change_type: type }
 }
 

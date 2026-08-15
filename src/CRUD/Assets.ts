@@ -1,12 +1,12 @@
-import {Asset} from "../Typings/DatabaseTypes";
-import {LRUCache} from "../Utils/DataStructures/LRUCache";
-import {Database} from "../Database";
+import {Asset} from "../Typings/DatabaseTypes.js";
+import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
+import {Database} from "../Database.js";
 
 const cache = new LRUCache<Asset['discord_id'], Asset>(2_000);
 
 const INVALID_EMOJI_IDS = new Set<Asset['discord_id']>();
 
-export async function GetAsset(id: Asset['discord_id']) {
+export async function GetAsset(id: Asset['discord_id']): Promise<Asset | null> {
 	id = BigInt(id);
 	if (cache.has(id)) return cache.get(id)!;
 

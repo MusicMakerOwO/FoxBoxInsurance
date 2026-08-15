@@ -1,13 +1,13 @@
 import * as dotenv from "dotenv";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { client } from "../Client";
+import { client } from "../Client.js";
 import {
 	APIChannel, APIEmoji, APIGuild, APIMessage, APISticker, APIUser, Guild, TextChannel, Message,
 	MessageFlags, EmbedType, APIAttachment
 } from "discord.js";
-import { MessageCreate } from "../Events";
-import { ProcessMessages } from "../Events/Messages";
-import { Database } from "../Database";
+import { MessageCreate } from "../Events/index.js";
+import { ProcessMessages } from "../Events/Messages.js";
+import { Database } from "../Database.js";
 import {
 	GUILD_FEATURES,
 	SimpleChannel,
@@ -16,10 +16,13 @@ import {
 	SimpleMessage, SimpleSticker,
 	SimpleUser,
 	MessageHistory
-} from "../Typings/DatabaseTypes";
+} from "../Typings/DatabaseTypes.js";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
-import { DiscardUser } from "../CRUD/Users";
+import { DiscardUser } from "../CRUD/Users.js";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: `${__dirname}/../../.env`, quiet: true });
 
 const API_ATTACHMENT: APIAttachment = {
@@ -247,7 +250,7 @@ describe("SaveMessages", () => {
 
 		// @ts-expect-error | Constructors are private for some reason
 		const TestGuild = new Guild(client, API_GUILD);
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		const TestChannel = new TextChannel(TestGuild, API_CHANNEL, client);
 
 		client.guilds.cache.set(API_GUILD.id, TestGuild);
@@ -257,7 +260,7 @@ describe("SaveMessages", () => {
 	});
 
 	it('saves an empty message', async () => {
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, API_MESSAGE_EMPTY));
 		await ProcessMessages({ quiet: true });
 
@@ -304,7 +307,7 @@ describe("SaveMessages", () => {
 	});
 
 	it('saves messages sent from the client', async () => {
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, {
 			... API_MESSAGE_EMPTY,
 			author: { ... API_MESSAGE_EMPTY.author, id: client.user.id, username: 'Fox Box Insurance', bot: true }
@@ -318,7 +321,7 @@ describe("SaveMessages", () => {
 	});
 
 	it('ignores messages sent from the client that are ephemeral (hidden)', async () => {
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, {
 			... API_MESSAGE_EMPTY,
 			flags : MessageFlags.Ephemeral,
@@ -335,7 +338,7 @@ describe("SaveMessages", () => {
 	it('saves message content with no emojis', async () => {
 		const text = 'Hello, World!';
 
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, { ... API_MESSAGE_EMPTY, content: text }));
 		await ProcessMessages({ quiet: true });
 
@@ -348,7 +351,7 @@ describe("SaveMessages", () => {
 	it('saves message content with only default emojis', async () => {
 		const text = '😀😃😄😁';
 
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, { ... API_MESSAGE_EMPTY, content: text }));
 		await ProcessMessages({ quiet: true });
 
@@ -362,7 +365,7 @@ describe("SaveMessages", () => {
 		const text = API_EMOJIS.map(x => '<' + (x.animated ? 'a' : '') + ':' + (x.name) + ':' + (x.id) + '>')
 		.join('');
 
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, { ... API_MESSAGE_EMPTY, content: text }));
 		await ProcessMessages({ quiet: true });
 
@@ -385,7 +388,7 @@ describe("SaveMessages", () => {
 	});
 
 	it('saves the sticker attached to a message', async () => {
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, { ... API_MESSAGE_EMPTY, stickers: [API_STICKER] }));
 		await ProcessMessages({ quiet: true });
 
@@ -468,7 +471,7 @@ describe("SaveMessages", () => {
 			]
 		}
 
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, { ... API_MESSAGE_EMPTY, embeds: [embed] }));
 		await ProcessMessages({ quiet: true });
 
@@ -501,7 +504,7 @@ describe("SaveMessages", () => {
 			]
 		}
 
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, { ... API_MESSAGE_EMPTY, components: [components] }));
 		await ProcessMessages({ quiet: true });
 
@@ -512,7 +515,7 @@ describe("SaveMessages", () => {
 	});
 
 	it('saves attachments included in the message', async () => {
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, {
 			... API_MESSAGE_EMPTY,
 			attachments: [API_ATTACHMENT]
@@ -543,7 +546,7 @@ describe("SaveMessages", () => {
 		);
 		await DiscardUser(API_USER.id);
 
-		// @ts-expect-error
+		// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 		await MessageCreate.execute(new Message<true>(client, {
 			... API_MESSAGE_EMPTY,
 			content    : `hello <:${API_EMOJIS[0].name}:${API_EMOJIS[0].id}>`,
@@ -567,7 +570,7 @@ describe("SaveMessages", () => {
 
 	describe('MessageHistory', () => {
 		it('saves message history for guilds with MESSAGE_HISTORY feature enabled', async () => {
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			const message = new Message<true>(client, API_MESSAGE_EMPTY);
 			await MessageCreate.execute(message);
 			await ProcessMessages({ quiet: true });
@@ -592,7 +595,7 @@ describe("SaveMessages", () => {
 			];
 
 			for (const msg of messages) {
-				// @ts-expect-error
+				// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 				await MessageCreate.execute(new Message<true>(client, msg));
 			}
 			await ProcessMessages({ quiet: true });
@@ -606,7 +609,7 @@ describe("SaveMessages", () => {
 		});
 
 		it('saves message history with correct guild association', async () => {
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			await MessageCreate.execute(new Message<true>(client, API_MESSAGE_EMPTY));
 			await ProcessMessages({ quiet: true });
 
@@ -627,7 +630,7 @@ describe("SaveMessages", () => {
 				id: '4444'
 			} as unknown as APIChannel;
 
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			const testChannel2 = new TextChannel(
 				client.guilds.cache.get(API_GUILD.id)!,
 				channel2,
@@ -635,13 +638,13 @@ describe("SaveMessages", () => {
 			);
 			client.channels.cache.set(channel2.id, testChannel2);
 
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			await MessageCreate.execute(new Message<true>(client, {
 				... API_MESSAGE_EMPTY,
 				id: '4001',
 				timestamp: '2026-03-19T19:36:57.000000+00:00'
 			}));
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			await MessageCreate.execute(new Message<true>(client, {
 				... API_MESSAGE_EMPTY,
 				id: '4002',
@@ -684,9 +687,9 @@ describe("SaveMessages", () => {
 				guild_id: guildWithoutHistory.id
 			} as unknown as APIChannel;
 
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			const testGuild = new Guild(client, guildWithoutHistory);
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			const testChannel = new TextChannel(testGuild, channelWithoutHistory, client);
 
 			client.guilds.cache.set(guildWithoutHistory.id, testGuild);
@@ -699,7 +702,7 @@ describe("SaveMessages", () => {
 				[BigInt(guildWithoutHistory.id), guildWithoutHistory.name, GUILD_FEATURES.MESSAGE_SAVING]
 			);
 
-			// @ts-expect-error
+			// @ts-expect-error | discord.js marks this constructor private to discourage manual instantiation
 			await MessageCreate.execute(new Message<true>(client, {
 				... API_MESSAGE_EMPTY,
 				id: '3001',

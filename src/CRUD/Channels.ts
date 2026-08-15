@@ -1,14 +1,14 @@
-import { SimpleChannel } from "../Typings/DatabaseTypes";
-import {LRUCache} from "../Utils/DataStructures/LRUCache";
-import {client} from "../Client";
+import { SimpleChannel } from "../Typings/DatabaseTypes.js";
+import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
+import {client} from "../Client.js";
 import {GuildChannel} from "discord.js";
-import {Database} from "../Database";
+import {Database} from "../Database.js";
 
 const cache = new LRUCache<SimpleChannel['id'], SimpleChannel>(100);
 
 const INVALID_CHANNEL_IDS = new Set<GuildChannel['id']>();
 
-export async function SaveChannel(channel: GuildChannel | SimpleChannel) {
+export async function SaveChannel(channel: GuildChannel | SimpleChannel): Promise<void> {
 	const connection = await Database.getConnection();
 
 	if (channel instanceof GuildChannel) {
@@ -25,7 +25,7 @@ export async function SaveChannel(channel: GuildChannel | SimpleChannel) {
 	Database.releaseConnection(connection);
 }
 
-export async function GetChannel(id: string | bigint) {
+export async function GetChannel(id: string | bigint): Promise<SimpleChannel | null | undefined> {
 	id = BigInt(id);
 	if (cache.has(id)) return cache.get(id)!;
 
@@ -61,7 +61,7 @@ export async function GetChannel(id: string | bigint) {
  * Removes the provided channel from cache if it exists, however the data will still exist in database.
  * If you intend to delete all the related data, use `DANGER_PurgeChannel()` instead.
  */
-export async function DiscardChannel(id: string | bigint) {
+export async function DiscardChannel(id: string | bigint): Promise<void> {
 	id = BigInt(id);
 	cache.delete(id);
 	INVALID_CHANNEL_IDS.delete(id.toString());
@@ -72,7 +72,7 @@ export async function DiscardChannel(id: string | bigint) {
  *
  * THIS CANNOT BE UNDONE!!!
  */
-export async function DANGER_PurgeChannel(id: string | bigint) {
+export async function DANGER_PurgeChannel(id: string | bigint): Promise<void> {
 	id = BigInt(id);
 	await Database.query('DELETE FROM Channels WHERE id = ?', [id]);
 }

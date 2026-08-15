@@ -1,3 +1,7 @@
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 import * as dotenv from "dotenv";
 dotenv.config({ path: `${__dirname}/../../.env`, quiet: true });
 
@@ -7,12 +11,12 @@ import {
 	isSnapshotQueuedForDeletion,
 	MaxSnapshotsForGuild,
 	SetSnapshotPinStatus
-} from "../CRUD/Snapshots";
-import { Database } from "../Database";
-import { SNAPSHOT_TYPE } from "../Utils/Constants";
-import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
+} from "../CRUD/Snapshots.js";
+import { Database } from "../Database.js";
+import { SNAPSHOT_TYPE } from "../Utils/Constants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
-// @ts-ignore
+// @ts-expect-error | vi.mock's factory return shape doesn't match the real Client export
 vi.mock(import('../Client.js'), () => ({
 	client: {
 		user: {

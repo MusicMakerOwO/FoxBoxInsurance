@@ -1,11 +1,11 @@
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {COLOR, EMOJI, SNAPSHOT_TYPE} from "../../Utils/Constants";
-import {GetImportsForGuild} from "../../CRUD/SnapshotImports";
-import {GetSnapshot} from "../../CRUD/Snapshots";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { DiscordActionRow, DiscordButton } from "../../Typings/DiscordTypes";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
-import { DiscordPermissions } from "../../Utils/DiscordConstants";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {COLOR, EMOJI, SNAPSHOT_TYPE} from "../../Utils/Constants.js";
+import {GetImportsForGuild} from "../../CRUD/SnapshotImports.js";
+import {GetSnapshot} from "../../CRUD/Snapshots.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { DiscordActionRow, DiscordButton } from "../../Typings/DiscordTypes.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],

@@ -1,6 +1,6 @@
-import {EventHandler} from "../Typings/HandlerTypes";
+import {EventHandler} from "../Typings/HandlerTypes.js";
 import {Message} from "discord.js";
-import { client } from "../Client";
+import { client } from "../Client.js";
 
 export default {
 	name: 'messageUpdate',

@@ -1,7 +1,7 @@
-import { ObjectValues } from "./HelperTypes";
+import { ObjectValues } from "./HelperTypes.js";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
-import { FORMAT, SNAPSHOT_TYPE } from "../Utils/Constants";
-import { JSONStringify } from "../JSON";
+import { FORMAT, SNAPSHOT_TYPE } from "../Utils/Constants.js";
+import { JSONStringify } from "../JSON.js";
 
 export const ASSET_TYPE = {
 	GUILD     : 0,

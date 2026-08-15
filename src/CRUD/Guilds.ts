@@ -1,14 +1,14 @@
-import { GUILD_FEATURES, SimpleGuild } from "../Typings/DatabaseTypes";
-import {LRUCache} from "../Utils/DataStructures/LRUCache";
-import {client} from "../Client";
+import { GUILD_FEATURES, SimpleGuild } from "../Typings/DatabaseTypes.js";
+import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
+import {client} from "../Client.js";
 import {Guild} from "discord.js";
-import {Database} from "../Database";
+import {Database} from "../Database.js";
 
 const cache = new LRUCache<SimpleGuild['id'], SimpleGuild>(100);
 
 const INVALID_GUILD_IDS = new Set<Guild['id']>();
 
-export async function SaveGuild(guild: Guild | SimpleGuild) {
+export async function SaveGuild(guild: Guild | SimpleGuild): Promise<void> {
 	const connection = await Database.getConnection();
 
 	if (guild instanceof Guild) {
@@ -25,7 +25,7 @@ export async function SaveGuild(guild: Guild | SimpleGuild) {
 	Database.releaseConnection(connection);
 }
 
-export async function GetGuild(id: string | bigint) {
+export async function GetGuild(id: string | bigint): Promise<SimpleGuild | null | undefined> {
 	id = BigInt(id);
 	if (cache.has(id)) return cache.get(id)!;
 
@@ -57,7 +57,7 @@ export async function GetGuild(id: string | bigint) {
  * Removes the provided guild from cache if it exists, however the data will still exist in database.
  * If you intend to delete all the related data, use `DANGER_PurgeGuild()` instead.
  */
-export async function DiscardGuild(id: string | bigint) {
+export async function DiscardGuild(id: string | bigint): Promise<void> {
 	cache.delete(BigInt(id));
 	INVALID_GUILD_IDS.delete(String(id));
 }
@@ -67,6 +67,6 @@ export async function DiscardGuild(id: string | bigint) {
  *
  * THIS CANNOT BE UNDONE!!!
  */
-export async function DANGER_PurgeGuild(id: string | bigint) {
+export async function DANGER_PurgeGuild(id: string | bigint): Promise<void> {
 	await Database.query('DELETE FROM Guilds WHERE id = ?', [ BigInt(id) ]);
 }

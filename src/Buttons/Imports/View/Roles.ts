@@ -1,10 +1,10 @@
-import {ButtonHandler} from "../../../Typings/HandlerTypes";
-import {GetImportsForGuild} from "../../../CRUD/SnapshotImports";
-import {COLOR, EMOJI} from "../../../Utils/Constants";
-import {RemoveFormatting} from "../../../Utils/RemoveFormatting";
-import { TOS_FEATURES } from "../../../TOSConstants";
-import { DiscordActionRow, DiscordButton } from "../../../Typings/DiscordTypes";
-import { DiscordPermissions } from "../../../Utils/DiscordConstants";
+import {ButtonHandler} from "../../../Typings/HandlerTypes.js";
+import {GetImportsForGuild} from "../../../CRUD/SnapshotImports.js";
+import {COLOR, EMOJI} from "../../../Utils/Constants.js";
+import {RemoveFormatting} from "../../../Utils/RemoveFormatting.js";
+import { TOS_FEATURES } from "../../../TOSConstants.js";
+import { DiscordActionRow, DiscordButton } from "../../../Typings/DiscordTypes.js";
+import { DiscordPermissions } from "../../../Utils/DiscordConstants.js";
 
 const PAGE_SIZE = 25; // Not used here, but can be useful for pagination in the future
 

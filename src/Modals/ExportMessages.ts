@@ -1,11 +1,11 @@
-import {GetExportCache} from "../Utils/Caching/GetExportCache";
-import {Database} from "../Database";
-import { InteractionResponse, ModalHandler } from "../Typings/HandlerTypes";
+import {GetExportCache} from "../Utils/Caching/GetExportCache.js";
+import {Database} from "../Database.js";
+import { InteractionResponse, ModalHandler } from "../Typings/HandlerTypes.js";
 import {ButtonInteraction} from "discord.js";
-import {CreateExportCacheKey} from "../Typings/CacheEntries";
-import { TOS_FEATURES } from "../TOSConstants";
-import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
-import { COLOR, EMOJI } from "../Utils/Constants";
+import {CreateExportCacheKey} from "../Typings/CacheEntries.js";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
+import { COLOR, EMOJI } from "../Utils/Constants.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -21,7 +21,7 @@ export default {
 		const targetMessageCount = parseInt(input.replace(/\D/g, '')) || 100; // 10,000 -> 10000
 
 		if (targetMessageCount < 20) {
-			// @ts-expect-error
+			// @ts-expect-error | followUp is stripped by NoReply<...>, but we need to send a validation error before the handler's own return value replies
 			void interaction.followUp({
 				embeds: [{
 					color: COLOR.ERROR,
@@ -32,7 +32,7 @@ export default {
 			return {};
 		}
 		if (targetMessageCount > 10_000) {
-			// @ts-expect-error
+			// @ts-expect-error | followUp is stripped by NoReply<...>, but we need to send a validation error before the handler's own return value replies
 			void interaction.followUp({
 				embeds: [{
 					color: COLOR.ERROR,
@@ -45,7 +45,7 @@ export default {
 
 		const inputNumber = Math.max(20, Math.min(10_000, targetMessageCount)); // [20, 10_000]
 
-		// @ts-expect-error
+		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
 		const exportOptions = await GetExportCache(interaction);
 		if (!exportOptions) return {};
 

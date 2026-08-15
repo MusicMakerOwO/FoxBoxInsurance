@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv";
 import { afterAll, assert, describe, expect, it } from "vitest";
-import { Database } from "../Database";
-import { ExportChannel, JSONExport } from "../Utils/Parsers/Export";
-import { FORMAT } from "../Utils/Constants";
+import { Database } from "../Database.js";
+import { ExportChannel, JSONExport } from "../Utils/Parsers/Export.js";
+import { FORMAT } from "../Utils/Constants.js";
 import {
 	SimpleChannel,
 	SimpleEmoji,
@@ -10,10 +10,13 @@ import {
 	SimpleMessage,
 	SimpleSticker,
 	SimpleUser
-} from "../Typings/DatabaseTypes";
+} from "../Typings/DatabaseTypes.js";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
 import { EmbedType } from "discord.js";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: `${__dirname}/../../.env`, quiet: true });
 
 function Pick<T extends object, K extends keyof T>(data: T, props: K[]): Pick<T, K> {
@@ -24,7 +27,7 @@ function Pick<T extends object, K extends keyof T>(data: T, props: K[]): Pick<T,
 	return result;
 }
 
-function BigIntToString<T>(data: T): T {
+function BigIntToString<T extends object | object[] | bigint>(data: T): T | Record<string, string> {
 	if (typeof data === "bigint") {
 		return data.toString() as unknown as T;
 	}
@@ -32,7 +35,7 @@ function BigIntToString<T>(data: T): T {
 		return data.map(BigIntToString) as unknown as T;
 	}
 	if (data && typeof data === "object") {
-		const result: any = {};
+		const result: Record<string, string> = {};
 		for (const [key, value] of Object.entries(data)) {
 			result[key] = BigIntToString(value);
 		}

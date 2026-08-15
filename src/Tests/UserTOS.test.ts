@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { SetUserTOSVersion, CanUserAccessTOSFeature } from "../Services/UserTOS";
-import { GetUser, SaveUser } from "../CRUD/Users";
-import { TOS_FEATURES, MAX_TOS_VERSION } from "../TOSConstants";
-import { SimpleUser } from "../Typings/DatabaseTypes";
+import { SetUserTOSVersion, CanUserAccessTOSFeature } from "../Services/UserTOS.js";
+import { GetUser, SaveUser } from "../CRUD/Users.js";
+import { TOS_FEATURES, MAX_TOS_VERSION } from "../TOSConstants.js";
+import { SimpleUser } from "../Typings/DatabaseTypes.js";
 
 vi.mock("../CRUD/Users");
 

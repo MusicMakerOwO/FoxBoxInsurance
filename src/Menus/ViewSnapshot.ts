@@ -1,7 +1,7 @@
-import {SelectMenuHandler} from "../Typings/HandlerTypes";
+import {SelectMenuHandler} from "../Typings/HandlerTypes.js";
 import {ButtonInteraction} from "discord.js";
-import { TOS_FEATURES } from "../TOSConstants";
-import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],

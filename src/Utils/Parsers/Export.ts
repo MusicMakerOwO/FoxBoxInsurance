@@ -6,24 +6,28 @@ import {
 	SimpleMessage,
 	SimpleSticker,
 	SimpleUser
-} from "../../Typings/DatabaseTypes";
-import { FORMAT, FORMAT_NAMES } from "../Constants";
+} from "../../Typings/DatabaseTypes.js";
+import { FORMAT, FORMAT_NAMES } from "../Constants.js";
 import { PoolConnection } from "mariadb";
-import { Database } from "../../Database";
-import { ObjectValues } from "../../Typings/HelperTypes";
-import { GetUser } from "../../CRUD/Users";
-import { GetAsset } from "../../CRUD/Assets";
-import { GetSticker } from "../../CRUD/Stickers";
-import { GetEmoji } from "../../CRUD/Emojis";
+import { Database } from "../../Database.js";
+import { ObjectValues } from "../../Typings/HelperTypes.js";
+import { GetUser } from "../../CRUD/Users.js";
+import { GetAsset } from "../../CRUD/Assets.js";
+import { GetSticker } from "../../CRUD/Stickers.js";
+import { GetEmoji } from "../../CRUD/Emojis.js";
 import { createHash } from "node:crypto";
-import { JSONReplacer, JSONStringify } from "../../JSON";
+import { JSONReplacer, JSONStringify } from "../../JSON.js";
 import { readFileSync } from "node:fs";
-import { client } from "../../Client";
-import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys";
-import { Decrypt } from "../Encryption";
+import { client } from "../../Client.js";
+import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys.js";
+import { Decrypt } from "../Encryption/index.js";
 import { minify } from "html-minifier-next";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
-function Omit<T extends {}, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function Omit<T extends object, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
 	const result = { ...data };
 	for (const key of props) {
 		delete result[key];
@@ -108,7 +112,12 @@ type ExportContext = {
 	messages: Pick<SimpleMessage, 'id' | 'user_id' | 'content' | 'sticker_id' | 'reply_to' | 'data' | 'created_at'>[];
 }
 
-export async function ExportChannel(options: ExportOptions) {
+export async function ExportChannel(options: ExportOptions): Promise<{
+	id: string;
+	name: string;
+	hash: [typeof HASH_ALGORITHM, string];
+	data: Buffer;
+}> {
 
 	if (options.messageCount < 1) throw new Error('Cannot export 0 messages');
 	if (options.messageCount > 10_000) throw new Error('Cannot export more than 10,000 messages');
@@ -222,7 +231,7 @@ export async function ExportChannel(options: ExportOptions) {
 	}
 
 
-	let fileData = Buffer.from(''); // empty buffer
+	let fileData: Buffer;
 	switch (options.format) {
 		case FORMAT.TEXT :
 			fileData = Buffer.from(ExportText(context));

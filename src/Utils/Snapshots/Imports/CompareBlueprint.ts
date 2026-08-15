@@ -21,7 +21,7 @@ type InferBlueprint<B extends JSONBlueprint> = {
 
 export type JSONBlueprint = Record<string, FieldType>;
 
-export function ObjectKeysMatch(x: Record<string, unknown>, y: Record<string, unknown>) {
+export function ObjectKeysMatch(x: Record<string, unknown>, y: Record<string, unknown>): boolean {
 	// the sort ensures that insertion order is irrelevant
 	const xKeys = Object.keys(x).sort((a, b) => a.localeCompare(b)).join(':');
 	const yKeys = Object.keys(y).sort((a, b) => a.localeCompare(b)).join(':');

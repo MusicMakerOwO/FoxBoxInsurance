@@ -1,10 +1,10 @@
-import {ButtonHandler} from "../Typings/HandlerTypes";
-import {COLOR, EMOJI} from "../Utils/Constants";
-import {Database} from "../Database";
-import {GetGuild} from "../CRUD/Guilds";
-import {GetChannel} from "../CRUD/Channels";
-import {SimpleMessageExport} from "../Typings/DatabaseTypes";
-import { DiscordActionRow, DiscordButton, DiscordStringSelect } from "../Typings/DiscordTypes";
+import {ButtonHandler} from "../Typings/HandlerTypes.js";
+import {COLOR, EMOJI} from "../Utils/Constants.js";
+import {Database} from "../Database.js";
+import {GetGuild} from "../CRUD/Guilds.js";
+import {GetChannel} from "../CRUD/Channels.js";
+import {SimpleMessageExport} from "../Typings/DatabaseTypes.js";
+import { DiscordActionRow, DiscordButton, DiscordStringSelect } from "../Typings/DiscordTypes.js";
 
 const PAGE_SIZE = 5;
 
@@ -21,7 +21,7 @@ export default {
 	hidden        : false,
 	customID      : 'history',
 	execute       : async function(interaction, client, args) {
-		let input = args[0];
+		const input = args[0];
 
 		const connection = await Database.getConnection();
 

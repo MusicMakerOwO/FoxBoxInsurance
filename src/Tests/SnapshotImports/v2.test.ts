@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import * as v2 from '../../Utils/Snapshots/Imports/v2';
-import { SNAPSHOT_ERRORS } from '../../Utils/Snapshots/Imports/Errors';
-import { OVERWRITE_TYPE, SnapshotExportMetadata } from "../../Typings/DatabaseTypes";
-import { SNAPSHOT_TYPE } from "../../Utils/Constants";
+import * as v2 from '../../Utils/Snapshots/Imports/v2.js';
+import { SNAPSHOT_ERRORS } from '../../Utils/Snapshots/Imports/Errors.js';
+import { OVERWRITE_TYPE, SnapshotExportMetadata } from "../../Typings/DatabaseTypes.js";
+import { SNAPSHOT_TYPE } from "../../Utils/Constants.js";
 
 describe('Roles', () => {
 	it('parses a valid role object', () => {
@@ -37,7 +37,7 @@ describe('Roles', () => {
 			position   : 0,
 			permissions: '1'
 			// missing managed_by
-		} as any))
+		} as Record<string, unknown>))
 		.toThrow(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 	});
 
@@ -216,7 +216,7 @@ describe('Channels', () => {
 			nsfw     : 1,
 			topic    : null,
 			parent_id: null
-		} as any))
+		} as Record<string, unknown>))
 		.toThrow(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 	});
 
@@ -350,7 +350,7 @@ describe('Bans', () => {
 		expect(() => v2.ParseBan({
 			id: '1'
 			// missing reason
-		} as any))
+		} as Record<string, unknown>))
 		.toThrow(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 	});
 
@@ -394,7 +394,7 @@ describe('Permissions', () => {
 			allow: '1',
 			deny : '2'
 			// missing type
-		} as any))
+		} as Record<string, unknown>))
 		.toThrow(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
 	});
 

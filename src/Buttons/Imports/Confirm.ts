@@ -1,9 +1,9 @@
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {COLOR, EMOJI, SECONDS} from "../../Utils/Constants";
-import {SaveImportForGuild} from "../../CRUD/SnapshotImports";
-import { TOS_FEATURES } from "../../TOSConstants";
-import { DiscordPermissions } from "../../Utils/DiscordConstants";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {COLOR, EMOJI, SECONDS} from "../../Utils/Constants.js";
+import {SaveImportForGuild} from "../../CRUD/SnapshotImports.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
+import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.IMPORT_SNAPSHOTS ],

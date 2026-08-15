@@ -6,14 +6,14 @@ import {
 	ModalSubmitInteraction,
 	SlashCommandBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, StringSelectMenuInteraction
 } from "discord.js";
-import {IClient} from "../Client";
-import {ObjectValues} from "./HelperTypes";
-import {Events} from "../Utils/DiscordConstants";
+import {IClient} from "../Client.js";
+import {ObjectValues} from "./HelperTypes.js";
+import {Events} from "../Utils/DiscordConstants.js";
 import { APIEmbed, APIModalInteractionResponseCallbackData } from "discord-api-types/v10";
-import { DiscordActionRow, DiscordButton, DiscordStringSelect } from "./DiscordTypes";
-import { TOS_FEATURES } from "../TOSConstants";
-import { GUILD_FEATURES } from "./DatabaseTypes";
-import { DiscordPermissions } from "../Utils/DiscordConstants";
+import { DiscordActionRow, DiscordButton, DiscordStringSelect } from "./DiscordTypes.js";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { GUILD_FEATURES } from "./DatabaseTypes.js";
+import { DiscordPermissions } from "../Utils/DiscordConstants.js";
 
 type NoReply<T extends Interaction> = Omit<T, 'reply' | 'editReply' | 'deferReply' | 'deferUpdate' | 'respond' | 'followUp'>;
 
@@ -66,5 +66,5 @@ export interface ModalHandler extends ComponentSettings {
 export interface EventHandler extends Omit<ComponentSettings, 'response_type' | 'hidden'> {
 	name: ObjectValues<typeof Events> | string & {};
 	once?: boolean;
-	execute: (...args: any[]) => Promise<unknown>;
+	execute: (...args: unknown[]) => Promise<unknown>;
 }

@@ -1,10 +1,10 @@
-import { CommandHandler, InteractionResponse } from "../Typings/HandlerTypes";
+import { CommandHandler, InteractionResponse } from "../Typings/HandlerTypes.js";
 import { ButtonInteraction, SlashCommandBuilder } from "discord.js";
-import { TOS_FEATURES } from "../TOSConstants";
-import { GUILD_FEATURES } from "../Typings/DatabaseTypes";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
 export default {
-	tos_features: [TOS_FEATURES.MESSAGE_HISTORY],
+	tos_features: [TOS_FEATURES.MESSAGE_EXPORTS],
 	guild_features: [GUILD_FEATURES.MESSAGE_HISTORY],
 	permissions: [],
 	response_type: 'reply',

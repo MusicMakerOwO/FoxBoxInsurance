@@ -1,6 +1,6 @@
-import { MAX_TOS_VERSION, TOS_FEATURES, TOS_VERSIONS } from "../TOSConstants";
-import { ObjectValues } from "../Typings/HelperTypes";
-import { SimpleUser } from "../Typings/DatabaseTypes";
+import { MAX_TOS_VERSION, TOS_FEATURES, TOS_VERSIONS } from "../TOSConstants.js";
+import { ObjectValues } from "../Typings/HelperTypes.js";
+import { SimpleUser } from "../Typings/DatabaseTypes.js";
 
 export const TOS_FEATURE_DESCRIPTION: { [K in ObjectValues<typeof TOS_FEATURES>]: Lowercase<string> } = {
 	[TOS_FEATURES.MESSAGE_EXPORTS] : 'message exports',

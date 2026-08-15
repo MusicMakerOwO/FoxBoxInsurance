@@ -1,6 +1,6 @@
 import {createPool, Pool, PoolConnection} from "mariadb";
-import {Log} from "./Utils/Log";
-import {Awaitable} from "./Typings/HelperTypes";
+import {Log} from "./Utils/Log.js";
+import {Awaitable} from "./Typings/HelperTypes.js";
 
 const connection_warning = new WeakMap(); // Connection => timeoutID
 const connection_location = new WeakMap(); // Connection => stack trace
@@ -13,6 +13,7 @@ class DatabaseWrapper {
 
 		if (!process.env.MARIADB_URI) {
 			console.log('[!] Missing MARIADB_URI environment variable');
+			// eslint-disable-next-line unicorn/no-process-exit
 			process.exit(1);
 		}
 

@@ -1,8 +1,8 @@
-import {ButtonHandler} from "../Typings/HandlerTypes";
-import {COLOR, SECONDS} from "../Utils/Constants";
-import {Database} from "../Database";
+import {ButtonHandler} from "../Typings/HandlerTypes.js";
+import {COLOR, SECONDS} from "../Utils/Constants.js";
+import {Database} from "../Database.js";
 import {APIEmbed} from "discord-api-types/v10";
-import { Asset, SimpleMessage } from "../Typings/DatabaseTypes";
+import { Asset, SimpleMessage } from "../Typings/DatabaseTypes.js";
 
 const STAT_SIZE = 10_000;
 

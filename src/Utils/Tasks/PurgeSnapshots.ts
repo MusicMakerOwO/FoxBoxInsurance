@@ -1,8 +1,8 @@
-import {Database} from "../../Database";
-import {DeleteSnapshot, MaxSnapshotsForGuild} from "../../CRUD/Snapshots";
-import {Log} from "../Log";
+import {Database} from "../../Database.js";
+import {DeleteSnapshot, MaxSnapshotsForGuild} from "../../CRUD/Snapshots.js";
+import {Log} from "../Log.js";
 
-export async function PurgeSnapshots() {
+export async function PurgeSnapshots(): Promise<void> {
 
 	const GuildSnapshots = await Database.query(`
 		SELECT guild_id, COUNT(*) as snapshot_count

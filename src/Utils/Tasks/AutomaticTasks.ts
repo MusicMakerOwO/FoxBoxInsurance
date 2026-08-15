@@ -1,12 +1,12 @@
-import {SECONDS} from "../Constants";
-import {Log} from "../Log";
-import {Database} from "../../Database";
-import {TaskScheduler} from "../TaskScheduler";
-import {SnapshotServers} from "./SnapshotServers";
-import {PushStats} from "./PushStats";
-import {ChannelPurge} from "./ChannelPurge";
-import { EncryptMessages } from "./EncryptMessages";
-import { UploadFiles } from "./UploadFiles";
+import {SECONDS} from "../Constants.js";
+import {Log} from "../Log.js";
+import {Database} from "../../Database.js";
+import {TaskScheduler} from "../TaskScheduler.js";
+import {SnapshotServers} from "./SnapshotServers.js";
+import {PushStats} from "./PushStats.js";
+import {ChannelPurge} from "./ChannelPurge.js";
+import { EncryptMessages } from "./EncryptMessages.js";
+import { UploadFiles } from "./UploadFiles.js";
 
 const TIME_BETWEEN_TASKS = SECONDS.MINUTE * 10; // 10 minutes
 
@@ -20,7 +20,7 @@ const TASKS: [name: string, callback: () => Promise<void>, interval: number ][] 
 
 const LONGEST_NAME_LENGTH = Math.max( ... TASKS.map(t => t[0].length) );
 
-export async function StartAutomaticTasks() {
+export async function StartAutomaticTasks(): Promise<void> {
 	if (TASKS.length === 0) {
 		Log('WARN', "No tasks to manage - nothing to do!");
 		return;
@@ -63,8 +63,8 @@ export async function StartAutomaticTasks() {
 
 		TaskScheduler.schedule(() => {
 			try {
-				callback();
-				Database.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
+				void callback();
+				void Database.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
 			} catch (err) {
 				Log('ERROR', err);
 			}

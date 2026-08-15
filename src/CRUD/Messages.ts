@@ -1,6 +1,6 @@
-import {SimpleMessage} from "../Typings/DatabaseTypes";
-import {LRUCache} from "../Utils/DataStructures/LRUCache";
-import {Database} from "../Database";
+import {SimpleMessage} from "../Typings/DatabaseTypes.js";
+import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
+import {Database} from "../Database.js";
 
 const cache = new LRUCache<SimpleMessage['id'], SimpleMessage>(20_000);
 
@@ -9,7 +9,7 @@ const INVALID_MESSAGE_IDS = new Set<SimpleMessage['id']>();
 /**
  * Grabs a message directly from the database. The message content is not decrypted.
  */
-export async function GetMessage(id: SimpleMessage['id']) {
+export async function GetMessage(id: SimpleMessage['id']): Promise<SimpleMessage | null> {
 	id = BigInt(id);
 	if (cache.has(id)) return cache.get(id)!;
 
@@ -25,7 +25,7 @@ export async function GetMessage(id: SimpleMessage['id']) {
  * Fetches a bunch of messages at once. Each of these also gets added to cache.
  * Like with the single fetch, none of these messages are decrypted.
  */
-export async function GetMessageBulk(ids: SimpleMessage['id'][]) {
+export async function GetMessageBulk(ids: SimpleMessage['id'][]): Promise<Map<SimpleMessage['id'], SimpleMessage>> {
 	const result = new Map<SimpleMessage['id'], SimpleMessage>();
 
 	const missingIDs: SimpleMessage['id'][] = [];
@@ -52,7 +52,7 @@ export async function GetMessageBulk(ids: SimpleMessage['id'][]) {
  * Removes the provided message from cache if it exists, however the data will still exist in database.
  * If you intend to delete all the related data, use `DANGER_PurgeMessage()` instead.
  */
-export async function DiscardMessage(id: bigint) {
+export async function DiscardMessage(id: bigint): Promise<void> {
 	cache.delete(id);
 	INVALID_MESSAGE_IDS.delete(id);
 }
@@ -62,6 +62,6 @@ export async function DiscardMessage(id: bigint) {
  *
  * THIS CANNOT BE UNDONE!!!
  */
-export async function DANGER_PurgeMessage(id: bigint) {
+export async function DANGER_PurgeMessage(id: bigint): Promise<void> {
 	await Database.query('DELETE FROM Messages WHERE id = ?', [id]);
 }

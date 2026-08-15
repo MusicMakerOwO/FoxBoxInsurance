@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CompareBlueprint, JSONBlueprint } from '../Utils/Snapshots/Imports/CompareBlueprint';
+import { CompareBlueprint, JSONBlueprint } from '../Utils/Snapshots/Imports/CompareBlueprint.js';
 
 describe('CompareBlueprint', () => {
   it('returns true for exact match with required fields', () => {

@@ -3,9 +3,13 @@ vi.mock("../CRUD/Guilds", () => ({
 	SaveGuild: vi.fn(() => Promise.resolve())
 }));
 
-import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures";
-import { GUILD_FEATURES, SimpleGuild } from "../Typings/DatabaseTypes";
-import * as Guilds from "../CRUD/Guilds";
+import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures.js";
+import { GUILD_FEATURES, SimpleGuild } from "../Typings/DatabaseTypes.js";
+import * as Guilds from "../CRUD/Guilds.js";
+
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import * as dotenv from "dotenv";
 dotenv.config({ path: `${__dirname}/../../.env`, quiet: true });

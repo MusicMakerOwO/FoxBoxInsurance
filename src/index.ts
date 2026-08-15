@@ -1,25 +1,29 @@
 const preloadStart = process.hrtime.bigint();
 
-import "source-map-support/register";
+import "source-map-support/register.js";
+
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import * as dotenv from "dotenv";
 dotenv.config({ path: `${__dirname}/../.env` });
 
-import {Log} from './Utils/Log';
-import {TaskScheduler} from "./Utils/TaskScheduler";
-import {Database} from "./Database";
-import {StartAutomaticTasks} from "./Utils/Tasks/AutomaticTasks";
-import {DownloadAssets} from "./Utils/Processing/Images";
-import {client} from './Client';
-import {ProcessMessages} from "./Events/Messages";
-import {SaveGuild} from "./CRUD/Guilds";
-import {EncryptMessages} from "./Utils/Tasks/EncryptMessages";
+import {Log} from './Utils/Log.js';
+import {TaskScheduler} from "./Utils/TaskScheduler.js";
+import {Database} from "./Database.js";
+import {StartAutomaticTasks} from "./Utils/Tasks/AutomaticTasks.js";
+import {DownloadAssets} from "./Utils/Processing/Images.js";
+import {client} from './Client.js';
+import {ProcessMessages} from "./Events/Messages.js";
+import {SaveGuild} from "./CRUD/Guilds.js";
+import {EncryptMessages} from "./Utils/Tasks/EncryptMessages.js";
 
-import * as Commands from "./Commands";
-import * as Buttons from "./Buttons";
-import * as Menus from "./Menus";
-import * as Modals from "./Modals";
-import * as Events from "./Events";
+import * as Commands from "./Commands/index.js";
+import * as Buttons from "./Buttons/index.js";
+import * as Menus from "./Menus/index.js";
+import * as Modals from "./Modals/index.js";
+import * as Events from "./Events/index.js";
 
 for (const command of Object.values(Commands)) {
 	client.commands.set(command.data.name, command);
@@ -89,6 +93,7 @@ async function Shutdown() {
 	const duration = Number(end - start) / 1_000_000;
 
 	Log('WARN', `Done! (took ${duration.toFixed(2)}ms)`);
+	// eslint-disable-next-line unicorn/no-process-exit
 	process.exit(0);
 }
 

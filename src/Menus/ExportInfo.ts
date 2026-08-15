@@ -1,7 +1,7 @@
-import {COLOR, FORMAT_NAMES} from "../Utils/Constants";
-import {Database} from "../Database";
-import {SelectMenuHandler} from "../Typings/HandlerTypes";
-import {SimpleMessageExport} from "../Typings/DatabaseTypes";
+import {COLOR, FORMAT_NAMES} from "../Utils/Constants.js";
+import {Database} from "../Database.js";
+import {SelectMenuHandler} from "../Typings/HandlerTypes.js";
+import {SimpleMessageExport} from "../Typings/DatabaseTypes.js";
 
 const NoExportEmbed = {
 	color: COLOR.ERROR,

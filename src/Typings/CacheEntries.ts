@@ -1,9 +1,9 @@
-import {FORMAT} from "../Utils/Constants";
+import {FORMAT} from "../Utils/Constants.js";
 import {Channel, User} from "discord.js";
-import {ObjectValues} from "./HelperTypes";
-import { SimpleChannel, SimpleGuild, SimpleMessage, SimpleUser } from "./DatabaseTypes";
+import {ObjectValues} from "./HelperTypes.js";
+import { SimpleChannel, SimpleGuild, SimpleMessage, SimpleUser } from "./DatabaseTypes.js";
 
-export function CreateExportCacheKey(channelID: Channel['id'], userID: User['id']) {
+export function CreateExportCacheKey(channelID: Channel['id'], userID: User['id']): string {
 	return channelID + ':' + userID;
 }
 export type ChannelExport = {

@@ -1,7 +1,7 @@
-import { SnapshotBan, SnapshotChannel, SnapshotRole } from "../../Typings/DatabaseTypes";
+import { SnapshotBan, SnapshotChannel, SnapshotRole } from "../../Typings/DatabaseTypes.js";
 import { GuildBan, GuildBasedChannel, Role } from "discord.js";
 
-type StripMetadata<T extends {}> = Omit<T, 'snapshot_id' | 'deleted'>;
+type StripMetadata<T extends object> = Omit<T, 'snapshot_id' | 'deleted'>;
 
 export function SimplifyRole(role: StripMetadata<SnapshotRole> | Role): StripMetadata<SnapshotRole> {
 	return {

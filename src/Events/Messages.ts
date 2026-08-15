@@ -1,14 +1,14 @@
-import {EventHandler} from "../Typings/HandlerTypes";
-import {GetGuild} from "../CRUD/Guilds";
+import {EventHandler} from "../Typings/HandlerTypes.js";
+import {GetGuild} from "../CRUD/Guilds.js";
 import { Channel, Emoji, Guild, GuildBasedChannel, Message, MessageFlags, Sticker, User } from "discord.js";
-import { GUILD_FEATURES, MessageHistory, SimpleEmoji, SimpleMessage } from "../Typings/DatabaseTypes";
-import {SECONDS} from "../Utils/Constants";
-import {Database} from "../Database";
-import {Log} from "../Utils/Log";
+import { GUILD_FEATURES, MessageHistory, SimpleEmoji, SimpleMessage } from "../Typings/DatabaseTypes.js";
+import {SECONDS} from "../Utils/Constants.js";
+import {Database} from "../Database.js";
+import {Log} from "../Utils/Log.js";
 import {PoolConnection} from "mariadb";
-import {JSONReplacer} from "../JSON";
-import {ASSET_TYPE, QueueDownload} from "../Utils/Processing/Images";
-import { GetUser } from "../CRUD/Users";
+import {JSONReplacer} from "../JSON.js";
+import {ASSET_TYPE, QueueDownload} from "../Utils/Processing/Images.js";
+import { GetUser } from "../CRUD/Users.js";
 
 export default {
 	name: 'messageCreate',
@@ -126,7 +126,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 						embeds: message.embeds.map(x => x.toJSON())
 						.filter(
 							// ignore embeds from gif links
-							x => !x.url?.startsWith("https:\/\/tenor\.com\/view\/")
+							x => !x.url?.startsWith("https://tenor.com/view/")
 						),
 						components: message.components.map(x => x.toJSON())
 					},
@@ -243,22 +243,24 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 
 		await Promise.all(promises);
 
-		await BulkInsert( connection,
-			`INSERT INTO Messages (
-                      id, guild_id, channel_id, user_id,
-                      content, length, sticker_id,
-                      reply_to,
-                      data
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			// `filter( () => true )` removes all uninitialized entries regardless of their value
-			// No comparison needed, JS just simply skips them lol
-			messageData.filter( () => true ).map( x => [
-				x.id, x.guild_id, x.channel_id, x.user_id,
-				x.content, x.length, x.sticker_id,
-				x.reply_to,
-				JSON.stringify(x.data, JSONReplacer)
-			])
-		);
+		await Promise.all(
+			await BulkInsert( connection,
+				`INSERT INTO Messages (
+						  id, guild_id, channel_id, user_id,
+						  content, length, sticker_id,
+						  reply_to,
+						  data
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				// `filter( () => true )` removes all uninitialized entries regardless of their value
+				// No comparison needed, JS just simply skips them lol
+				messageData.filter( () => true ).map( x => [
+					x.id, x.guild_id, x.channel_id, x.user_id,
+					x.content, x.length, x.sticker_id,
+					x.reply_to,
+					JSON.stringify(x.data, JSONReplacer)
+				])
+			)
+		)
 
 		promises.push( BulkInsert( connection,
 			`INSERT INTO MessageHistory (created_at, guild_id, channel_id) VALUES (?, ?, ?)`,
@@ -279,7 +281,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 	if (!opts.quiet) Log('TRACE', `Inserted ${messageData.filter( () => true ).length} messages :D`);
 }
 
-async function BulkInsert(connection: PoolConnection, sql: string, rows: unknown[][]) {
+async function BulkInsert(connection: PoolConnection, sql: string, rows: unknown[][]): Promise<Promise<unknown>[]> {
 	const promises: Promise<unknown>[] = [];
 	if (rows.length === 0) return promises; // nothing to save!
 

@@ -6,9 +6,9 @@ function CleanName(input: string) {
 	return input.replace(/[^a-zA-Z0-9-_.]/g, '');
 }
 
-export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: number | null) {
+export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: number | null): Promise<string> {
 	// POST cdn.notfbi.dev/upload
-	return new Promise((resolve, reject) => {
+	return new Promise<string>((resolve, reject) => {
 		const request = https.request({
 			hostname: 'cdn.notfbi.dev',
 			port: 443,

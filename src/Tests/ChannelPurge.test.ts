@@ -1,11 +1,15 @@
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 import * as dotenv from "dotenv";
 dotenv.config({ path: `${__dirname}/../../.env`, quiet: true });
 
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Database } from "../Database";
-import { ChannelPurge } from "../Utils/Tasks/ChannelPurge";
-import { GUILD_FEATURES, SimpleChannel } from "../Typings/DatabaseTypes";
-import { SECONDS } from "../Utils/Constants";
+import { Database } from "../Database.js";
+import { ChannelPurge } from "../Utils/Tasks/ChannelPurge.js";
+import { GUILD_FEATURES, SimpleChannel } from "../Typings/DatabaseTypes.js";
+import { SECONDS } from "../Utils/Constants.js";
 
 const DISCORD_EPOCH = 1420070400000n;
 const TEST_GUILD_ID = 991000000000000001n;

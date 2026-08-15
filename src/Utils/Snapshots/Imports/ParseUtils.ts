@@ -36,7 +36,7 @@ export function ValidString(x: string, opts: Partial<StringOptions> = {}): boole
 	return true;
 }
 
-export function ValidBigInt(x: string) {
+export function ValidBigInt(x: string): boolean {
 	return ValidString(x, { scheme: /^\d+$/i });
 }
 

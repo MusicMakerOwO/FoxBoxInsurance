@@ -1,6 +1,6 @@
-import {ButtonHandler} from "../../Typings/HandlerTypes";
-import {GetImportsForGuild} from "../../CRUD/SnapshotImports";
-import {COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI, SNAPSHOT_TYPE_NAME} from "../../Utils/Constants";
+import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {GetImportsForGuild} from "../../CRUD/SnapshotImports.js";
+import {COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI, SNAPSHOT_TYPE_NAME} from "../../Utils/Constants.js";
 import {
 	GetSnapshot,
 	isSnapshotQueuedForDeletion,
@@ -8,16 +8,16 @@ import {
 	ListSnapshotsForGuild,
 	MaxSnapshotsForGuild,
 	Snapshot
-} from "../../CRUD/Snapshots";
-import { TOS_FEATURES } from "../../TOSConstants";
+} from "../../CRUD/Snapshots.js";
+import { TOS_FEATURES } from "../../TOSConstants.js";
 import {
 	DiscordActionRow,
 	DiscordButton,
 	DiscordStringSelect,
 	DiscordStringSelectOption
-} from "../../Typings/DiscordTypes";
-import { GUILD_FEATURES } from "../../Typings/DatabaseTypes";
-import { DiscordPermissions } from "../../Utils/DiscordConstants";
+} from "../../Typings/DiscordTypes.js";
+import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 
 const PAGE_SIZE = 5;
 

@@ -12,7 +12,7 @@ const FORMATS = [
 ]
 
 // strip discord formatting from a string
-export function RemoveFormatting(text: string) {
+export function RemoveFormatting(text: string): string {
 	if (text.length === 0) return text;
 
 	let result = text;

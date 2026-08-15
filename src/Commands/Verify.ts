@@ -1,11 +1,11 @@
-import { CommandHandler } from "../Typings/HandlerTypes";
-import { COLOR, RandomLoadingEmbed } from "../Utils/Constants";
+import { CommandHandler } from "../Typings/HandlerTypes.js";
+import { COLOR, RandomLoadingEmbed } from "../Utils/Constants.js";
 import { SlashCommandBuilder } from "discord.js";
-import { Database } from "../Database";
-import { Log } from "../Utils/Log";
+import { Database } from "../Database.js";
+import { Log } from "../Utils/Log.js";
 import { createHash } from "node:crypto";
 import { APIEmbed } from "discord-api-types/v10";
-import { SimpleMessageExport } from "../Typings/DatabaseTypes";
+import { SimpleMessageExport } from "../Typings/DatabaseTypes.js";
 
 const FailedEmbed = {
 	color      : COLOR.ERROR,
@@ -70,7 +70,7 @@ export default {
 			return { embeds: [FailedEmbed] };
 		}
 
-		// @ts-expect-error
+		// @ts-expect-error | editReply is stripped by NoReply<...>, but we need an early progress update before the handler's own return value replies
 		void interaction.editReply({ embeds: [RandomLoadingEmbed()] });
 		await new Promise(resolve => setTimeout(resolve, 2000));
 

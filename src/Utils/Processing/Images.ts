@@ -1,12 +1,12 @@
-import { ObjectValues } from "../../Typings/HelperTypes";
-import LimitedSet from "../DataStructures/LimitedSet";
-import { Log } from "../Log";
+import { ObjectValues } from "../../Typings/HelperTypes.js";
+import LimitedSet from "../DataStructures/LimitedSet.js";
+import { Log } from "../Log.js";
 import fs, { unlinkSync } from "node:fs";
-import { TestConnection } from "../TestConnection";
-import { DOWNLOAD_CACHE_PATH, UPLOAD_CACHE_PATH } from "../Constants";
-import { Database } from "../../Database";
+import { TestConnection } from "../TestConnection.js";
+import { DOWNLOAD_CACHE_PATH, UPLOAD_CACHE_PATH } from "../Constants.js";
+import { Database } from "../../Database.js";
 import https from "node:https";
-import { Asset } from "../../Typings/DatabaseTypes";
+import { Asset } from "../../Typings/DatabaseTypes.js";
 
 const HUNDRED_MEGABYTES = 1024 * 1024 * 100;
 
@@ -35,7 +35,7 @@ const DownloadObjects = new Map<BasicAsset['id'], BasicAsset>();
 
 let timeout: NodeJS.Timeout | undefined;
 
-export function QueueDownload(asset: BasicAsset) {
+export function QueueDownload(asset: BasicAsset): void {
 	if (RecentURLs.has(asset.url)) return;
 
 	// using a map because if someone updates their profile picture

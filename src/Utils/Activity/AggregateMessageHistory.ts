@@ -1,5 +1,5 @@
-import { Database } from "../../Database";
-import { MessageHistory } from "../../Typings/DatabaseTypes";
+import { Database } from "../../Database.js";
+import { MessageHistory } from "../../Typings/DatabaseTypes.js";
 
 export type MessageHistoryBucket = {
 	start: number,
@@ -17,7 +17,7 @@ export async function AggregateMessageHistory(options: {
 	channelID: bigint | null,
 	timeRange: [start: number, end: number],
 	bucketSize: number,
-}) {
+}): Promise<MessageHistoryBucket[]> {
 
 	const [start, end] = options.timeRange;
 	if (!Number.isFinite(options.bucketSize) || options.bucketSize <= 0) {

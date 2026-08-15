@@ -1,4 +1,4 @@
-import {ButtonHandler} from "../Typings/HandlerTypes";
+import {ButtonHandler} from "../Typings/HandlerTypes.js";
 
 export default {
 	tos_features  : [],

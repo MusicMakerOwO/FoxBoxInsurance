@@ -1,13 +1,13 @@
-import {Database} from "../../Database";
-import {client} from "../../Client";
-import {Log} from "../Log";
-import {CreateSnapshot} from "../../CRUD/Snapshots";
-import {SNAPSHOT_TYPE} from "../Constants";
-import {PurgeSnapshots} from "./PurgeSnapshots";
-import {GetGuild} from "../../CRUD/Guilds";
-import {GUILD_FEATURES} from "../../Typings/DatabaseTypes";
+import {Database} from "../../Database.js";
+import {client} from "../../Client.js";
+import {Log} from "../Log.js";
+import {CreateSnapshot} from "../../CRUD/Snapshots.js";
+import {SNAPSHOT_TYPE} from "../Constants.js";
+import {PurgeSnapshots} from "./PurgeSnapshots.js";
+import {GetGuild} from "../../CRUD/Guilds.js";
+import {GUILD_FEATURES} from "../../Typings/DatabaseTypes.js";
 
-export async function SnapshotServers() {
+export async function SnapshotServers(): Promise<void> {
 	const currentHour = new Date().getUTCHours();
 
 	const snapshotQueue = [];

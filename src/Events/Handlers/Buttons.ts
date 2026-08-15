@@ -1,9 +1,9 @@
-import { EventHandler } from "../../Typings/HandlerTypes";
+import { EventHandler } from "../../Typings/HandlerTypes.js";
 import { ButtonInteraction } from "discord.js";
-import { COLOR } from "../../Utils/Constants";
-import { Log } from "../../Utils/Log";
-import { CheckHandlerAccess } from "../../Utils/CheckHandlerAccess";
-import { client } from "../../Client";
+import { COLOR } from "../../Utils/Constants.js";
+import { Log } from "../../Utils/Log.js";
+import { CheckHandlerAccess } from "../../Utils/CheckHandlerAccess.js";
+import { client } from "../../Client.js";
 
 export default {
 	name: 'button-interaction',

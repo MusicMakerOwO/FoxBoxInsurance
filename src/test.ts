@@ -1,10 +1,14 @@
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 import * as dotenv from "dotenv";
 dotenv.config({ path: `${__dirname}/../.env` });
 
-import { Database } from "./Database";
-import { AggregateMessageHistory } from "./Utils/Activity/AggregateMessageHistory";
-import { SECONDS } from "./Utils/Constants";
-import { RenderGraph } from "./Utils/Activity/GraphCreator";
+import { Database } from "./Database.js";
+import { AggregateMessageHistory } from "./Utils/Activity/AggregateMessageHistory.js";
+import { SECONDS } from "./Utils/Constants.js";
+import { RenderGraph } from "./Utils/Activity/GraphCreator.js";
 import { writeFileSync } from "node:fs";
 
 const DaysOfWeek = [
@@ -24,7 +28,7 @@ function Convert24To12(time: number) {
 	return `${time - 12} PM`;
 }
 
-( async() => {
+void ( async() => {
 	const now = new Date();
 	const startOfToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 

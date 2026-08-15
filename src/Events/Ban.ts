@@ -1,6 +1,6 @@
-import {EventHandler} from "../Typings/HandlerTypes";
+import {EventHandler} from "../Typings/HandlerTypes.js";
 import {GuildMember} from "discord.js";
-import {Database} from "../Database";
+import {Database} from "../Database.js";
 
 export default {
 	name: 'guildBanAdd',

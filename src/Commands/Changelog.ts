@@ -1,6 +1,6 @@
 import {SlashCommandBuilder} from "discord.js";
-import {COLOR} from "../Utils/Constants";
-import {CommandHandler} from "../Typings/HandlerTypes";
+import {COLOR} from "../Utils/Constants.js";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
 
 const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 	"2.0.1": {

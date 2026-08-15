@@ -1,4 +1,4 @@
-import { SECONDS } from "../Constants";
+import { SECONDS } from "../Constants.js";
 
 type CacheEntry<T> = { value: T, expiryTime: number, ttl: number };
 
@@ -13,12 +13,12 @@ export class TTLCache<K, V> {
 		this.interval = setInterval(() => this.cleanup(), checkInterval).unref();
 	}
 
-	set(key: K, value: V, ttl = SECONDS.MINUTE * 10 * 1000) {
+	set(key: K, value: V, ttl = SECONDS.MINUTE * 10 * 1000): void {
 		const expiryTime = Date.now() + ttl;
 		this.cache.set(key, { value, expiryTime, ttl });
 	}
 
-	delete(key: K) {
+	delete(key: K): void {
 		this.cache.delete(key);
 	}
 
@@ -26,7 +26,7 @@ export class TTLCache<K, V> {
 		return Date.now() > item.expiryTime;
 	}
 
-	has(key: K) {
+	has(key: K): boolean {
 		const item = this.cache.get(key);
 		if (!item) return false;
 
@@ -39,7 +39,7 @@ export class TTLCache<K, V> {
 	}
 
 
-	get(key: K, touch = true) {
+	get(key: K, touch = true): V | null {
 		const item = this.cache.get(key);
 		if (!item) return null;
 
@@ -57,7 +57,7 @@ export class TTLCache<K, V> {
 		return item.value;
 	}
 
-	cleanup() {
+	cleanup(): void {
 		for (const [key, item] of this.cache.entries()) {
 			if (this.#isExpired(item)) {
 				this.cache.delete(key);
@@ -65,16 +65,16 @@ export class TTLCache<K, V> {
 		}
 	}
 
-	destroy() {
+	destroy(): void {
 		clearInterval(this.interval);
 		this.cache.clear();
 	}
 
-	keys() {
+	keys(): K[] {
 		return Array.from(this.cache.keys()).filter(key => this.has(key));
 	}
 
-	values() {
+	values(): V[] {
 		return Array.from(this.cache.values())
 			.filter(item => !this.#isExpired(item))
 			.map(item => item.value);

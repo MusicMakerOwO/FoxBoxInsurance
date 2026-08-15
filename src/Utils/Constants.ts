@@ -1,3 +1,9 @@
+import { ObjectValues } from "../Typings/HelperTypes.js";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 export const ROOT_FOLDER     = `${__dirname}/../..`;
 
 export const DB_SETUP_FILE   = `${ROOT_FOLDER}/DB_SETUP.sql`;
@@ -129,12 +135,12 @@ export const LOADING_MESSAGES = [
 	'Finding the best memes ...',
 ] as const;
 
-export function RandomLoadingMessage() {
+export function RandomLoadingMessage(): typeof LOADING_MESSAGES[number] {
 	const index = Math.floor(Math.random() * LOADING_MESSAGES.length);
 	return LOADING_MESSAGES[index];
 }
 
-export function RandomLoadingEmbed() {
+export function RandomLoadingEmbed(): { color: ObjectValues<typeof COLOR>, description: string } {
 	return {
 		color: COLOR.PRIMARY,
 		description: EMOJI.LOADING + ' ' + RandomLoadingMessage()

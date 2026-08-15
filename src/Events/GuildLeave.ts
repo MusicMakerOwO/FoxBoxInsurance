@@ -1,5 +1,5 @@
-import {Log} from "../Utils/Log";
-import {EventHandler} from "../Typings/HandlerTypes";
+import {Log} from "../Utils/Log.js";
+import {EventHandler} from "../Typings/HandlerTypes.js";
 import {Guild} from "discord.js";
 
 export default {

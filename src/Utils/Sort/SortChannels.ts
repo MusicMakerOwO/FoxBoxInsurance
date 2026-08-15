@@ -1,5 +1,5 @@
 import {ChannelType} from "discord.js";
-import {SnapshotChannel} from "../../Typings/DatabaseTypes";
+import {SnapshotChannel} from "../../Typings/DatabaseTypes.js";
 
 const TextChannelTypes = new Set([
   ChannelType.GuildText,
@@ -27,7 +27,7 @@ function GetSortableChannelTypes(type: number): Set<ChannelType> {
 	}
 }
 
-export function SortChannels(channels: SnapshotChannel[]) {
+export function SortChannels(channels: SnapshotChannel[]): SnapshotChannel[] {
 	return Array.from(channels).sort((a, b) => {
 		const aTypes = GetSortableChannelTypes(a.type);
 

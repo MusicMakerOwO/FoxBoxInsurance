@@ -1,7 +1,7 @@
-import {SnapshotRole} from "../../Typings/DatabaseTypes";
+import {SnapshotRole} from "../../Typings/DatabaseTypes.js";
 
 /** Sorts the given role array and mutates the `position` accordingly */
-export function SortRoles(roles: SnapshotRole[]) {
+export function SortRoles(roles: SnapshotRole[]): SnapshotRole[] {
 	const sorted = Array.from(roles).sort((r1, r2) => {
 		// Primary sort: raw position
 		if (r1.position !== r2.position) return r1.position - r2.position;

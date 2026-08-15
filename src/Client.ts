@@ -1,8 +1,8 @@
 import {Client} from 'discord.js';
-import {ButtonHandler, CommandHandler, ModalHandler, SelectMenuHandler} from "./Typings/HandlerTypes";
-import {JSONSnapshot} from "./CRUD/Snapshots";
-import {TTLCache} from "./Utils/DataStructures/TTLCache";
-import {ChannelExport, CreateExportCacheKey} from "./Typings/CacheEntries";
+import {ButtonHandler, CommandHandler, ModalHandler, SelectMenuHandler} from "./Typings/HandlerTypes.js";
+import {JSONSnapshot} from "./CRUD/Snapshots.js";
+import {TTLCache} from "./Utils/DataStructures/TTLCache.js";
+import {ChannelExport, CreateExportCacheKey} from "./Typings/CacheEntries.js";
 
 interface IClient extends Client<true> {
 	commands : Map<string, CommandHandler>;

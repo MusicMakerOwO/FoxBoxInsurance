@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Database } from '../Database';
-import { AggregateMessageHistory } from '../Utils/Activity/AggregateMessageHistory';
-import { SECONDS } from "../Utils/Constants";
+import { Database } from '../Database.js';
+import { AggregateMessageHistory } from '../Utils/Activity/AggregateMessageHistory.js';
+import { SECONDS } from "../Utils/Constants.js";
 
 describe('AggregateMessageHistory', () => {
 	afterEach(() => {

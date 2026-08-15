@@ -1,6 +1,6 @@
-import {CommandHandler} from "../Typings/HandlerTypes";
+import {CommandHandler} from "../Typings/HandlerTypes.js";
 import {SlashCommandBuilder} from "discord.js";
-import {COLOR} from "../Utils/Constants";
+import {COLOR} from "../Utils/Constants.js";
 
 export default {
 	tos_features  : [],

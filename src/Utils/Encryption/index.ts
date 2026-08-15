@@ -1,4 +1,4 @@
-import * as v1 from "./Versions/v1";
+import * as v1 from "./Versions/v1.js";
 
 const VERSIONS: Record<number, {
 	Encrypt: (content: Buffer, key: Buffer) => Buffer

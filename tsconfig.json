@@ -1,6 +1,7 @@
 {
 	"exclude": [
-		"./vitest.config.ts"
+		"./vitest.config.ts",
+		"./eslint.config.ts",
 	],
 	// Visit https://aka.ms/tsconfig to read more about this file
 	"compilerOptions": {

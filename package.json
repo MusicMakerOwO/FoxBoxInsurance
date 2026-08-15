@@ -9,8 +9,8 @@
 		"source-map-support": "^0.5.21"
 	},
 	"scripts": {
-		"check": "echo \"Checking for errors ...\" && tsgo --noEmit",
-		"build": "echo \"Checking for errors ...\" && tsgo --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsgo -b",
+		"check": "echo \"Running linter...\" && eslint . && echo \"Checking for errors ...\" && tsgo --noEmit",
+		"build": "echo \"Running linter...\" && eslint . && echo \"Checking for errors ...\" && tsgo --noEmit && echo \"Deleting old data ...\" && rm -rf build && echo \"Compiling scripts ...\" && tsgo -b",
 		"start": "node build/index.js",
 		"linecount": "find . -type f -name '*.ts' -not -path './node_modules/*' -exec wc -l {} + | sort -n -r | head -n 10",
 		"test": "vitest run",

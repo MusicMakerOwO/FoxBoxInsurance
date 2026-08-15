@@ -134,7 +134,7 @@ export function ParsePermission(data: Record<string, unknown>): JSONStringify<Sn
 		target_id : data.role_id,
 
 		allow     : data.allow,
-		deny      : data.allow,
+		deny      : data.deny,
 		/** I don't think it REALLY matters in the discord API but this info was never included in v1 anyway */
 		type      : OVERWRITE_TYPE.ROLE
 	}

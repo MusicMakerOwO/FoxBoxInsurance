@@ -238,6 +238,7 @@ async function DownloadURL(url: string) {
 				size += chunk.length;
 				if (size > HUNDRED_MEGABYTES) {
 					reject(new Error(`File too large: ${url}`));
+					response.destroy();
 					return;
 				}
 				data.push(chunk);

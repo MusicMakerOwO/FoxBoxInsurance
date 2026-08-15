@@ -23,7 +23,7 @@ function FileSize(bytes: number): string {
 
 let lastOutput = {};
 let lastRun = 0;
-async function CalcuateMessageStats(): Promise<APIEmbed> {
+async function CalculateMessageStats(): Promise<APIEmbed> {
 	// only compute every 30 minutes
 	if (Date.now() - lastRun < SECONDS.MINUTE * 1000 * 30) {
 		return lastOutput;
@@ -123,7 +123,7 @@ export default {
 	customID      : 'global-stats',
 	execute       : async function() {
 		console.time('Calculating stats');
-		const stats = await CalcuateMessageStats();
+		const stats = await CalculateMessageStats();
 		console.timeEnd('Calculating stats');
 
 		return {

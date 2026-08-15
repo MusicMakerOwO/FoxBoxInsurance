@@ -2,10 +2,10 @@ import {ObjectValues} from "./Typings/HelperTypes";
 
 export const TOS_FEATURES = {
 	MESSAGE_EXPORTS: 1,
-	SERVER_SNAPSHOTS: 2 ,
+	SERVER_SNAPSHOTS: 2,
 	TOS_VERSIONING: 3,
 	IMPORT_SNAPSHOTS: 4,
-	DATA_COLLECTION_OPT_OUT: 6,
+	DATA_COLLECTION_OPT_OUT: 5,
 } as const;
 
 type TOS_DATA = {
@@ -53,4 +53,4 @@ export const TOS_VERSIONS: { [key: number]: TOS_DATA } = {
 	}
 } as const;
 
-export const MAX_TOS_VERSION = +Object.keys(TOS_VERSIONS).sort((x, y) => y.localeCompare(x))[0];
+export const MAX_TOS_VERSION = Math.max( ... Object.keys(TOS_VERSIONS).map(Number) );

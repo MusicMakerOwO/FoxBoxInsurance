@@ -1,5 +1,3 @@
-import { EncryptMessages } from "./Utils/Tasks/EncryptMessages";
-
 const preloadStart = process.hrtime.bigint();
 
 import "source-map-support/register";
@@ -15,6 +13,7 @@ import {DownloadAssets} from "./Utils/Processing/Images";
 import {client} from './Client';
 import {ProcessMessages} from "./Events/Messages";
 import {SaveGuild} from "./CRUD/Guilds";
+import {EncryptMessages} from "./Utils/Tasks/EncryptMessages";
 
 import * as Commands from "./Commands";
 import * as Buttons from "./Buttons";

@@ -1,4 +1,5 @@
 import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
+import {TTLCache} from "../Utils/DataStructures/TTLCache.js";
 import {client} from "../Client.js";
 import {Database} from "../Database.js";
 import {SimpleUser} from "../Typings/DatabaseTypes.js";
@@ -58,7 +59,7 @@ export async function GetUser(id: string | bigint): Promise<SimpleUser | null | 
 
 	const fetched = await client.users.fetch(stringID).catch( () => null)
 	if (!fetched) {
-		INVALID_USER_IDS.set(stringID, true);
+		INVALID_USER_IDS.add(stringID);
 		return null;
 	}
 

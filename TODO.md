@@ -1,15 +1,197 @@
-Harden all public facing snapshot actions to check guild ID
+- [ ] Harden all public facing snapshot actions to check guild ID
 	- Referring to buttons, commands, etc.
-- Snapshot imports expire in 10 minutes but users are told 60 minutes
-- `src/CRUD/Messages.ts`: `GetMessageBulk()` does no pass in message IDs to query
-- `src/CRUD/*`: Searches returning nothing should not permanently invalidate future searches
+- [x] Snapshot imports expire in 10 minutes but users are told 60 minutes
+- [x] `src/CRUD/Messages.ts`: `GetMessageBulk()` does not pass in message IDs to query
+- [x] `src/CRUD/*`: Searches returning nothing should not permanently invalidate future searches
   - Only invalidate searches for the next 10 minutes or so to prevent spamming DB & API
 
-- Rebuild all tests, they frankly suck lol
-  -  I think my original method would be to build the function then copy-paste the output as the "expected" result, however if the method never worked to begin then the entire process is flawed. I don't know which tests I did that on so I should likely go through and redo most if not all of them to be safe.
-  - Will add a list of tests here soon!
+- [ ] Rebuild all tests, they frankly suck lol
+  -  I think my original method would be to build the function then copy-paste the output as the "expected" result, however if the method never worked to begin then the entire process is flawed. I don't know which tests I did that on, so I should likely go through and redo most if not all of them to be safe.
+  - [ ] AggregateMessageHistory.test.ts
+    - [ ] returns hour-aligned buckets with counts for points in range
+    - [ ] returns zero-filled buckets for empty days in a range
+    - [ ] uses fixed 30-day buckets for monthly aggregation
+    - [ ] rejects when time range contains a non-finite value
+    - [ ] rejects when start is after end
+  - [ ] ChannelPurge.test.ts
+    - [ ] removes messages older than sixty days but keeps messages at the cutoff and newer
+    - [ ] keeps only the newest ten thousand messages for overflowing channels
+    - [ ] leaves channels at or below the limit untouched and removes channels with no remaining messages
+  - [ ] CompareBlueprint.test.ts
+    - [ ] returns true for exact match with required fields
+    - [ ] returns true for nullable fields with null values
+    - [ ] returns true for nullable fields with non-null values
+    - [ ] returns false if a required field is null
+    - [ ] returns false if a field is missing
+    - [ ] returns false if an extra field is present
+    - [ ] returns false if a field has the wrong type
+    - [ ] returns false if a nullable field has the wrong type
+    - [ ] returns true if object keys are out of order
+  - [ ] GuildFeatures.test.ts
+    - [ ] GetFeatureFlag: returns false when no flags are set
+    - [ ] GetFeatureFlag: returns true when the flag is set
+    - [ ] GetFeatureFlag: returns false for a flag not set when other flags are set
+    - [ ] SetFeatureFlag: sets the flag when enabled is true
+    - [ ] SetFeatureFlag: clears the flag when enabled is false
+    - [ ] SetFeatureFlag: does not affect other flags when setting a flag
+    - [ ] SetFeatureFlag: does not affect other flags when clearing a flag
+  - [ ] SaveMessages.test.ts
+    - [ ] saves an empty message
+    - [ ] saves messages sent from the client
+    - [ ] ignores messages sent from the client that are ephemeral (hidden)
+    - [ ] saves message content with no emojis
+    - [ ] saves message content with only default emojis
+    - [ ] saves message content with only discord emojis
+    - [ ] saves the sticker attached to a message
+    - [ ] saves the full embed on a message
+    - [ ] saves all the components in a message
+    - [ ] saves attachments included in the message
+    - [ ] redacts message data for users who opted out of collection
+    - [ ] MessageHistory: saves message history for guilds with MESSAGE_HISTORY feature enabled
+    - [ ] MessageHistory: saves multiple message history entries for multiple messages
+    - [ ] MessageHistory: saves message history with correct guild association
+    - [ ] MessageHistory: saves message history with correct channel association
+    - [ ] MessageHistory: does not save message history for guilds without MESSAGE_HISTORY feature
+  - [ ] SnapshotDiff.test.ts
+    - [ ] Roles: errors if there is no bot role and there is at least 1 role
+    - [ ] Roles: does not error if roles are empty
+    - [ ] Roles: returns created roles
+    - [ ] Roles: returns deleted roles
+    - [ ] Roles: returns updated roles
+    - [ ] Channels: returns created channel
+    - [ ] Channels: returns deleted channels
+    - [ ] Channels: returns updated channels
+    - [ ] Permissions: returns updated channel with added permission
+    - [ ] Permissions: returns updated channel with removed permission
+    - [ ] Permissions: returns updated channel with modified permission
+    - [ ] Bans: returns created bans
+    - [ ] Bans: returns deleted bans
+    - [ ] Bans: returns updated bans
+    - [ ] returns the entire target snapshot as CREATE if base is empty
+    - [ ] returns the entire base snapshot as DELETE if target is empty
+    - [ ] returns nothing if both snapshots are the same
+  - [ ] ExportMessages.test.ts
+    - [ ] should not export more than 10,000 messages
+    - [ ] should not export 0 messages
+    - [ ] should export a text format without error
+    - [ ] should export a HTML format without error
+    - [ ] should contain all the required metadata and warnings
+    - [ ] should contain the guild info
+    - [ ] should contain the channel info
+    - [ ] should only contain relevant users
+    - [ ] should only export public data for users
+    - [ ] should only contain relevant emojis
+    - [ ] should only export public data for emojis
+    - [ ] should only contain relevant stickers
+    - [ ] should only export public data for sticker
+    - [ ] should contain message IDs in ascending order
+    - [ ] should contain the original message data minus private data
+  - [ ] TOSVersionAccess.test.ts
+    - [ ] GetNextRequiredTOSVersion: returns the next required version if feature is added after user's version
+    - [ ] GetNextRequiredTOSVersion: returns null if no required version is greater than user's version
+    - [ ] GetNextRequiredTOSVersion: returns the minimum version if all features have a common required version
+    - [ ] BuildTOSChangeList: returns a non-empty array if features were added between versions
+    - [ ] BuildTOSChangeList: returns a non-empty array if features were added or removed between versions
+    - [ ] BuildTOSChangeList: returns empty array if no changes between versions
+  - [ ] UserTOS.test.ts
+    - [ ] SetUserTOSVersion: sets the user's TOS version if user exists
+    - [ ] SetUserTOSVersion: throws if user does not exist
+    - [ ] CanUserAccessTOSFeature: returns false if user has not accepted any TOS version
+    - [ ] CanUserAccessTOSFeature: returns true if user accepted a version greater than MAX_TOS_VERSION
+    - [ ] CanUserAccessTOSFeature: returns true if feature is included in accepted version
+    - [ ] CanUserAccessTOSFeature: returns false if feature is not included in accepted version
+    - [ ] CanUserAccessTOSFeature: returns false if GetTOSFeatures returns null
+  - [ ] Snapshots.test.ts
+    - [ ] only saves 7 snapshots per server
+    - [ ] does not allow pinned snapshots to be deleted
+    - [ ] cannot pin more snapshots than the maximum snapshots
+    - [ ] queues snapshots for deletion that are not pinned
+    - [ ] marks unpinned snapshots as deletable
+    - [ ] queues deletion from oldest snapshots first
+    - [ ] returns null if a given snapshot does not exist
+  - [ ] Encryption/v1.test.ts
+    - [ ] unwraps a wrapped buffer back to the original bytes
+    - [ ] unwraps a wrapped string back to the original utf8 bytes
+    - [ ] produces unique wrapped blobs for the same input and keeps the expected binary size
+    - [ ] unwraps an empty buffer and still includes iv and auth tag overhead
+    - [ ] rejects wrapped blobs that were modified after wrapping
+    - [ ] rejects unwrapping with a different wrapping key
+    - [ ] wraps and unwraps user keys with the configured master key
+  - [ ] SnapshotImports/v1.test.ts
+    - [ ] Roles: parses a valid role object
+    - [ ] Roles: sets managed_by to 1n if managed is truthy
+    - [ ] Roles: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Roles: throws CORRUPTED if id is not a valid bigint
+    - [ ] Roles: throws CORRUPTED if name is too short
+    - [ ] Roles: throws CORRUPTED if name is too long
+    - [ ] Roles: throws CORRUPTED if color is out of range
+    - [ ] Roles: throws CORRUPTED if hoist is not boolean-like
+    - [ ] Roles: throws CORRUPTED if position is negative
+    - [ ] Roles: throws CORRUPTED if permissions is not a valid bigint
+    - [ ] Roles: throws CORRUPTED if managed is not boolean-like
+    - [ ] Channels: parses a valid channel object with all fields
+    - [ ] Channels: parses a valid channel object with optional values omitted
+    - [ ] Channels: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Channels: throws CORRUPTED if id is not a valid bigint
+    - [ ] Channels: throws CORRUPTED if name is too short
+    - [ ] Channels: throws CORRUPTED if type is negative
+    - [ ] Channels: throws CORRUPTED if position is negative
+    - [ ] Channels: throws CORRUPTED if nsfw is not boolean-like
+    - [ ] Channels: throws CORRUPTED if topic is too long
+    - [ ] Channels: throws CORRUPTED if parent_id is not a valid bigint
+    - [ ] Bans: parses a valid ban object
+    - [ ] Bans: parses with empty reason
+    - [ ] Bans: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Bans: throws CORRUPTED if user_id is not a valid bigint
+    - [ ] Bans: throws CORRUPTED if reason is too long
+    - [ ] Permissions: parses a valid permission object
+    - [ ] Permissions: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Permissions: throws CORRUPTED if channel_id is not a valid bigint
+    - [ ] Permissions: throws CORRUPTED if role_id is not a valid bigint
+    - [ ] Permissions: throws CORRUPTED if allow is not a valid bigint
+    - [ ] Permissions: throws CORRUPTED if deny is not a valid bigint
+    - [ ] Format validation: throws MISMATCH_FIELDS if required field missing
+    - [ ] Format validation: throws MISMATCH_FIELDS if extra fields present
+    - [ ] Format validation: throws BAD_DATA_TYPE if array fields are not arrays
+    - [ ] Format validation: does not throw if all fields valid
+    - [ ] can read and parse an entire snapshot without error
+  - [ ] SnapshotImports/v2.test.ts
+    - [ ] Roles: parses a valid role object
+    - [ ] Roles: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Roles: throws CORRUPTED if id is not a valid bigint
+    - [ ] Roles: throws CORRUPTED if name is too short
+    - [ ] Roles: throws CORRUPTED if name is too long
+    - [ ] Roles: throws CORRUPTED if color is out of range
+    - [ ] Roles: throws CORRUPTED if hoist is not boolean-like
+    - [ ] Roles: throws CORRUPTED if position is negative
+    - [ ] Roles: throws CORRUPTED if permissions is not a valid bigint
+    - [ ] Roles: throws CORRUPTED if managed is not a valid bigint
+    - [ ] Channels: parses a valid channel object with all fields
+    - [ ] Channels: parses a valid channel object with optional values omitted
+    - [ ] Channels: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Channels: throws CORRUPTED if id is not a valid bigint
+    - [ ] Channels: throws CORRUPTED if name is too short
+    - [ ] Channels: throws CORRUPTED if type is negative
+    - [ ] Channels: throws CORRUPTED if position is negative
+    - [ ] Channels: throws CORRUPTED if nsfw is not boolean-like
+    - [ ] Channels: throws CORRUPTED if topic is too long
+    - [ ] Channels: throws CORRUPTED if parent_id is not a valid bigint
+    - [ ] Bans: parses a valid ban object
+    - [ ] Bans: parses with empty reason
+    - [ ] Bans: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Bans: throws CORRUPTED if user_id is not a valid bigint
+    - [ ] Bans: throws CORRUPTED if reason is too long
+    - [ ] Permissions: parses a valid permission object
+    - [ ] Permissions: throws BAD_DATA_TYPE if blueprint does not match
+    - [ ] Permissions: throws CORRUPTED if allow is not a valid bigint
+    - [ ] Permissions: throws CORRUPTED if deny is not a valid bigint
+    - [ ] Format validation: throws MISMATCH_FIELDS if required field missing
+    - [ ] Format validation: throws MISMATCH_FIELDS if extra fields present
+    - [ ] Format validation: throws BAD_DATA_TYPE if array fields are not arrays
+    - [ ] Format validation: does not throw if all fields valid
+    - [ ] can read and parse an entire snapshot without error
 
-- Rebuild TOS checks
-  - Required tos version
-  - Next required version
-  - Version comparison
+- [ ] Rebuild TOS checks
+  - [ ] Required tos version
+  - [ ] Next required version
+  - [ ] Version comparison

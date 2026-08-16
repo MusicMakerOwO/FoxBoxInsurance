@@ -1,4 +1,4 @@
-import {COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE} from "../Utils/Constants.js";
+import { COLOR, EMOJI, RandomLoadingEmbed, SECONDS, SNAPSHOT_TYPE } from "../Utils/Constants.js";
 import {ButtonInteraction, SlashCommandBuilder} from "discord.js";
 import {CommandHandler} from "../Typings/HandlerTypes.js";
 import {GetGuild} from "../CRUD/Guilds.js";
@@ -78,7 +78,7 @@ export default {
 			const emoji = subcommand === 'enable' ? EMOJI.SUCCESS : EMOJI.ERROR;
 
 			void SetFeatureFlag(savedGuild, GUILD_FEATURES.MANAGE_SNAPSHOTS, enabled);
-			
+
 			return {
 				embeds: [{
 					color: COLOR.PRIMARY,
@@ -204,7 +204,7 @@ ${error.message}
 				return {};
 			}
 
-			client.importCache.set(importData.id, importData);
+			client.importCache.set(importData.id, importData, SECONDS.HOUR * 1000);
 
 			const importSnapshot = client.buttons.get('import')!;
 			return importSnapshot.execute(interaction as unknown as ButtonInteraction, client, [importData.id]);

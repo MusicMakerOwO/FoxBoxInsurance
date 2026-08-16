@@ -3,6 +3,7 @@ import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
 import {client} from "../Client.js";
 import {GuildChannel} from "discord.js";
 import {Database} from "../Database.js";
+import { SECONDS } from "../Utils/Constants.js";
 
 const cache = new LRUCache<SimpleChannel['id'], SimpleChannel>(100);
 
@@ -48,6 +49,7 @@ export async function GetChannel(id: string | bigint): Promise<SimpleChannel | n
 	const fetched = await client.channels.fetch(stringID).catch( () => null)
 	if (!fetched) {
 		INVALID_CHANNEL_IDS.add(stringID);
+		setTimeout( () => INVALID_CHANNEL_IDS.delete(stringID),  SECONDS.MINUTE * 10 * 1000 ).unref();
 		return null;
 	}
 

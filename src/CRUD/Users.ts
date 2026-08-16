@@ -3,6 +3,7 @@ import {client} from "../Client.js";
 import {Database} from "../Database.js";
 import {SimpleUser} from "../Typings/DatabaseTypes.js";
 import {User} from "discord.js";
+import { SECONDS } from "../Utils/Constants.js";
 
 const cache = new LRUCache<SimpleUser['id'], SimpleUser>(1000);
 
@@ -47,6 +48,7 @@ export async function GetUser(id: string | bigint): Promise<SimpleUser | null | 
 	const fetched = await client.users.fetch(stringID).catch( () => null)
 	if (!fetched) {
 		INVALID_USER_IDS.add(stringID);
+		setTimeout( () => INVALID_USER_IDS.delete(stringID),  SECONDS.MINUTE * 10 * 1000 ).unref();
 		return null;
 	}
 

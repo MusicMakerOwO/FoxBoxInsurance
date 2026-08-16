@@ -3,6 +3,7 @@ import {LRUCache} from "../Utils/DataStructures/LRUCache.js";
 import {client} from "../Client.js";
 import {Guild} from "discord.js";
 import {Database} from "../Database.js";
+import { SECONDS } from "../Utils/Constants.js";
 
 const cache = new LRUCache<SimpleGuild['id'], SimpleGuild>(100);
 
@@ -46,6 +47,7 @@ export async function GetGuild(id: string | bigint): Promise<SimpleGuild | null 
 	const fetched = await client.guilds.fetch(stringID).catch( () => null)
 	if (!fetched) {
 		INVALID_GUILD_IDS.add(stringID);
+		setTimeout( () => INVALID_GUILD_IDS.delete(stringID),  SECONDS.MINUTE * 10 * 1000 ).unref();
 		return null;
 	}
 

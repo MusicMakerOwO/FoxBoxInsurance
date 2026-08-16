@@ -4,16 +4,12 @@ import {Database} from "../Database.js";
 
 const cache = new LRUCache<SimpleMessage['id'], SimpleMessage>(20_000);
 
-const INVALID_MESSAGE_IDS = new Set<SimpleMessage['id']>();
-
 /**
  * Grabs a message directly from the database. The message content is not decrypted.
  */
 export async function GetMessage(id: SimpleMessage['id']): Promise<SimpleMessage | null> {
 	id = BigInt(id);
 	if (cache.has(id)) return cache.get(id)!;
-
-	if (INVALID_MESSAGE_IDS.has(id)) return null;
 
 	const dbMessage = await Database.query(`SELECT * FROM Messages WHERE id = ?`, [id]).then(x => x[0]) as SimpleMessage | null;
 	if (!dbMessage) return null;
@@ -54,7 +50,6 @@ export async function GetMessageBulk(ids: SimpleMessage['id'][]): Promise<Map<Si
  */
 export async function DiscardMessage(id: bigint): Promise<void> {
 	cache.delete(id);
-	INVALID_MESSAGE_IDS.delete(id);
 }
 
 /**

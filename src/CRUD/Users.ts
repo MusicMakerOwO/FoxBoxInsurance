@@ -6,7 +6,8 @@ import {User} from "discord.js";
 
 const cache = new LRUCache<SimpleUser['id'], SimpleUser>(1000);
 
-const INVALID_USER_IDS = new Set<User['id']>();
+import { TTLCache } from "../Utils/DataStructures/TTLCache.js";
+const INVALID_USER_IDS = new TTLCache<User['id'], true>();
 
 export async function SaveUser(user: User | SimpleUser): Promise<void> {
 	const connection = await Database.getConnection();
@@ -46,7 +47,7 @@ export async function GetUser(id: string | bigint): Promise<SimpleUser | null | 
 
 	const fetched = await client.users.fetch(stringID).catch( () => null)
 	if (!fetched) {
-		INVALID_USER_IDS.add(stringID);
+		INVALID_USER_IDS.set(stringID, true);
 		return null;
 	}
 

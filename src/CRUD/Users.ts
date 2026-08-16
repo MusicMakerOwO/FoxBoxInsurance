@@ -6,8 +6,19 @@ import {User} from "discord.js";
 
 const cache = new LRUCache<SimpleUser['id'], SimpleUser>(1000);
 
-import { TTLCache } from "../Utils/DataStructures/TTLCache.js";
-const INVALID_USER_IDS = new TTLCache<User['id'], true>();
+class TTLSet<K> { // stop complaining about many things mr. musicmaker
+    #cache: TTLCache<K, null>;  // lets be big-brain here cuz we gotta lock in 
+
+    constructor(ttl?: number) {
+        this.#cache = new TTLCache(ttl);
+    }
+
+    add(key: K): void { this.#cache.set(key, null); } 
+    has(key: K): boolean { return this.#cache.has(key); }
+    delete(key: K): void { this.#cache.delete(key); }
+}
+
+const INVALID_USER_IDS = new TTLSet<User['id']>();
 
 export async function SaveUser(user: User | SimpleUser): Promise<void> {
 	const connection = await Database.getConnection();

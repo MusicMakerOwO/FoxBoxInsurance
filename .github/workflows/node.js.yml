@@ -10,22 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      MARIADB_URI: mariadb://root:root@127.0.0.1:3306/fbi_test
       PEPPER: ftOIKjYGK38MekzrwDoWqRjTDulOCTXuG4LOzI9jOQg=
-
-    services:
-      mariadb:
-        image: mariadb:11
-        env:
-          MARIADB_ROOT_PASSWORD: root
-          MARIADB_DATABASE: fbi_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -40,9 +25,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Run migrations
-        run: npm run db-setup
 
       - name: Test
         run: npm run test

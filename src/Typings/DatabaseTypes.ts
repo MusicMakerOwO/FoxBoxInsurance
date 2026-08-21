@@ -21,7 +21,7 @@ export const GUILD_FEATURES = {
 	IMPORT_SNAPSHOTS: 1 << 2,
 	/** Allows users the ability to export any channel they can access normally (i.e. can view channel and is not banned from exporting) */
 	EXPORT_MESSAGES: 1 << 3,
-	/** If this is enabled, no newer messages will be saved but channels can still export existing data */
+	/** If this is disabled, no newer messages will be saved but channels can still export existing data */
 	MESSAGE_SAVING: 1 << 4,
 	/** Allows historical timestamps for message, indexable by guild and channel */
 	MESSAGE_HISTORY: 1 << 5,

@@ -19,10 +19,7 @@ export default {
 
 		const savedGuild = await GetGuild(message.guildId);
 		if (!savedGuild) return;
-		if (
-			(savedGuild.features & GUILD_FEATURES.MESSAGE_SAVING) === 0 ||
-			(savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) === 0
-		) return;
+		if ((savedGuild.features & GUILD_FEATURES.MESSAGE_SAVING) === 0) return;
 
 		if (message.flags.has(MessageFlags.Ephemeral)) return;
 
@@ -104,7 +101,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			}
 		}
 
-		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 ) {
+		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_SAVING) !== 0 ) {
 			if (!savedUser.opt_out_collection) {
 				messageData[i] = {
 					id: BigInt(message.id),

@@ -32,7 +32,14 @@ function DeepEquals(a: Record<string, unknown>, b: Record<string, unknown>): boo
 	const bKeys = Object.keys(b);
 	if (aKeys.length !== bKeys.length) return false;
 	for (const key of aKeys) {
-		if (!(key in b) || a[key] !== b[key]) return false;
+		if (!(key in b)) return false;
+		const aValue = a[key];
+		const bValue = b[key];
+		if (typeof aValue === 'object' && aValue !== null && typeof bValue === 'object' && bValue !== null) {
+			if (!DeepEquals(aValue as Record<string, unknown>, bValue as Record<string, unknown>)) return false;
+		} else if (aValue !== bValue) {
+			return false;
+		}
 	}
 	return true;
 }

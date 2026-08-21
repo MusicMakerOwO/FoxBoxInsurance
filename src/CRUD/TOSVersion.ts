@@ -28,8 +28,8 @@ export function GetTOSFeatures(version: number): ObjectValues<typeof TOS_FEATURE
 
 export function ListSupportVersionsWithFeature(feature: ObjectValues<typeof TOS_FEATURES>): number[] {
 	const supportedVersions: number[] = [];
-	for (let version = 1; version < MAX_TOS_VERSION; version++) {
-		const features = FEATURES_TABLE[version];
+	for (let version = 1; version <= MAX_TOS_VERSION; version++) {
+		const features = FEATURES_TABLE[version - 1];
 		if (features && features.includes(feature)) {
 			supportedVersions.push(version);
 		}

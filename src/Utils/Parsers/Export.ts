@@ -157,6 +157,7 @@ export async function ExportChannel(options: ExportOptions): Promise<{
         SELECT id, user_id, content, sticker_id, reply_to, data, created_at, encryption_version
         FROM Messages
         WHERE id IN (${'?,'.repeat(selectedMessageIDs.length - 1)}?)
+        ORDER BY id ASC
 	`, selectedMessageIDs.map(m => m.id)) as Pick<SimpleMessage, 'id' | 'user_id' | 'content' | 'sticker_id' | 'reply_to' | 'data' | 'created_at' | 'encryption_version'>[]
 
 	const encryptedUserIDs = encryptedMessages.map(m => m.user_id);

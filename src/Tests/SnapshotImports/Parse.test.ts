@@ -58,6 +58,17 @@ describe('BuildSnapshotFromImport', () => {
 
 		expect(v1Parse).toHaveBeenCalledTimes(1); // second call served from cache
 	});
+
+	it('rejects arbitrarily deep JSON instead of blowing the stack', async () => {
+		let nested: Record<string, unknown> = {};
+		for (let i = 0; i < 100; i++) {
+			nested = { child: nested };
+		}
+		const input = { id: 'ABCD-EFGH-IJKL-MNOP-3', version: 1, nested };
+
+		await expect(BuildSnapshotFromImport(input)).rejects.toThrow();
+		expect(query).not.toHaveBeenCalled();
+	});
 });
 
 function hashOf(str: string) {

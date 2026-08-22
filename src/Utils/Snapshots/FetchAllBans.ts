@@ -5,7 +5,7 @@ import { TTLCache } from "../DataStructures/TTLCache.js";
 const banCache = new TTLCache<AnonymousGuild['id'], Map<User['id'], GuildBan>>(); // guild_id -> user_id -> GuildBan
 export async function FetchAllBans(guild: AnonymousGuild): Promise<Map<User['id'], GuildBan>> {
 	if (!(guild instanceof Guild)) throw new Error('Expected argument to be a Guild instance');
-	if (banCache.has(guild.id)) return banCache.get(guild.id)!;
+	if (banCache.has(guild.id)) return banCache.get(guild.id, false)!;
 
 	const MAX_BANS = 1000;
 	const bans = new Map<User['id'], GuildBan>();

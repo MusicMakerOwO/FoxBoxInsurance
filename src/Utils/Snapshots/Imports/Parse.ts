@@ -54,11 +54,15 @@ export async function BuildSnapshotFromImport(input: unknown): Promise<JSONSnaps
 	return snapshotData;
 }
 
-function DeepFreeze<T extends object>(obj: T) {
+const MAX_DEEP_FREEZE_DEPTH = 50;
+
+function DeepFreeze<T extends object>(obj: T, depth = 0): T {
+	if (depth > MAX_DEEP_FREEZE_DEPTH) throw new Error(SNAPSHOT_ERRORS.BAD_DATA_TYPE);
+
 	Object.freeze(obj);
 	for (const key of Object.keys(obj) as (keyof T)[]) {
 		if (typeof obj[key] === 'object' && obj[key] !== null) {
-			DeepFreeze(obj[key])
+			DeepFreeze(obj[key], depth + 1)
 		}
 	}
 	return obj

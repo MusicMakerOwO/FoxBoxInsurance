@@ -135,7 +135,6 @@ async function _runDownloadAssets() {
 			cacheHit++;
 			continue;
 		}
-		RecentURLs.add(asset.url);
 
 		if (noInternet) {
 			// if we already had a failure, stop trying to download
@@ -158,6 +157,8 @@ async function _runDownloadAssets() {
 			}
 			continue;
 		}
+
+		RecentURLs.add(asset.url);
 
 		// write to disk for later upload
 		const savePath = `${UPLOAD_CACHE_PATH}/${asset.id}`;
@@ -223,7 +224,7 @@ function RemoveNonASCII(input: string) {
 
 async function DownloadURL(url: string) {
 	return new Promise<Buffer>((resolve, reject) => {
-		https.get(url, {
+		const request = https.get(url, {
 			timeout: 5000,
 			headers: {
 				'Content-Type': 'application/octet-stream'
@@ -259,6 +260,12 @@ async function DownloadURL(url: string) {
 				const buffer = Buffer.concat(data);
 				resolve(buffer);
 			});
+		});
+
+		request.on('error', reject);
+		request.on('timeout', () => {
+			request.destroy();
+			reject(new Error(`Timed out downloading '${url}'`));
 		});
 	});
 }

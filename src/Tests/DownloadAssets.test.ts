@@ -6,11 +6,13 @@ vi.mock('../Database.js', () => ({ Database: { batch } }));
 const { TestConnection } = vi.hoisted(() => ({ TestConnection: vi.fn() }));
 vi.mock('../Utils/TestConnection.js', () => ({ TestConnection }));
 
-const { existsSync, mkdirSync, readdirSync, writeFileSync } = vi.hoisted(() => ({
+const { existsSync, mkdirSync, readdirSync, writeFileSync, readFileSync, unlinkSync } = vi.hoisted(() => ({
 	existsSync: vi.fn(() => true),
 	mkdirSync: vi.fn(),
-	readdirSync: vi.fn(() => []),
-	writeFileSync: vi.fn()
+	readdirSync: vi.fn((): string[] => []),
+	writeFileSync: vi.fn(),
+	readFileSync: vi.fn((): string => ''),
+	unlinkSync: vi.fn()
 }));
 vi.mock('node:fs', () => ({
 	default: {
@@ -18,17 +20,24 @@ vi.mock('node:fs', () => ({
 		mkdirSync,
 		readdirSync,
 		writeFileSync,
+		readFileSync,
+		unlinkSync,
 		promises: { writeFile: vi.fn() }
 	},
 	existsSync,
 	mkdirSync,
 	readdirSync,
 	writeFileSync,
-	unlinkSync: vi.fn(),
+	readFileSync,
+	unlinkSync,
 	promises: { writeFile: vi.fn() }
 }));
 
+const { httpsGet } = vi.hoisted(() => ({ httpsGet: vi.fn() }));
+vi.mock('node:https', () => ({ default: { get: httpsGet }, get: httpsGet }));
+
 import { QueueDownload, DownloadAssets, ASSET_TYPE } from '../Utils/Processing/Images.js';
+import { EventEmitter } from 'node:events';
 
 beforeEach(() => {
 	vi.useFakeTimers();
@@ -42,6 +51,9 @@ beforeEach(() => {
 	mkdirSync.mockReset();
 	readdirSync.mockReset().mockReturnValue([]);
 	writeFileSync.mockReset();
+	readFileSync.mockReset();
+	unlinkSync.mockReset();
+	httpsGet.mockReset();
 });
 
 describe('DownloadAssets', () => {
@@ -62,6 +74,55 @@ describe('DownloadAssets', () => {
 
 		expect(batch).not.toHaveBeenCalled();
 		expect(writeFileSync).toHaveBeenCalled(); // failed downloads persisted for retry
+
+		vi.useRealTimers();
+	});
+
+	it('retries a previously-failed download instead of treating it as a cache hit', async () => {
+		TestConnection.mockResolvedValue(true);
+		TestConnection.mockResolvedValueOnce(false); // no internet on the first run - asset fails immediately
+
+		const asset = {
+			id: '111000000000000002',
+			type: ASSET_TYPE.ATTACHMENT,
+			name: 'retry.png',
+			url: 'https://cdn.discordapp.com/attachments/x/retry.png',
+			width: null,
+			height: null
+		};
+
+		QueueDownload(asset);
+		await vi.runOnlyPendingTimersAsync();
+		await DownloadAssets();
+
+		expect(writeFileSync).toHaveBeenCalledTimes(1);
+		const persisted = writeFileSync.mock.calls[0]![1] as string;
+
+		// second run: LoadFailedDownloads reads the persisted retry cache back in
+		readdirSync.mockReturnValueOnce(['retry-batch.json']);
+		readFileSync.mockReturnValueOnce(persisted);
+
+		// this time the download succeeds
+		httpsGet.mockImplementationOnce((_url: string, _opts: unknown, cb: (response: EventEmitter & { statusCode: number }) => void) => {
+			const response = new EventEmitter() as EventEmitter & { statusCode: number, destroy: () => void };
+			response.statusCode = 200;
+			response.destroy = vi.fn();
+			queueMicrotask(() => {
+				cb(response);
+				response.emit('data', Buffer.from('image-bytes'));
+				response.emit('end');
+			});
+			const request = new EventEmitter() as EventEmitter & { destroy: () => void };
+			request.destroy = vi.fn();
+			return request;
+		});
+
+		await DownloadAssets();
+
+		// a real bug here (RecentURLs marked "seen" before the attempt) would skip the
+		// retried URL as a false "cache hit" and never actually call https.get
+		expect(httpsGet).toHaveBeenCalledTimes(1);
+		expect(batch).toHaveBeenCalled();
 
 		vi.useRealTimers();
 	});

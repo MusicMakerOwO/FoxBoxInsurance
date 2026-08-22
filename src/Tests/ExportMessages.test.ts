@@ -179,6 +179,28 @@ describe('ExportChannel', () => {
 		expect(result.data.length).toBeGreaterThan(0);
 	});
 
+	it('renders midnight as 12am, not 0am', async () => {
+		setupMocks(baseFixture()); // messages created at 00:00-00:02 UTC
+		const result = await ExportChannel(makeOptions({ format: FORMAT.TEXT }));
+		const text = result.data.toString('utf8');
+
+		expect(text).toContain('12:00am UTC');
+		expect(text).not.toMatch(/\b0:00am/);
+	});
+
+	it('renders noon as 12pm, not 12am', async () => {
+		const fixture = baseFixture();
+		fixture.messages = [fixture.messages[0]];
+		fixture.messages[0].created_at = new Date('2025-01-01T12:30:00Z');
+		setupMocks(fixture);
+
+		const result = await ExportChannel(makeOptions({ format: FORMAT.TEXT }));
+		const text = result.data.toString('utf8');
+
+		expect(text).toContain('12:30pm UTC');
+		expect(text).not.toContain('12:30am UTC');
+	});
+
 	it('should export a HTML format without error', async () => {
 		setupMocks(baseFixture());
 		const result = await ExportChannel(makeOptions({ format: FORMAT.HTML }));

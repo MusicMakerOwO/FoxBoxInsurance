@@ -43,13 +43,14 @@ function UTCDate(date: Date) {
 }
 
 function UTCTime(date: Date) {
-	let hour = date.getUTCHours();
+	const rawHour = date.getUTCHours();
 	const minute = date.getUTCMinutes()
 	.toString()
 	.padStart(2, '0')
 	// const second = date.getUTCSeconds().toString().padStart(2, '0')
 
-	const timing = hour > 12 ? (hour -= 12, 'pm') : 'am';
+	const timing = rawHour >= 12 ? 'pm' : 'am';
+	const hour = rawHour % 12 === 0 ? 12 : rawHour % 12;
 
 	return `${hour}:${minute}${timing} UTC`;
 }

@@ -382,6 +382,18 @@ describe('SaveMessages', () => {
 			expect(order).toEqual(['history-execute', 'history-execute', 'history-execute', 'commit']);
 		});
 
+		it('does not save message history for users who opted out of data collection', async () => {
+			const connection = makeConnection();
+			GetGuild.mockResolvedValue(makeGuild(GUILD_FEATURES.MESSAGE_SAVING | GUILD_FEATURES.MESSAGE_HISTORY));
+			GetUser.mockResolvedValue(makeUser({ opt_out_collection: 1 }));
+			getConnection.mockResolvedValue(connection);
+
+			await MessageCreateHandler.execute(makeMessage({}));
+			await ProcessMessages({ quiet: true });
+
+			expect(findInserts(connection.calls, 'MessageHistory')).toHaveLength(0);
+		});
+
 		it('does not save message history for guilds without MESSAGE_HISTORY feature', async () => {
 			const connection = makeConnection();
 			GetGuild.mockResolvedValue(makeGuild(GUILD_FEATURES.MESSAGE_SAVING)); // no MESSAGE_HISTORY

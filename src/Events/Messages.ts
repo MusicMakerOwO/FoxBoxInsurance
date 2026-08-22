@@ -94,7 +94,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 		const savedUser = await GetUser(message.author.id) ?? { opt_out_collection: true }
 		const savedGuild = (await GetGuild(message.guild.id))!;
 
-		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 ) {
+		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 && !savedUser.opt_out_collection ) {
 			messageHistory[i] = {
 				created_at: BigInt(message.createdTimestamp), // seconds
 				guild_id  : BigInt(message.guild.id),

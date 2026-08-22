@@ -53,7 +53,7 @@ export default {
 		const file = interaction.options.getAttachment('file')!;
 
 		const metadata = await Database.query(`
-            SELECT hash
+            SELECT hash, hash_algorithm
             FROM Exports
             WHERE id = ?`, [exportID])
 		.then(x => x[0]) as Pick<SimpleMessageExport, 'hash' | 'hash_algorithm'>;

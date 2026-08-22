@@ -12,12 +12,6 @@ export default {
 	hidden        : true,
 	customID      : 'tos-accept',
 	execute       : async function(interaction, client, args) {
-		const guildID = args[0] ?? interaction.guild?.id;
-		if (!guildID) throw new Error('Guild ID not found');
-
-		const guild = client.guilds.cache.get(guildID);
-		if (!guild) throw new Error('Guild not found');
-
 		const targetTOSVersion = parseInt(args[0]) || MAX_TOS_VERSION;
 
 		const embed: APIEmbed = {

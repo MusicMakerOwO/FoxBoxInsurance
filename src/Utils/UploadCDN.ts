@@ -14,6 +14,7 @@ export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: n
 			port: 443,
 			path: '/upload',
 			method: 'POST',
+			timeout: 5000,
 			headers: {
 				'Content-Type': 'application/octet-stream',
 				'Content-Length': data.length,
@@ -22,14 +23,14 @@ export async function UploadCDN(fileName: string, data: Buffer, downloadLimit: n
 				'download-limit': String(downloadLimit || null), // 0 -> null -> no limit
 			}
 		}, (response: IncomingMessage) => {
-			const data: string[] = [];
-			response.on('data', (chunk: string) => data.push(chunk));
+			const responseChunks: Buffer[] = [];
+			response.on('data', (chunk: Buffer) => responseChunks.push(chunk));
 			response.on('end', () => {
 				switch (response.statusCode) {
 					case 200:
 					case 201:
 						// Uploaded successfully, returned a hash to use for retrieval
-						resolve( data.join('') );
+						resolve( Buffer.concat(responseChunks).toString('utf8') );
 						break;
 					case 401: reject('Invalid key provided'); break;
 					case 413: reject('File is too large'); break;

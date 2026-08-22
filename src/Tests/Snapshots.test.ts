@@ -60,6 +60,17 @@ describe('Snapshots', () => {
 		await expect(DeleteSnapshot(201)).rejects.toThrow('Cannot delete a pinned snapshot');
 	});
 
+	it('awaits the fast-path DELETE when removing the latest snapshot', async () => {
+		seed([{ id: 701, guild_id: 701n, type: 0, pinned: 0 }]);
+
+		await DeleteSnapshot(701);
+
+		const deleteCall = query.mock.calls.find(([sql, params]) =>
+			sql.includes('DELETE') && sql.includes('FROM Snapshots') && sql.includes('WHERE id') && (params as unknown[])[0] === 701
+		);
+		expect(deleteCall).toBeDefined();
+	});
+
 	it('cannot pin more snapshots than the maximum snapshots', async () => {
 		const pinned: SnapshotRow[] = Array.from({ length: 7 }, (_, i) => ({ id: 301 + i, guild_id: 102n, type: 0, pinned: 1 }));
 		seed([...pinned, { id: 308, guild_id: 102n, type: 0, pinned: 0 }]);

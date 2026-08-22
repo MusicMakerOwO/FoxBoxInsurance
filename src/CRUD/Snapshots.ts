@@ -238,11 +238,13 @@ export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']): Promis
 
 	if (availableSnapshotIDs[availableSnapshotIDs.length - 1] === snapshotID) {
 		// if this is the latest snapshot, delete the data immediately
-		void connection.query(`
-            DELETE
-            FROM Snapshots
-            WHERE id = ?
-		`, [snapshotID]);
+		promiseQueue.push(
+			connection.query(`
+                DELETE
+                FROM Snapshots
+                WHERE id = ?
+			`, [snapshotID])
+		);
 	} else {
 
 		// merge data forward with next snapshot

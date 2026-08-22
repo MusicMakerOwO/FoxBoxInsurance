@@ -185,6 +185,9 @@ export default function Parse(metadata: SnapshotExportMetadata, importData: Reco
 		if (JSONChannel.permission_overwrites === null || typeof JSONChannel.permission_overwrites !== 'object') throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 
 		for (const [id, JSONOverwrite] of Object.entries(JSONChannel.permission_overwrites)) {
+			// must be a valid snowflake - also rejects prototype-polluting keys like `__proto__`/`constructor`
+			if (!ValidBigInt(id)) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
+
 			const overwrite = ParsePermission(JSONOverwrite);
 			// does the role actually exist?
 			if (

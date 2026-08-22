@@ -271,4 +271,36 @@ describe('SnapshotImports v2', () => {
 			'100000000000000001': { allow: '8', deny: '0', type: OVERWRITE_TYPE.ROLE }
 		});
 	});
+
+	it('rejects a permission overwrite keyed by __proto__ instead of hijacking the object prototype', () => {
+		const importData = {
+			id: metadata.id,
+			type: SNAPSHOT_TYPE.IMPORT,
+			version: 2,
+			roles: [],
+			channels: [{
+				...validChannel(),
+				permission_overwrites: JSON.parse(`{"__proto__": ${JSON.stringify(validPermission({ type: OVERWRITE_TYPE.USER }))}}`)
+			}],
+			bans: []
+		};
+
+		expect(() => Parse(metadata, importData)).toThrow(SNAPSHOT_ERRORS.CORRUPTED);
+	});
+
+	it('rejects a non-snowflake permission overwrite key such as constructor', () => {
+		const importData = {
+			id: metadata.id,
+			type: SNAPSHOT_TYPE.IMPORT,
+			version: 2,
+			roles: [],
+			channels: [{
+				...validChannel(),
+				permission_overwrites: { constructor: validPermission({ type: OVERWRITE_TYPE.USER }) }
+			}],
+			bans: []
+		};
+
+		expect(() => Parse(metadata, importData)).toThrow(SNAPSHOT_ERRORS.CORRUPTED);
+	});
 });

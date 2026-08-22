@@ -9,7 +9,7 @@ import {TOS_FEATURES} from "../TOSConstants.js";
 import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
 const DISCORD_EPOCH_OFFSET = 1420070400000;
-const DISCORD_ID_FILLING = BigInt( 0b1_1111_11111111_11111111 );
+const DISCORD_ID_FILLING = BigInt( 0b11_1111_11111111_11111111 ); // 22 bits: worker (5) + process (5) + increment (12)
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],

@@ -14,7 +14,7 @@ export async function SnapshotServers(): Promise<void> {
 	for (const guild of client.guilds.cache.values()) {
 		if (BigInt(guild.id) % 24n !== BigInt(currentHour)) continue;
 		const savedGuild = (await GetGuild(guild.id))!;
-		if (!process.env.DEV_MODE && (savedGuild.features & GUILD_FEATURES.AUTOMATIC_SNAPSHOTS) === 0) {
+		if ((savedGuild.features & GUILD_FEATURES.AUTOMATIC_SNAPSHOTS) === 0) {
 			if (process.env.DEV_MODE) Log('DEBUG', `Skipping ${guild.name} (${guild.id}) - Snapshots disabled`);
 			continue;
 		}

@@ -279,6 +279,20 @@ describe('SaveMessages', () => {
 		expect(data).toEqual({ attachments: [], emoji_ids: [], embeds: [], components: [] });
 	});
 
+	it('redacts message data when the user row cannot be read (fail closed on unknown opt-out status)', async () => {
+		const connection = makeConnection();
+		GetGuild.mockResolvedValue(makeGuild(GUILD_FEATURES.MESSAGE_SAVING));
+		GetUser.mockResolvedValue(null);
+		getConnection.mockResolvedValue(connection);
+
+		await MessageCreateHandler.execute(makeMessage({ content: 'Should be redacted - user status unknown' }));
+		await ProcessMessages({ quiet: true });
+
+		const insert = findInserts(connection.calls, 'Messages')[0]!;
+		expect(insert.params[4]).toBeNull(); // content
+		expect(insert.params[5]).toBe(0); // length
+	});
+
 	describe('MessageHistory', () => {
 		it('saves message history for guilds with MESSAGE_HISTORY feature enabled', async () => {
 			const connection = makeConnection();

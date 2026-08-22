@@ -90,7 +90,8 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			emojiIDs.push(id);
 		}
 
-		const savedUser = await GetUser(message.author.id) ?? { opt_out_collection: false }
+		// fail closed: if we can't confirm the user's opt-out preference, assume they're opted out
+		const savedUser = await GetUser(message.author.id) ?? { opt_out_collection: true }
 		const savedGuild = (await GetGuild(message.guild.id))!;
 
 		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 ) {

@@ -31,9 +31,9 @@ export default {
 	response_type : 'reply',
 	hidden        : true,
 
-	usage   : '/verify <file> <export_id>',
+	usage   : '/verify <export_id> <file>',
 	examples: [
-		'/verify <file> AAAA-BBBB-CCCC-DDDD'
+		'/verify AAAA-BBBB-CCCC-DDDD <file>'
 	],
 	data    : new SlashCommandBuilder()
 	.setName('verify')

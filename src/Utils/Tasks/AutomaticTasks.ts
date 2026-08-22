@@ -39,7 +39,7 @@ export async function StartAutomaticTasks(): Promise<void> {
 		const [ name, callback, interval ] = taskData;
 
 		if (interval <= 0 || !Number.isFinite(interval)) {
-			Log('WARN', `Task "${name}" does has an invalid interval, skipping...`);
+			Log('WARN', `Task "${name}" has an invalid interval, skipping...`);
 			continue;
 		}
 		if (typeof callback !== 'function') {

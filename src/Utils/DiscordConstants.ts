@@ -4,7 +4,7 @@ export const Events = {
 	AutoModerationRuleCreate	: 'autoModerationRuleCreate',
 	AutoModerationRuleDelete	: 'autoModerationRuleDelete',
 	AutoModerationRuleUpdate	: 'autoModerationRuleUpdate',
-	ClientReady					: 'ready',
+	ClientReady					: 'clientReady',
 	EntitlementCreate			: 'entitlementCreate',
 	EntitlementDelete			: 'entitlementDelete',
 	EntitlementUpdate			: 'entitlementUpdate',

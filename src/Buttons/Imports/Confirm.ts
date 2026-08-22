@@ -34,7 +34,7 @@ export default {
 				color: 0x00FF00,
 				title: 'Snapshot Imported',
 				description: `
-The snapshot has been added your list, check it out with \`/snapshot list\`
+The snapshot has been added to your list, check it out with \`/snapshot list\`
 It will be removed from your list <t:${~~(Date.now() / 1000) + SECONDS.MINUTE * 60}:R>`
 			}],
 			components: [{

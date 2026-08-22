@@ -36,7 +36,7 @@ export default {
 					color: COLOR.ERROR,
 					title: 'Export Failed',
 					description: `
-An error occurred while generating your export :broken_heart:
+An error occurred while generating your export 💔
 The error has been reported automatically and a fix is being worked on`
 				}],
 				components: []

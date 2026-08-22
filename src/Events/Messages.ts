@@ -91,7 +91,7 @@ export async function ProcessMessages(): Promise<void> {
 
 		if ( (savedGuild.features & GUILD_FEATURES.MESSAGE_HISTORY) !== 0 && !savedUser.opt_out_collection ) {
 			messageHistory[i] = {
-				created_at: BigInt(message.createdTimestamp), // seconds
+				created_at: BigInt(message.createdTimestamp), // milliseconds
 				guild_id  : BigInt(message.guild.id),
 				channel_id: BigInt(message.channel.id),
 			}

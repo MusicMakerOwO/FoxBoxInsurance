@@ -7,7 +7,7 @@ import { GetTOSFeatures } from "../CRUD/TOSVersion.js";
 /** Mutates the data in place and saves it to the database */
 export async function SetUserTOSVersion(id: string | bigint, version: number): Promise<void> {
 	id = BigInt(id);
-	const saved = await GetUser(id); // internally it just saves the guild if it doesn't exist, great to ensure the data truly exists
+	const saved = await GetUser(id); // internally it just saves the user if it doesn't exist, great to ensure the data truly exists
 	if (!saved) throw new Error('User ID does not exist or cannot be accessed');
 	saved.terms_version_accepted = version;
 	await SaveUser(saved);

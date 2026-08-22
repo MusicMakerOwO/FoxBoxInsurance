@@ -11,9 +11,9 @@ export function Encrypt(content: Buffer, key: Buffer): Buffer {
 export function Decrypt(wrappedBlob: Buffer, key: Buffer): Buffer {
 	const iv = wrappedBlob.subarray(0, 12);
 	const tag = wrappedBlob.subarray(wrappedBlob.length - 16);
-	// encrypted key is in the middle
+	// encrypted key or message content is in the middle
 	const encryptedKey = wrappedBlob.subarray(12, wrappedBlob.length - 16);
 	const content = createDecipheriv('aes-256-gcm', key, iv);
 	content.setAuthTag(tag);
-	return Buffer.concat([content.update(encryptedKey), content.final()]); // original key
+	return Buffer.concat([content.update(encryptedKey), content.final()]); // original key or message content
 }

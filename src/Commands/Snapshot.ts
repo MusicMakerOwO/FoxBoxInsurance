@@ -18,7 +18,7 @@ export default {
 	hidden        : true,
 	aliases       : ['backup'],
 	examples      : [
-		'/snapshot enabled',
+		'/snapshot enable',
 		'/snapshot create',
 		'/snapshot list',
 		'/snapshot import <file>'

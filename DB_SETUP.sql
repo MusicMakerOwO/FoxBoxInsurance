@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS Messages (
     channel_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
 
-    content BLOB, -- either ASCII text or a wrapped key, refer to the encryption version to know which
+    content BLOB, -- either plaintext UTF-8 or ciphertext, refer to the encryption version to know which
     sticker_id BIGINT UNSIGNED,
     reply_to BIGINT UNSIGNED DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
     encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS SnapshotExports (
 	version INT UNSIGNED NOT NULL DEFAULT 1, -- The version of the export format
 
 	hash TEXT NOT NULL, -- The hash of the file
-	algorithm TEXT NOT NULL, -- The algorithm used to encrypt the file
+	algorithm TEXT NOT NULL, -- The hash algorithm used to verify the file
 	revoked BOOLEAN NOT NULL DEFAULT 0 -- 1 if the export is revoked
 );
 CREATE INDEX IF NOT EXISTS snapshot_exports_user_id ON SnapshotExports (user_id);

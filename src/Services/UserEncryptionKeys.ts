@@ -16,7 +16,7 @@ export async function ResolveUserKey(userID: SimpleUser['id']): Promise<Buffer> 
 	const newKey = BuildNewKey();
 	savedUser.wrapped_key = v1.Encrypt(newKey, Buffer.from(process.env.PEPPER!, 'base64'));
 
-	void SaveUser(savedUser);
+	await SaveUser(savedUser);
 
 	return newKey;
 }

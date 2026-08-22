@@ -12,18 +12,20 @@ const INVALID_GUILD_IDS = new Set<Guild['id']>();
 export async function SaveGuild(guild: Guild | SimpleGuild): Promise<void> {
 	const connection = await Database.getConnection();
 
-	if (guild instanceof Guild) {
-		// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
-		await connection.query(`INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`, [guild.id, guild.name, Object.values(GUILD_FEATURES).reduce((a, b) => a | b, 0)]);
-		const saved = await connection.query(`SELECT * FROM Guilds WHERE id = ?`, [guild.id]).then( x => x[0]) as SimpleGuild;
-		cache.set(saved.id, saved);
-		INVALID_GUILD_IDS.delete(guild.id);
-	} else {
-		await connection.query(`UPDATE Guilds SET name = ?, features = ?, last_restore = ? WHERE id = ?`, [guild.name, guild.features, guild.last_restore, guild.id]);
-		cache.set(guild.id, guild);
+	try {
+		if (guild instanceof Guild) {
+			// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
+			await connection.query(`INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`, [guild.id, guild.name, Object.values(GUILD_FEATURES).reduce((a, b) => a | b, 0)]);
+			const saved = await connection.query(`SELECT * FROM Guilds WHERE id = ?`, [guild.id]).then( x => x[0]) as SimpleGuild;
+			cache.set(saved.id, saved);
+			INVALID_GUILD_IDS.delete(guild.id);
+		} else {
+			await connection.query(`UPDATE Guilds SET name = ?, features = ?, last_restore = ? WHERE id = ?`, [guild.name, guild.features, guild.last_restore, guild.id]);
+			cache.set(guild.id, guild);
+		}
+	} finally {
+		Database.releaseConnection(connection);
 	}
-
-	Database.releaseConnection(connection);
 }
 
 export async function GetGuild(id: string | bigint): Promise<SimpleGuild | null | undefined> {

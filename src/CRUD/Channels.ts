@@ -12,18 +12,20 @@ const INVALID_CHANNEL_IDS = new Set<GuildChannel['id']>();
 export async function SaveChannel(channel: GuildChannel | SimpleChannel): Promise<void> {
 	const connection = await Database.getConnection();
 
-	if (channel instanceof GuildChannel) {
-		// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
-		await connection.query(`INSERT INTO Channels (guild_id, id, name, type) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`, [channel.guildId, channel.id, channel.name, channel.type]);
-		const saved = await connection.query(`SELECT * FROM Channels WHERE id = ?`, [channel.id]).then( x => x[0]) as SimpleChannel;
-		cache.set(saved.id, saved);
-		INVALID_CHANNEL_IDS.delete(channel.id);
-	} else {
-		await connection.query(`UPDATE Channels SET name = ?, block_exports = ?, last_purge = ? WHERE id = ?`, [channel.name, channel.block_exports, channel.last_purge, channel.id]);
-		cache.set(channel.id, channel);
+	try {
+		if (channel instanceof GuildChannel) {
+			// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
+			await connection.query(`INSERT INTO Channels (guild_id, id, name, type) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`, [channel.guildId, channel.id, channel.name, channel.type]);
+			const saved = await connection.query(`SELECT * FROM Channels WHERE id = ?`, [channel.id]).then( x => x[0]) as SimpleChannel;
+			cache.set(saved.id, saved);
+			INVALID_CHANNEL_IDS.delete(channel.id);
+		} else {
+			await connection.query(`UPDATE Channels SET name = ?, block_exports = ?, last_purge = ? WHERE id = ?`, [channel.name, channel.block_exports, channel.last_purge, channel.id]);
+			cache.set(channel.id, channel);
+		}
+	} finally {
+		Database.releaseConnection(connection);
 	}
-
-	Database.releaseConnection(connection);
 }
 
 export async function GetChannel(id: string | bigint): Promise<SimpleChannel | null | undefined> {

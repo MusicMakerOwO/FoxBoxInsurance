@@ -12,18 +12,20 @@ const INVALID_USER_IDS = new Set<User['id']>();
 export async function SaveUser(user: User | SimpleUser): Promise<void> {
 	const connection = await Database.getConnection();
 
-	if (user instanceof User) {
-		// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
-		await connection.query(`INSERT INTO Users (id, username, bot) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE username = VALUES(username)`, [user.id, user.username, user.bot]);
-		const saved = await connection.query(`SELECT * FROM Users WHERE id = ?`, [user.id]).then( x => x[0]) as SimpleUser;
-		cache.set(saved.id, saved);
-		INVALID_USER_IDS.delete(user.id);
-	} else {
-		await connection.query(`UPDATE Users SET username = ?, terms_version_accepted = ?, wrapped_key = ?, opt_out_collection = ? WHERE id = ?`, [user.username, user.terms_version_accepted, user.wrapped_key, user.opt_out_collection, user.id]);
-		cache.set(user.id, user);
+	try {
+		if (user instanceof User) {
+			// I hate it, yeah, but I don't know another way to get the column defaults at runtime :v
+			await connection.query(`INSERT INTO Users (id, username, bot) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE username = VALUES(username)`, [user.id, user.username, user.bot]);
+			const saved = await connection.query(`SELECT * FROM Users WHERE id = ?`, [user.id]).then( x => x[0]) as SimpleUser;
+			cache.set(saved.id, saved);
+			INVALID_USER_IDS.delete(user.id);
+		} else {
+			await connection.query(`UPDATE Users SET username = ?, terms_version_accepted = ?, wrapped_key = ?, opt_out_collection = ? WHERE id = ?`, [user.username, user.terms_version_accepted, user.wrapped_key, user.opt_out_collection, user.id]);
+			cache.set(user.id, user);
+		}
+	} finally {
+		Database.releaseConnection(connection);
 	}
-
-	Database.releaseConnection(connection);
 }
 
 export async function GetUser(id: string | bigint): Promise<SimpleUser | null | undefined> {

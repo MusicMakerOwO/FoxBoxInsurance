@@ -25,6 +25,11 @@ export const TaskScheduler = new class {
     #reschedule() {
         if (this.timeout) clearTimeout(this.timeout);
 
+        if (this.taskQueue.length === 0) {
+            this.timeout = null;
+            return;
+        }
+
         const nextTask = this.taskQueue[0];
         const timeUntilNext = Math.max(0, nextTask.time - Date.now());
 

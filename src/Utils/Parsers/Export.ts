@@ -125,6 +125,8 @@ export async function ExportChannel(options: ExportOptions): Promise<{
 
 	const connection = await Database.getConnection();
 
+	try {
+
 	const selectedMessageIDs = await connection.query(`
         SELECT id
         FROM Messages
@@ -151,6 +153,8 @@ export async function ExportChannel(options: ExportOptions): Promise<{
 
 		messages: new Array(selectedMessageIDs.length)
 	}
+
+	if (selectedMessageIDs.length === 0) throw new Error('No messages to export');
 
 	selectedMessageIDs.reverse();
 
@@ -254,13 +258,15 @@ export async function ExportChannel(options: ExportOptions): Promise<{
 	.update(fileData)
 	.digest('hex');
 
-	Database.releaseConnection(connection);
-
 	return {
 		id  : context.id,
 		name: fileName,
 		hash: [HASH_ALGORITHM, hash] as [typeof HASH_ALGORITHM, string],
 		data: fileData
+	}
+
+	} finally {
+		Database.releaseConnection(connection);
 	}
 }
 

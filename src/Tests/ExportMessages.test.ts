@@ -173,6 +173,15 @@ describe('ExportChannel', () => {
 		await expect(ExportChannel(makeOptions({ messageCount: 0 }))).rejects.toThrow('Cannot export 0 messages');
 	});
 
+	it('should throw and still release the connection when the channel has no stored messages', async () => {
+		const fixture = baseFixture();
+		fixture.messages = [];
+		setupMocks(fixture);
+
+		await expect(ExportChannel(makeOptions())).rejects.toThrow('No messages to export');
+		expect(releaseConnection).toHaveBeenCalledTimes(1);
+	});
+
 	it('should export a text format without error', async () => {
 		setupMocks(baseFixture());
 		const result = await ExportChannel(makeOptions({ format: FORMAT.TEXT }));

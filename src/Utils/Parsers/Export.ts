@@ -352,10 +352,19 @@ You can check if the export has been tampered with by using /verify and the ID a
 	return ObjectConvertBigInt(output) as JSONStringify<typeof output>;
 }
 
+function EscapeForInlineScript(json: string): string {
+	return json
+	.replace(/</g, '\\u003c')
+	.replace(/>/g, '\\u003e')
+	.replace(/\u2028/g, '\\u2028')
+	.replace(/\u2029/g, '\\u2029');
+}
+
 async function ExportHTML(context: ExportContext) {
 	const lookups = ExportJSON(context);
 	const template = readFileSync(`${__dirname}/../../../export.html`, 'utf-8');
-	const result = template.replace(/\{\{EXPORT_DATA}}/, JSON.stringify(lookups));
+	const escapedJson = EscapeForInlineScript(JSON.stringify(lookups));
+	const result = template.replace(/\{\{EXPORT_DATA}}/, () => escapedJson);
 
 	// ~65KB reduction in my testing
 	// 265KB -> 200KB

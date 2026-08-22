@@ -185,6 +185,36 @@ describe('ExportChannel', () => {
 		expect(result.data.length).toBeGreaterThan(0);
 	});
 
+	it('should not let message content break out of the inline <script> block in HTML exports', async () => {
+		const fixture = baseFixture();
+		fixture.messages[0].content = Buffer.from(
+			'</script><script>alert(document.domain)</script><script>', 'utf8'
+		);
+		setupMocks(fixture);
+
+		const result = await ExportChannel(makeOptions({ format: FORMAT.HTML }));
+		const html = result.data.toString('utf8');
+
+		// An unescaped export would emit this exact unescaped sequence as a real,
+		// executing <script> element - a browser's HTML tokenizer ends the *legitimate*
+		// script block at the first literal `</script`, regardless of JS string context.
+		expect(html).not.toContain('<script>alert(document.domain)</script>');
+		// The payload should still be present, just neutralized inside the JSON string.
+		expect(html).toContain('alert(document.domain)');
+	});
+
+	it('should not corrupt HTML exports when message content contains $-replacement patterns', async () => {
+		const fixture = baseFixture();
+		fixture.messages[0].content = Buffer.from('price is $&, not $$1', 'utf8');
+		setupMocks(fixture);
+
+		const result = await ExportChannel(makeOptions({ format: FORMAT.HTML }));
+		const html = result.data.toString('utf8');
+
+		expect(html).not.toContain('{{EXPORT_DATA}}');
+		expect(html).toContain('price is $&, not $$1');
+	});
+
 	it('should contain all the required metadata and warnings', async () => {
 		setupMocks(baseFixture());
 		const result = await exportJSON();

@@ -64,6 +64,16 @@ describe('CreateSnapshotDiff', () => {
 				.toThrow('Could not find a bot role in the provided guild - Was the bot given no permissions upon invite?');
 		});
 
+		it('finds the bot role from a v1-imported snapshot using the `1n` managed_by sentinel', () => {
+			const base: SnapshotComparable = {
+				...emptySnapshot(),
+				roles: new Map([[1n, makeRole({ id: 1n, managed_by: 1n, position: 100 })]])
+			};
+			const target = emptySnapshot();
+
+			expect(() => CreateSnapshotDiff(base, target)).not.toThrow();
+		});
+
 		it('does not error if roles are empty', () => {
 			const base = emptySnapshot();
 			const target = emptySnapshot();

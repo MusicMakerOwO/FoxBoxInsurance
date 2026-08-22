@@ -54,7 +54,8 @@ function MoveBotRoleToTop(roleList: SnapshotComparable['roles']) {
 
 	const botRole = roles.find(role => {
 		if ('managed_by' in role) {
-			return role.managed_by === BigInt(client.user!.id)
+			// v1-imported snapshots store `managed_by` as a `1n` sentinel rather than the real bot user ID
+			return role.managed_by === BigInt(client.user!.id) || role.managed_by === 1n
 		}
 	});
 	if (!botRole) {

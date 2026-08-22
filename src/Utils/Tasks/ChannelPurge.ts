@@ -36,7 +36,7 @@ export async function ChannelPurge(opts: { silent?: boolean } = {}): Promise<voi
 	// NOTE: This is a very slow query from my testing, ~400ms
 	// This task should only run once a day at most so the performance impact is relatively low here
 	// It is also faster than an individual query for each channel, so do with it what you will
-	const { affectedRows: emptyChannels } = await connection.query('DELETE FROM Channels WHERE ( SELECT COUNT(*) FROM Messages WHERE channel_id = Channels.id ) = 0');
+	const { affectedRows: emptyChannels } = await connection.query('DELETE FROM Channels WHERE ( SELECT COUNT(*) FROM Messages WHERE channel_id = Channels.id ) = 0') as { affectedRows: bigint };
 
 	await connection.query("COMMIT");
 	Database.releaseConnection(connection);
@@ -44,7 +44,7 @@ export async function ChannelPurge(opts: { silent?: boolean } = {}): Promise<voi
 	if (opts.silent) return;
 
 	// little hack to count the total number of channels in db without a dedicated query
-	Log('DELETE', `Checked ${channelMessageCounts.length + emptyChannels} channels`);
+	Log('DELETE', `Checked ${channelMessageCounts.length + Number(emptyChannels)} channels`);
 	Log('DELETE', ` - Deleted ${expiredMessageCount} expired messages`);
 	Log('DELETE', ` - Deleted ${overflowMessageCount} overflow messages`);
 	Log('DELETE', ` - Removed ${emptyChannels} empty channels`);

@@ -71,4 +71,11 @@ describe('ChannelPurge', () => {
 		const emptyChannelCall = connection.query.mock.calls.find(([sql]) => sql.includes('DELETE FROM Channels'));
 		expect(emptyChannelCall).toBeDefined();
 	});
+
+	it('does not throw when logging a non-silent summary (bigint affectedRows vs number length)', async () => {
+		const connection = makeConnection([{ channel_id: 333n, message_count: 5n }]);
+		getConnection.mockResolvedValue(connection);
+
+		await expect(ChannelPurge()).resolves.not.toThrow();
+	});
 });

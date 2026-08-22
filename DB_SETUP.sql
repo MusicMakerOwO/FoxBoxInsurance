@@ -123,9 +123,12 @@ CREATE TABLE IF NOT EXISTS Messages (
     length SMALLINT, -- The length of the original message (unencrypted)
     created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME( ((id >> 22) + 1420070400000) / 1000) ) VIRTUAL, -- The time the message was created
 
-    FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE CASCADE,
-    FOREIGN KEY (channel_id) REFERENCES Channels(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    -- Deliberately RESTRICT (not CASCADE): a guild/channel/user deletion must not
+    -- silently wipe out message history. Callers must explicitly decide what to do
+    -- with a user's messages (delete, anonymize, archive) before removing the parent row.
+    FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE RESTRICT,
+    FOREIGN KEY (channel_id) REFERENCES Channels(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE RESTRICT,
     FOREIGN KEY (sticker_id) REFERENCES Stickers(id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);

@@ -82,7 +82,7 @@ export default {
 			return {
 				embeds: [{
 					color: COLOR.PRIMARY,
-					description: `${emoji} Automatic snapshots have been ${enabled ? 'enabled' : 'disabled'}.`,
+					description: `${emoji} Snapshot management has been ${enabled ? 'enabled' : 'disabled'}.`,
 				}]
 			}
 		}

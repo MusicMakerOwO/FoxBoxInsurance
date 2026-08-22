@@ -29,12 +29,13 @@ export class LRUCache<K, V> {
 	get(key: K): V | null {
 		if (!this.cache.has(key)) return null;
 
-		const value = this.cache.get(key);
+		const value = this.cache.get(key) as V;
 
+		// re-insert to mark as most-recently-used, regardless of whether value is falsy
 		this.cache.delete(key);
-		if (value) this.cache.set(key, value);
+		this.cache.set(key, value);
 
-		return value ?? null;
+		return value;
 	}
 
 	delete(key: K): boolean {

@@ -61,10 +61,10 @@ export async function StartAutomaticTasks(): Promise<void> {
 		const offset = (TIME_BETWEEN_TASKS * 1000) * i;
 		const delay = Math.max(timeSinceLastRun >= interval ? 0 : interval - timeSinceLastRun, offset);
 
-		TaskScheduler.schedule(() => {
+		TaskScheduler.schedule(async () => {
 			try {
-				void callback();
-				void Database.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
+				await callback();
+				await Database.query("INSERT INTO Timers (id, last_run) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_run = VALUES(last_run)", [name, Date.now()]);
 			} catch (err) {
 				Log('ERROR', err);
 			}

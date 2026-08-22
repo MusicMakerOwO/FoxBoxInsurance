@@ -15,7 +15,8 @@ export async function TestConnection(): Promise<boolean> {
 			timeout: 5000
 		}, function (response: IncomingMessage) {
 			lastTest = Date.now();
-			connected = response.statusCode === 200;
+			// any HTTP response (even a non-200) proves DNS/TCP/TLS are working - only a network-level error means no internet
+			connected = response.statusCode !== undefined;
 			response.destroy();
 			request.destroy();
 			resolve(connected);

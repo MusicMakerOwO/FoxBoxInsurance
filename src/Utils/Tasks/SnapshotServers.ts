@@ -1,4 +1,3 @@
-import {Database} from "../../Database.js";
 import {client} from "../../Client.js";
 import {Log} from "../Log.js";
 import {CreateSnapshot} from "../../CRUD/Snapshots.js";
@@ -12,8 +11,6 @@ export async function SnapshotServers(): Promise<void> {
 
 	const snapshotQueue = [];
 
-	const connection = await Database.getConnection();
-
 	for (const guild of client.guilds.cache.values()) {
 		if (BigInt(guild.id) % 24n !== BigInt(currentHour)) continue;
 		const savedGuild = (await GetGuild(guild.id))!;
@@ -23,8 +20,6 @@ export async function SnapshotServers(): Promise<void> {
 		}
 		snapshotQueue.push(guild);
 	}
-
-	Database.releaseConnection(connection);
 
 	if (snapshotQueue.length === 0) return;
 

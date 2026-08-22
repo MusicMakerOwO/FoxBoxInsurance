@@ -1,6 +1,7 @@
 import { AnonymousGuild, Collection, Guild, GuildBan, User } from "discord.js";
 import { SECONDS } from "../Constants.js";
 import { TTLCache } from "../DataStructures/TTLCache.js";
+import { Log } from "../Log.js";
 
 const banCache = new TTLCache<AnonymousGuild['id'], Map<User['id'], GuildBan>>(); // guild_id -> user_id -> GuildBan
 export async function FetchAllBans(guild: AnonymousGuild): Promise<Map<User['id'], GuildBan>> {
@@ -25,7 +26,7 @@ export async function FetchAllBans(guild: AnonymousGuild): Promise<Map<User['id'
 
 		offset = fetchedBans.last()?.user.id ?? null;
 		if (!offset || offset === previousOffset) {
-			console.warn('Pagination halted: offset is stuck or undefined');
+			Log('WARN', 'Pagination halted: offset is stuck or undefined');
 			break;
 		}
 		previousOffset = offset;

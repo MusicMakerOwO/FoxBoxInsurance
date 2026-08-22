@@ -8,6 +8,7 @@ import {
 	SimpleUser
 } from "../../Typings/DatabaseTypes.js";
 import { FORMAT, FORMAT_NAMES } from "../Constants.js";
+import { OmitKeys } from "../Omit.js";
 import { PoolConnection } from "mariadb";
 import { Database } from "../../Database.js";
 import { ObjectValues } from "../../Typings/HelperTypes.js";
@@ -27,13 +28,6 @@ import { dirname } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-function Omit<T extends object, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
-	const result = { ...data };
-	for (const key of props) {
-		delete result[key];
-	}
-	return result;
-}
 
 function UTCDate(date: Date) {
 	const year = date.getUTCFullYear();
@@ -175,7 +169,7 @@ export async function ExportChannel(options: ExportOptions): Promise<{
 			if (!userKey) throw new Error(`Failed to get key for user ${message.user_id}`);
 			message.content = Decrypt(message.content, userKey, message.encryption_version);
 		}
-		context.messages[i] = Omit(message, ['encryption_version']);
+		context.messages[i] = OmitKeys(message, ['encryption_version']);
 	}
 
 	const userIDs = new Set<SimpleUser['id']>();

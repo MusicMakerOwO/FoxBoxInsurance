@@ -12,7 +12,7 @@ class DatabaseWrapper {
 		if (this.connection_pool) return;
 
 		if (!process.env.MARIADB_URI) {
-			console.log('[!] Missing MARIADB_URI environment variable');
+			Log('ERROR', 'Missing MARIADB_URI environment variable');
 			// eslint-disable-next-line unicorn/no-process-exit
 			process.exit(1);
 		}

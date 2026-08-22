@@ -62,8 +62,9 @@ export async function GetGuild(id: string | bigint): Promise<SimpleGuild | null 
  * If you intend to delete all the related data, use `DANGER_PurgeGuild()` instead.
  */
 export async function DiscardGuild(id: string | bigint): Promise<void> {
-	cache.delete(BigInt(id));
-	INVALID_GUILD_IDS.delete(String(id));
+	id = BigInt(id);
+	cache.delete(id);
+	INVALID_GUILD_IDS.delete(id.toString());
 }
 
 /**

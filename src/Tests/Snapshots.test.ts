@@ -13,7 +13,7 @@ import {
 	MaxSnapshotsForGuild,
 	DeleteSnapshot,
 	SetSnapshotPinStatus,
-	isSnapshotQueuedForDeletion,
+	IsSnapshotQueuedForDeletion,
 	IsSnapshotDeletable,
 	GetSnapshot
 } from '../CRUD/Snapshots.js';
@@ -97,8 +97,8 @@ describe('Snapshots', () => {
 		];
 		seed(snapshots);
 
-		expect(await isSnapshotQueuedForDeletion(401)).toBe(false);
-		expect(await isSnapshotQueuedForDeletion(402)).toBe(true);
+		expect(await IsSnapshotQueuedForDeletion(401)).toBe(false);
+		expect(await IsSnapshotQueuedForDeletion(402)).toBe(true);
 	});
 
 	it('marks unpinned snapshots as deletable', async () => {
@@ -111,8 +111,8 @@ describe('Snapshots', () => {
 		const snapshots: SnapshotRow[] = Array.from({ length: 9 }, (_, i) => ({ id: 601 + i, guild_id: 105n, type: 0, pinned: 0 }));
 		seed(snapshots);
 
-		expect(await isSnapshotQueuedForDeletion(601)).toBe(true); // oldest of the 2-snapshot overflow
-		expect(await isSnapshotQueuedForDeletion(609)).toBe(false); // newest, within the 7-snapshot limit
+		expect(await IsSnapshotQueuedForDeletion(601)).toBe(true); // oldest of the 2-snapshot overflow
+		expect(await IsSnapshotQueuedForDeletion(609)).toBe(false); // newest, within the 7-snapshot limit
 	});
 
 	it('returns null if a given snapshot does not exist', async () => {

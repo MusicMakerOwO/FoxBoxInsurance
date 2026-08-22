@@ -1,7 +1,7 @@
 import {EventHandler} from "../../Typings/HandlerTypes.js";
 import {Log} from "../../Utils/Log.js";
 import {Database} from "../../Database.js";
-import {Interaction} from "discord.js";
+import {ApplicationCommandType, Interaction} from "discord.js";
 import { client } from "../../Client.js";
 
 export default {
@@ -18,7 +18,7 @@ export default {
 		switch (interaction.type) {
 			case 4: // Autocomplete
 			case 2: // Slash Commands + Context Menus
-				if (interaction.commandType === 1) {
+				if (interaction.commandType === ApplicationCommandType.ChatInput) {
 					// @ts-expect-error | Private properties
 					const subcommand: string = interaction.options._subcommand || "";
 					// @ts-expect-error | Private properties

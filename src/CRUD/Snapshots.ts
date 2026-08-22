@@ -2,6 +2,7 @@ import { Database } from "../Database.js";
 import { DIFF_CHANGE_TYPE, SNAPSHOT_TYPE } from "../Utils/Constants.js";
 import { AnonymousGuild, Guild } from "discord.js";
 import { Log } from "../Utils/Log.js";
+import { OmitKeys } from "../Utils/Omit.js";
 import { LRUCache } from "../Utils/DataStructures/LRUCache.js";
 import {
 	SimpleGuild,
@@ -15,13 +16,6 @@ import { PoolConnection } from "mariadb";
 import { CreateSnapshotDiff } from "../Utils/Snapshots/GuildDiff.js";
 import { BuildSnapshotComparison } from "../Utils/Snapshots/BuildSnapshotComparison.js";
 
-function Omit<T extends object, K extends keyof T>(data: T, props: K[]): Omit<T, K> {
-	const result = { ...data };
-	for (const key of props) {
-		delete result[key];
-	}
-	return result;
-}
 
 export type Snapshot = SnapshotMetadata & {
 	channels: Map<SnapshotChannel['id'], SnapshotChannel>;
@@ -382,16 +376,16 @@ export async function ExportSnapshot(snapshotID: SnapshotMetadata['id']): Promis
 		id         : exportID,
 		version    : 2,
 		type       : SNAPSHOT_TYPE.IMPORT,
-		channels   : Array.from(snapshotData.channels.values()).map(x => Omit(x, ['snapshot_id', 'deleted'])),
-		roles      : Array.from(snapshotData.roles.values()).map(x => Omit(x, ['snapshot_id', 'deleted'])),
-		bans       : Array.from(snapshotData.bans.values()).map(x => Omit(x, ['snapshot_id', 'deleted']))
+		channels   : Array.from(snapshotData.channels.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted'])),
+		roles      : Array.from(snapshotData.roles.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted'])),
+		bans       : Array.from(snapshotData.bans.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted']))
 	}
 
 	Database.releaseConnection(connection);
 	return snapshotExport;
 }
 
-export async function isSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['id']): Promise<boolean> {
+export async function IsSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['id']): Promise<boolean> {
 	const guildID = await ResolveGuildFromSnapshotID(snapshotID);
 
 	const maxSnapshotCount = await MaxSnapshotsForGuild(guildID);

@@ -1,5 +1,5 @@
 /** Bounded Set that evicts the oldest entry when capacity is exceeded */
-export default class LimitedSet<T> extends Set<T> {
+export class LimitedSet<T> extends Set<T> {
 	private readonly maxSize: number;
 
 	constructor(maxSize: number, iterable?: Iterable<T>) {

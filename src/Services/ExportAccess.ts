@@ -40,7 +40,7 @@ export async function SetChannelExportStatus(channelID: Channel['id'] | SimpleCh
 	const channel = await GetChannel(channelID);
 	if (!channel) throw new Error("Channel does not exist");
 
-	channel.block_exports = +!enabled as 1 | 0
+	channel.block_exports = enabled ? 0 : 1;
 
 	await SaveChannel(channel);
 }

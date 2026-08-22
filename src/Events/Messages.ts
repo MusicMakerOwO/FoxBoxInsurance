@@ -15,7 +15,7 @@ export default {
 	execute: async function(message: Message<true>) {
 		if (!message.guild) return; // DM messages are not supported
 
-		if (message.flags.has(128)) return; // deferred message
+		if (message.flags.has(MessageFlags.Loading)) return; // deferred message
 
 		const savedGuild = await GetGuild(message.guildId);
 		if (!savedGuild) return;

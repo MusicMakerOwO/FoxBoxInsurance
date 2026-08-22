@@ -1,5 +1,5 @@
 import { ObjectValues } from "../../Typings/HelperTypes.js";
-import LimitedSet from "../DataStructures/LimitedSet.js";
+import { LimitedSet } from "../DataStructures/LimitedSet.js";
 import { Log } from "../Log.js";
 import fs, { unlinkSync } from "node:fs";
 import { TestConnection } from "../TestConnection.js";

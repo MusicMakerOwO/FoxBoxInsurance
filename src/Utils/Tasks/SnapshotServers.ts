@@ -23,7 +23,7 @@ export async function SnapshotServers(): Promise<void> {
 
 	if (snapshotQueue.length === 0) return;
 
-	if (process.env.DEV_MODE) console.log(`Backing up ${snapshotQueue.length} servers : ${snapshotQueue.map(g => g.id).join(', ')}`);
+	if (process.env.DEV_MODE) Log('INFO', `Backing up ${snapshotQueue.length} servers : ${snapshotQueue.map(g => g.id).join(', ')}`);
 
 	for (const guild of snapshotQueue) {
 		try {

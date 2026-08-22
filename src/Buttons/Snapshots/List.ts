@@ -3,7 +3,7 @@ import {GetImportsForGuild} from "../../CRUD/SnapshotImports.js";
 import {COLOR, EMOJI, SECONDS, SNAPSHOT_TYPE, SNAPSHOT_TYPE_EMOJI, SNAPSHOT_TYPE_NAME} from "../../Utils/Constants.js";
 import {
 	GetSnapshot,
-	isSnapshotQueuedForDeletion,
+	IsSnapshotQueuedForDeletion,
 	JSONSnapshot,
 	ListSnapshotsForGuild,
 	MaxSnapshotsForGuild,
@@ -116,7 +116,7 @@ Create one using \`/snapshot create\``
 				const createdAt = new Date(snapshotData.created_at).getTime();
 				const emoji = snapshotData.pinned ? EMOJI.PIN : EMOJI.SNAPSHOT;
 
-				const queuedDeletion = await isSnapshotQueuedForDeletion(item.id);
+				const queuedDeletion = await IsSnapshotQueuedForDeletion(item.id);
 
 				embed.description += `
 ${queuedDeletion ? `\n**${EMOJI.WARNING} This snapshot is pending deletion**` : ''}

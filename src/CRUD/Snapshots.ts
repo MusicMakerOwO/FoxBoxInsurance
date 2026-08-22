@@ -447,4 +447,6 @@ export async function SetSnapshotPinStatus(snapshotID: SnapshotMetadata['id'], p
         SET pinned = ?
         WHERE id = ?
 	`, [pinned, snapshotID]);
+
+	cache.delete(snapshotID);
 }

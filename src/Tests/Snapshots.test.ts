@@ -29,7 +29,7 @@ function seed(snapshots: SnapshotRow[]) {
 			const row = snapshots.find(s => s.id === params[0]);
 			return row ? [row] : [];
 		}
-		if (sql.includes('UPDATE Snapshots SET pinned')) {
+		if (sql.includes('UPDATE Snapshots') && sql.includes('SET pinned')) {
 			const [pinned, id] = params as [boolean, number];
 			const row = snapshots.find(s => s.id === id);
 			if (row) row.pinned = pinned ? 1 : 0;
@@ -58,6 +58,18 @@ describe('Snapshots', () => {
 		seed([{ id: 201, guild_id: 101n, type: 0, pinned: 1 }]);
 
 		await expect(DeleteSnapshot(201)).rejects.toThrow('Cannot delete a pinned snapshot');
+	});
+
+	it('invalidates the cached snapshot after changing its pin status', async () => {
+		seed([{ id: 801, guild_id: 801n, type: 0, pinned: 0 }]);
+
+		const before = await GetSnapshot(801);
+		expect(before!.pinned).toBe(0);
+
+		await SetSnapshotPinStatus(801, true);
+
+		const after = await GetSnapshot(801);
+		expect(after!.pinned).toBe(1);
 	});
 
 	it('awaits the fast-path DELETE when removing the latest snapshot', async () => {

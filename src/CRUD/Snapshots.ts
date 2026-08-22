@@ -343,6 +343,9 @@ export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']): Promis
 	await Promise.all(promiseQueue);
 
 	Database.releaseConnection(connection);
+
+	cache.delete(snapshotID);
+	guildCache.delete(snapshotID);
 }
 
 
@@ -415,7 +418,7 @@ export async function IsSnapshotDeletable(snapshotID: SnapshotMetadata['id']): P
 	return !snapshot.pinned;
 }
 
-const guildCache = new Map<SnapshotMetadata['id'], SnapshotMetadata['guild_id']>(); // snapshotID -> guildID
+const guildCache = new LRUCache<SnapshotMetadata['id'], SnapshotMetadata['guild_id']>(100); // snapshotID -> guildID
 async function ResolveGuildFromSnapshotID(snapshotID: SnapshotMetadata['id']): Promise<SnapshotMetadata['guild_id']> {
 	if (guildCache.has(snapshotID)) return guildCache.get(snapshotID)!;
 

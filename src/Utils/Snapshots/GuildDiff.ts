@@ -68,12 +68,7 @@ function MoveBotRoleToTop(roleList: SnapshotComparable['roles']) {
 	// bot role is not at the top, move everything above it down
 	for (const role of roles.values()) {
 		if (role.id === botRole.id) {
-			// move bot role to the top
-			if ('rawPosition' in role) {
-				role.rawPosition = highestRole.position
-			} else {
-				role.position = highestRole.position + 1;
-			}
+			role.position = highestRole.position + 1;
 		}
 	}
 }
@@ -117,7 +112,7 @@ export function CreateSnapshotDiff(baseSnapshot: SnapshotComparable, targetSnaps
 		} else if (
 			baseRole.name !== targetRole.name ||
 			baseRole.color !== targetRole.color ||
-			baseRole.hoist !== +targetRole.hoist ||
+			+baseRole.hoist !== +targetRole.hoist ||
 			baseRole.position !== targetRole.position ||
 			baseRole.permissions !== targetRole.permissions ||
 			baseRole.managed_by !== targetRole.managed_by
@@ -130,6 +125,8 @@ export function CreateSnapshotDiff(baseSnapshot: SnapshotComparable, targetSnaps
 	}
 
 	for (const baseChannel of baseSnapshot.channels.values()) {
+		if (!ALLOWED_CHANNEL_TYPES.has(baseChannel.type)) continue;
+
 		const ChannelCacheKey = baseChannel.id;
 		const targetChannel = targetSnapshot.channels.get(baseChannel.id);
 
@@ -143,7 +140,7 @@ export function CreateSnapshotDiff(baseSnapshot: SnapshotComparable, targetSnaps
 			baseChannel.parent_id !== targetChannel.parent_id ||
 			('position' in baseChannel && baseChannel.position !== targetChannel.position) ||
 			('topic' in baseChannel && baseChannel.topic !== targetChannel.topic) ||
-			('nsfw' in baseChannel && baseChannel.nsfw !== +targetChannel.nsfw) ||
+			('nsfw' in baseChannel && +baseChannel.nsfw !== +targetChannel.nsfw) ||
 			( ! DeepEquals(baseChannel.permission_overwrites, targetChannel.permission_overwrites) )
 		) {
 			globalDiff.channels.set(ChannelCacheKey, {

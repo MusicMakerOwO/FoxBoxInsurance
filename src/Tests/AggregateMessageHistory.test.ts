@@ -70,7 +70,7 @@ describe('AggregateMessageHistory', () => {
 		}
 	});
 
-	it('rejects when time range contains a non-finite value', async () => {
+	it('rejects when time range contains a non-finite value, without querying the database', async () => {
 		query.mockResolvedValue([]);
 
 		await expect(AggregateMessageHistory({
@@ -79,9 +79,10 @@ describe('AggregateMessageHistory', () => {
 			timeRange: [Number.NaN, 100],
 			bucketSize: 3600
 		})).rejects.toThrow('timeRange must contain finite timestamps');
+		expect(query).not.toHaveBeenCalled();
 	});
 
-	it('rejects when start is after end', async () => {
+	it('rejects when start is after end, without querying the database', async () => {
 		query.mockResolvedValue([]);
 
 		await expect(AggregateMessageHistory({
@@ -90,5 +91,6 @@ describe('AggregateMessageHistory', () => {
 			timeRange: [100, 0],
 			bucketSize: 3600
 		})).rejects.toThrow('timeRange start must be less than or equal to end');
+		expect(query).not.toHaveBeenCalled();
 	});
 });

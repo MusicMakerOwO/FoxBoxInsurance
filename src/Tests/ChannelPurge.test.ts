@@ -1,11 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SECONDS } from '../Utils/Constants.js';
 
-const { getConnection, releaseConnection } = vi.hoisted(() => ({
+const { getConnection, releaseConnection, transaction } = vi.hoisted(() => ({
 	getConnection: vi.fn(),
-	releaseConnection: vi.fn()
+	releaseConnection: vi.fn(),
+	transaction: vi.fn(async (callback: (connection: unknown) => Promise<void>) => {
+		const connection = await getConnection();
+		try {
+			await callback(connection);
+		} finally {
+			releaseConnection(connection);
+		}
+	})
 }));
-vi.mock('../Database.js', () => ({ Database: { getConnection, releaseConnection } }));
+vi.mock('../Database.js', () => ({ Database: { getConnection, releaseConnection, transaction } }));
 
 import { ChannelPurge } from '../Utils/Tasks/ChannelPurge.js';
 
@@ -21,6 +29,7 @@ function makeConnection(channelCounts: ChannelCount[] = []) {
 
 beforeEach(() => {
 	getConnection.mockReset();
+	transaction.mockClear();
 	releaseConnection.mockReset();
 });
 

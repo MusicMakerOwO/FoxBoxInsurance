@@ -61,11 +61,18 @@ export function GetNextRequiredTOSVersion(
 }
 
 /** Builds a changelist of TOS features added/removed between two TOS versions */
-export function BuildTOSChangeList(fromVersion: number, toVersion: number): string[] {
+export function BuildTOSChangeList(
+	fromVersion: number,
+	toVersion: number,
+
+	/** ONLY FOR USE IN TESTING */
+	TOSVersionsImpl: typeof TOS_VERSIONS = TOS_VERSIONS,
+	GetTOSFeaturesImpl: typeof GetTOSFeatures = GetTOSFeatures
+): string[] {
 	const changes: string[] = [];
-	const seen = new Set<number>();
+	const seen = new Set<number>(GetTOSFeaturesImpl(fromVersion) ?? []);
 	for (let v = fromVersion + 1; v <= toVersion; v++) {
-		const tosData = TOS_VERSIONS[v];
+		const tosData = TOSVersionsImpl[v];
 		if (!tosData) continue;
 		for (const feature of tosData.added) {
 			if (!seen.has(feature)) {

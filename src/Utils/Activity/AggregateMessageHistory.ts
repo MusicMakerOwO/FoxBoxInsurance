@@ -24,6 +24,14 @@ export async function AggregateMessageHistory(options: {
 		throw new RangeError('bucketSize must be a finite number greater than 0 seconds');
 	}
 
+	if (!Number.isFinite(start) || !Number.isFinite(end)) {
+		throw new TypeError('timeRange must contain finite timestamps');
+	}
+
+	if (start > end) {
+		throw new RangeError('timeRange start must be less than or equal to end');
+	}
+
 	const points = (await Database.query(`
 		SELECT created_at FROM MessageHistory
 		WHERE guild_id = ?
@@ -37,14 +45,6 @@ export async function AggregateMessageHistory(options: {
 		start,
 		end,
 	]) as MessageHistory[]).map(x => Number(x.created_at));
-
-	if (!Number.isFinite(start) || !Number.isFinite(end)) {
-		throw new TypeError('timeRange must contain finite timestamps');
-	}
-
-	if (start > end) {
-		throw new RangeError('timeRange start must be less than or equal to end');
-	}
 
 	const alignedStart = GetBucketStart(start, options.bucketSize);
 	const alignedEnd = GetBucketStart(end, options.bucketSize);

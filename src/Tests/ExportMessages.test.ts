@@ -210,6 +210,40 @@ describe('ExportChannel', () => {
 		expect(text).not.toContain('12:30am UTC');
 	});
 
+	it('emits a date separator for messages on different calendar days exactly one week apart', async () => {
+		const fixture = baseFixture();
+		fixture.messages = [
+			fixture.messages[0], // 2025-01-01T00:00:00Z, a Wednesday
+			{
+				...fixture.messages[0],
+				id: 1004n,
+				created_at: new Date('2025-01-08T00:00:00Z') // also a Wednesday, 7 days later
+			}
+		];
+		setupMocks(fixture);
+
+		const result = await ExportChannel(makeOptions({ format: FORMAT.TEXT }));
+		const text = result.data.toString('utf8');
+
+		const separators = text.match(/----------\s\[/g) ?? [];
+		expect(separators.length).toBe(2);
+	});
+
+	it('does not emit a spurious date separator for messages on the same day of different weeks', async () => {
+		const fixture = baseFixture();
+		fixture.messages = [
+			{ ...fixture.messages[0], created_at: new Date('2025-01-01T00:00:00Z') },
+			{ ...fixture.messages[0], id: 1004n, created_at: new Date('2025-01-01T23:00:00Z') }
+		];
+		setupMocks(fixture);
+
+		const result = await ExportChannel(makeOptions({ format: FORMAT.TEXT }));
+		const text = result.data.toString('utf8');
+
+		const separators = text.match(/----------\s\[/g) ?? [];
+		expect(separators.length).toBe(1);
+	});
+
 	it('should export a HTML format without error', async () => {
 		setupMocks(baseFixture());
 		const result = await ExportChannel(makeOptions({ format: FORMAT.HTML }));

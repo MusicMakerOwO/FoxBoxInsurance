@@ -295,7 +295,7 @@ function ExportText(context: ExportContext) {
 
 		const messageDate = new Date(message.created_at);
 
-		const stepsOverDay = !prevMessage || new Date(prevMessage.created_at).getUTCDay() !== messageDate.getUTCDay();
+		const stepsOverDay = !prevMessage || new Date(prevMessage.created_at).toISOString().slice(0, 10) !== messageDate.toISOString().slice(0, 10);
 
 		const user = context.users.get(message.user_id) ?? { id: message.user_id, username: 'unknown_user', bot: 0 };
 		const sticker = context.stickers.get(message.sticker_id!) ?? {

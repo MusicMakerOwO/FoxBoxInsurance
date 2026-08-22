@@ -2,6 +2,7 @@ import {randomBytes} from "node:crypto";
 import {SimpleUser} from "../Typings/DatabaseTypes.js";
 import {GetUser, SaveUser} from "../CRUD/Users.js";
 import * as v1 from "../Utils/Encryption/Versions/v1.js"
+import {Log} from "../Utils/Log.js";
 
 function BuildNewKey() {
 	return randomBytes(32);
@@ -21,12 +22,16 @@ export async function ResolveUserKey(userID: SimpleUser['id']): Promise<Buffer> 
 	return newKey;
 }
 
-/** Returns a map of user IDs to unwrapped keys */
+/** Returns a map of user IDs to unwrapped keys. Users that cannot be resolved are skipped, not thrown. */
 export async function ResolveUserKeyBulk(userIDs: SimpleUser['id'][]): Promise<Map<SimpleUser['id'], Buffer>> {
 	const result = new Map<SimpleUser['id'], Buffer>();
 
-	for (const id of userIDs) {
-		result.set(id, await ResolveUserKey(id) );
+	for (const id of new Set(userIDs)) {
+		try {
+			result.set(id, await ResolveUserKey(id));
+		} catch (error) {
+			Log('ERROR', `Could not resolve encryption key for user ${id} - skipping`, error);
+		}
 	}
 
 	return result;

@@ -46,4 +46,17 @@ describe('BuildTOSChangeList', () => {
 		const result = BuildTOSChangeList(2, 2);
 		expect(result).toEqual([]);
 	});
+
+	it('reports a feature removal even when it was added in a version before the requested range', () => {
+		// Feature X added in v1, removed in v3 - a user upgrading from v2 to v3 should still be told it went away.
+		const fakeVersions = {
+			1: { date: '', added: [TOS_FEATURES.MESSAGE_EXPORTS], removed: [] },
+			2: { date: '', added: [], removed: [] },
+			3: { date: '', added: [], removed: [TOS_FEATURES.MESSAGE_EXPORTS] }
+		};
+		const fakeGetTOSFeatures = (version: number) => (version === 2 ? [TOS_FEATURES.MESSAGE_EXPORTS] : null);
+
+		const result = BuildTOSChangeList(2, 3, fakeVersions, fakeGetTOSFeatures);
+		expect(result).toEqual(['Removed message exports']);
+	});
 });

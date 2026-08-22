@@ -1,24 +1,10 @@
-const FORMATS = [
-	/\*\*/g, // bold
-	/__/g, // underline
-	/\*/g, // italic
-	/_/g, // italic (underscore)
-	/~~/g, // strikethrough
-	/`/g, // inline code
-	/```/g, // code block
-	/\|\|/g, // spoiler
-	/^> /g, // blockquote
-	/^>>> /g // blockquote (multi-line)
-]
-
 // strip discord formatting from a string
 export function RemoveFormatting(text: string): string {
 	if (text.length === 0) return text;
 
-	let result = text;
-	for (const format of FORMATS) {
-		result = result.replace(format, '\\$&'); // escape the formatting characters
-	}
+	const result = text
+	.replace(/([*_~`|])/g, '\\$1') // bold/italic/underline/strikethrough/code/spoiler markers
+	.replace(/^(>{1,3} ?)/gm, (match) => match.replace(/>/g, '\\>')); // blockquotes, on any line
 
 	return result.trim();
 }

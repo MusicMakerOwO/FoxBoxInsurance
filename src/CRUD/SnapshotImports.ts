@@ -14,6 +14,13 @@ const importCache = new Map<JSONSnapshot['id'], JSONSnapshot>();
  */
 const guildOwnership = new Map<Guild['id'], ExpirationEntry>();
 
+function IsImportOwnedByAnyGuild(importID: JSONSnapshot['id']): boolean {
+	for (const ownership of guildOwnership.values()) {
+		if (ownership.has(importID)) return true;
+	}
+	return false;
+}
+
 export function SaveImportForGuild(guildID: Guild['id'], data: JSONSnapshot): void {
 	if (!importCache.has(data.id)) importCache.set(data.id, data);
 
@@ -32,6 +39,7 @@ export function GetImportsForGuild(guildID: Guild['id']): Map<JSONSnapshot['id']
 	for (const [importID, expires_at] of ownership.entries()) {
 		if (now > expires_at) {
 			ownership.delete(importID);
+			if (!IsImportOwnedByAnyGuild(importID)) importCache.delete(importID);
 			continue;
 		}
 

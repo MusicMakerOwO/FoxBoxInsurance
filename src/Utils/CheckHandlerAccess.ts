@@ -27,22 +27,24 @@ By agreeing to the Terms you are agreeing to the following:
 You can find a fully copy of the terms here : https://www.notfbi.dev/terms`
 }
 
-const USER_TOS_BUTTONS: DiscordActionRow<DiscordButton> = {
-	type: 1,
-	components: [
-		{
-			type: 2,
-			style: 4,
-			label: 'Decline',
-			custom_id: 'close'
-		},
-		{
-			type: 2,
-			style: 3,
-			label: 'Accept',
-			custom_id: 'tos-accept'
-		}
-	]
+function BuildUserTOSButtons(targetTOSVersion: number | null): DiscordActionRow<DiscordButton> {
+	return {
+		type: 1,
+		components: [
+			{
+				type: 2,
+				style: 4,
+				label: 'Decline',
+				custom_id: 'close'
+			},
+			{
+				type: 2,
+				style: 3,
+				label: 'Accept',
+				custom_id: targetTOSVersion === null ? 'tos-accept' : `tos-accept_${targetTOSVersion}`
+			}
+		]
+	}
 }
 
 /** Returns an interaction response object with the error or null if the user is allowed to execute the command */
@@ -59,7 +61,8 @@ export async function CheckHandlerAccess(
 	const savedUser = (await GetUser(interaction.user.id))!;
 	if (handler.tos_features.length > 0 && savedUser.terms_version_accepted === 0) {
 		// Force users to accept TOS
-		return { embeds: [USER_TOS_Embed], components: [USER_TOS_BUTTONS] };
+		const nextTOSVersion = GetNextRequiredTOSVersion(handler.tos_features, savedUser);
+		return { embeds: [USER_TOS_Embed], components: [BuildUserTOSButtons(nextTOSVersion)] };
 	}
 	const disallowedFeatures = handler.tos_features.filter(x => !CanUserAccessTOSFeature(savedUser, x));
 	if (disallowedFeatures.length > 0) {

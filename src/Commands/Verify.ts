@@ -61,10 +61,11 @@ export default {
 			return { embeds: [NoExportEmbed] };
 		}
 
-		let fileData: string;
+		let fileData: Buffer;
 		try {
 			const request = await fetch(file.url);
-			fileData = await request.text();
+			if (!request.ok) throw new Error(`Failed to download file: ${request.status} ${request.statusText}`);
+			fileData = Buffer.from(await request.arrayBuffer());
 		} catch (err) {
 			Log('ERROR', err);
 			return { embeds: [FailedEmbed] };

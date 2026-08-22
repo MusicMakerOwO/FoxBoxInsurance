@@ -4,8 +4,10 @@ import { ResolveUserKeyBulk } from "../../Services/UserEncryptionKeys.js";
 import { SimpleMessage } from "../../Typings/DatabaseTypes.js";
 import { Encrypt } from "../Encryption/index.js";
 
+const MESSAGE_BATCH_LIMIT = 10_000;
+
 export async function EncryptMessages(): Promise<void> {
-	const unencryptedMessages = await Database.query("SELECT id, user_id, content FROM Messages WHERE encryption_version IS NULL") as Pick<SimpleMessage, 'id' | 'user_id' | 'content'>[];
+	const unencryptedMessages = await Database.query(`SELECT id, user_id, content FROM Messages WHERE encryption_version IS NULL LIMIT ${MESSAGE_BATCH_LIMIT}`) as Pick<SimpleMessage, 'id' | 'user_id' | 'content'>[];
 	if (unencryptedMessages.length === 0) return;
 
 	Log('TRACE', `Encrypting ${unencryptedMessages.length} messages...`);
@@ -24,24 +26,24 @@ export async function EncryptMessages(): Promise<void> {
 			updateValues.push([null, 0, message.id]);
 			continue;
 		}
-		const userKey = userKeys.get(message.user_id)!;
+		const userKey = userKeys.get(message.user_id);
+		if (!userKey) continue; // author is unresolvable - leave this message for a later run
 		const [cipherText, version] = Encrypt(message.content, userKey);
 		updateValues.push([cipherText, version, message.id])
 	}
 	const end = process.hrtime.bigint();
 
-	const connection = await Database.getConnection();
-	await connection.query('START TRANSACTION');
-	await connection.batch(`
-        UPDATE Messages
-        SET content            = ?,
-            encryption_version = ?
-        WHERE id = ?
-	`, updateValues);
-	await connection.query('COMMIT');
-
-	Database.releaseConnection(connection);
+	if (updateValues.length > 0) {
+		await Database.transaction(async (connection) => {
+			await connection.batch(`
+	            UPDATE Messages
+	            SET content            = ?,
+	                encryption_version = ?
+	            WHERE id = ?
+			`, updateValues);
+		});
+	}
 
 	const time = Number(end - start) / 1e6;
-	Log('TRACE', `Encrypted ${unencryptedMessages.length} messages in ${time.toFixed(2)}ms`);
+	Log('TRACE', `Encrypted ${updateValues.length}/${unencryptedMessages.length} messages in ${time.toFixed(2)}ms`);
 }

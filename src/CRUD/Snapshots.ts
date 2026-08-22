@@ -121,7 +121,7 @@ export async function GetSnapshot(snapshot_id: Snapshot['id']): Promise<Snapshot
 		bans       : bans
 	}
 
-	if (cache) cache.set(snapshot_id, result); // cache for 1 hour
+	cache.set(snapshot_id, result);
 	return result;
 }
 

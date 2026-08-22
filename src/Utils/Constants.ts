@@ -6,13 +6,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const ROOT_FOLDER     = `${__dirname}/../..`;
 
-export const DB_SETUP_FILE   = `${ROOT_FOLDER}/DB_SETUP.sql`;
-export const DB_FILE         = `${ROOT_FOLDER}/fbi.sqlite`;
-
 // If we lose internet we will dump the cache in here and read it back on startup
 export const DOWNLOAD_CACHE_PATH  = `${ROOT_FOLDER}/DownloadCache`;
 export const UPLOAD_CACHE_PATH    = `${ROOT_FOLDER}/UploadCache`;
-export const FAILED_MESSAGES = `${ROOT_FOLDER}/FailedMessages`;
 
 export const SECONDS = {
 	MINUTE : 60,

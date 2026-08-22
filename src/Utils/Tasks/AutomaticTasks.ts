@@ -31,12 +31,7 @@ export async function StartAutomaticTasks(): Promise<void> {
 	const connection = await Database.getConnection();
 
 	for (let i = 0; i < TASKS.length; i++) {
-		const taskData = TASKS[i];
-		if (!Array.isArray(taskData) || taskData.length !== 3) {
-			Log('WARN', `Task entry ${i} is not an array, skipping...`);
-			continue;
-		}
-		const [ name, callback, interval ] = taskData;
+		const [ name, callback, interval ] = TASKS[i];
 
 		if (interval <= 0 || !Number.isFinite(interval)) {
 			Log('WARN', `Task "${name}" has an invalid interval, skipping...`);

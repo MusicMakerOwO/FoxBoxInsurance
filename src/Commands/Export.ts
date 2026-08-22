@@ -8,9 +8,6 @@ import {CreateExportCacheKey} from "../Typings/CacheEntries.js";
 import {TOS_FEATURES} from "../TOSConstants.js";
 import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
-const DISCORD_EPOCH_OFFSET = 1420070400000;
-const DISCORD_ID_FILLING = BigInt( 0b11_1111_11111111_11111111 ); // 22 bits: worker (5) + process (5) + increment (12)
-
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
 	guild_features: [ GUILD_FEATURES.EXPORT_MESSAGES ],
@@ -55,8 +52,7 @@ Try sending a message in the channel and try again
 				channelID: BigInt(interaction.channelId),
 				userID: BigInt(interaction.user.id),
 				format: FORMAT.HTML,
-				messageCount: Math.min(Number(channelMessageCount), 100),
-				lastMessageID: (BigInt(Date.now() - DISCORD_EPOCH_OFFSET) << 22n) | DISCORD_ID_FILLING
+				messageCount: Math.min(Number(channelMessageCount), 100)
 			}
 		);
 

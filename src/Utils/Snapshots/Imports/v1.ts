@@ -216,7 +216,7 @@ export default function Parse(metadata: SnapshotExportMetadata, importData: Reco
 		const targetRole = snapshotData.roles.find(x => x.id.toString() === permission.target_id);
 		if (!targetRole) throw new Error(SNAPSHOT_ERRORS.CORRUPTED);
 
-		snapshotData.channels.find(x => x.id.toString() === permission.channel_id)!.permission_overwrites[permission.target_id] = permission;
+		targetChannel.permission_overwrites[permission.target_id] = permission;
 	}
 
 	return snapshotData;

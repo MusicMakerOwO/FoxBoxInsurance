@@ -253,10 +253,6 @@ async function DownloadURL(url: string) {
 					reject(new Error(`Empty response from '${url}'`));
 					return;
 				}
-				if (response.statusCode !== 200) {
-					reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
-					return;
-				}
 				const buffer = Buffer.concat(data);
 				resolve(buffer);
 			});

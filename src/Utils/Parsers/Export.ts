@@ -150,8 +150,6 @@ export async function ExportChannel(options: ExportOptions): Promise<{
 
 	if (selectedMessageIDs.length === 0) throw new Error('No messages to export');
 
-	selectedMessageIDs.reverse();
-
 	const encryptedMessages = await connection.query(`
         SELECT id, user_id, content, sticker_id, reply_to, data, created_at, encryption_version
         FROM Messages

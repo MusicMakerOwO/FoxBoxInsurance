@@ -180,29 +180,31 @@ async function _runDownloadAssets() {
 		})
 	}
 
-	await Database.batch(`
-        INSERT INTO Assets (type, discord_id, discord_url, name, width, height, size)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+	if (queuedAssets.length > 0) {
+		await Database.batch(`
+	        INSERT INTO Assets (type, discord_id, discord_url, name, width, height, size)
+	        VALUES (?, ?, ?, ?, ?, ?, ?)
 
-        -- Already exists, update in place, no need for delete
-        ON DUPLICATE KEY
-            UPDATE type        = VALUES(type),
-                   discord_id  = VALUES(discord_id),
-                   discord_url = VALUES(discord_url),
-                   name        = VALUES(name),
-                   width       = VALUES(width),
-                   height      = VALUES(height),
-                   size        = VALUES(size),
-                   hash        = NULL
-	`, queuedAssets.map(x => [
-		x.type,
-		x.discord_id,
-		x.discord_url,
-		x.name,
-		x.width,
-		x.height,
-		x.size
-	]));
+	        -- Already exists, update in place, no need for delete
+	        ON DUPLICATE KEY
+	            UPDATE type        = VALUES(type),
+	                   discord_id  = VALUES(discord_id),
+	                   discord_url = VALUES(discord_url),
+	                   name        = VALUES(name),
+	                   width       = VALUES(width),
+	                   height      = VALUES(height),
+	                   size        = VALUES(size),
+	                   hash        = NULL
+		`, queuedAssets.map(x => [
+			x.type,
+			x.discord_id,
+			x.discord_url,
+			x.name,
+			x.width,
+			x.height,
+			x.size
+		]));
+	}
 
 	const end = Date.now();
 	const duration = end - start;

@@ -27,13 +27,15 @@ export async function UploadFiles(): Promise<void> {
 		}
 	}
 
-	await Database.batch(`
-        UPDATE Assets
-        SET hash = ?
-        WHERE discord_id = ?
-	`, Array.from(assetLookups.entries()).map(
-		([id, hash]) => ([hash, id])
-	));
+	if (assetLookups.size > 0) {
+		await Database.batch(`
+	        UPDATE Assets
+	        SET hash = ?
+	        WHERE discord_id = ?
+		`, Array.from(assetLookups.entries()).map(
+			([id, hash]) => ([hash, id])
+		));
+	}
 
 	for (const discord_id of assetLookups.keys()) {
 		void rm(`${UPLOAD_CACHE_PATH}/${discord_id}`)

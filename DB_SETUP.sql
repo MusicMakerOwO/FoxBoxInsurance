@@ -58,22 +58,25 @@ CREATE TABLE IF NOT EXISTS Guilds (
 );
 
 CREATE TABLE IF NOT EXISTS GuildBlocks (
-	guild_id BIGINT UNSIGNED NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
+	guild_id BIGINT UNSIGNED NOT NULL,
 	user_id BIGINT UNSIGNED NOT NULL,
 	moderator_id BIGINT UNSIGNED, -- NULL if automatic
-	PRIMARY KEY (guild_id, user_id)
+	PRIMARY KEY (guild_id, user_id),
+	FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS guild_blocks_guild_id ON GuildBlocks (guild_id);
 CREATE INDEX IF NOT EXISTS guild_blocks_user_id  ON GuildBlocks (user_id);
 
 CREATE TABLE IF NOT EXISTS Channels (
 	id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-	guild_id BIGINT UNSIGNED NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
+	guild_id BIGINT UNSIGNED NOT NULL,
 	name VARCHAR(100) NOT NULL,
 	type TINYINT UNSIGNED NOT NULL,
 	block_exports BOOLEAN NOT NULL DEFAULT 0, -- 1 if exports are blocked
 
-	last_purge INT UNSIGNED NOT NULL DEFAULT UNIX_TIMESTAMP() -- The last time the channel was purged
+	last_purge INT UNSIGNED NOT NULL DEFAULT UNIX_TIMESTAMP(), -- The last time the channel was purged
+
+	FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS channels_guild_id  ON Channels (guild_id);
 CREATE INDEX IF NOT EXISTS channels_last_purge ON Channels (last_purge DESC);
@@ -103,12 +106,12 @@ CREATE TABLE IF NOT EXISTS Stickers (
 CREATE TABLE IF NOT EXISTS Messages (
     -- metadata IDs
     id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    guild_id BIGINT UNSIGNED NOT NULL REFERENCES Guilds(id),
-    channel_id BIGINT UNSIGNED NOT NULL REFERENCES Channels(id),
-    user_id BIGINT UNSIGNED NOT NULL REFERENCES Users(id),
+    guild_id BIGINT UNSIGNED NOT NULL,
+    channel_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
 
     content BLOB, -- either ASCII text or a wrapped key, refer to the encryption version to know which
-    sticker_id BIGINT UNSIGNED REFERENCES Stickers(id) ON DELETE SET NULL,
+    sticker_id BIGINT UNSIGNED,
     reply_to BIGINT UNSIGNED DEFAULT NULL, -- NULL if no reply, otherwise the message ID of the reply
     encryption_version TINYINT UNSIGNED DEFAULT NULL, -- future proofing
 
@@ -118,7 +121,12 @@ CREATE TABLE IF NOT EXISTS Messages (
 
     -- miscellaneous metadata
     length SMALLINT, -- The length of the original message (unencrypted)
-    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME( ((id >> 22) + 1420070400000) / 1000) ) VIRTUAL -- The time the message was created
+    created_at DATETIME GENERATED ALWAYS AS ( FROM_UNIXTIME( ((id >> 22) + 1420070400000) / 1000) ) VIRTUAL, -- The time the message was created
+
+    FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE CASCADE,
+    FOREIGN KEY (channel_id) REFERENCES Channels(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (sticker_id) REFERENCES Stickers(id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS messages_guild_id   ON Messages (guild_id);
 CREATE INDEX IF NOT EXISTS messages_channel_id ON Messages (channel_id);
@@ -161,17 +169,19 @@ CREATE INDEX IF NOT EXISTS interaction_logs_created_at ON InteractionLogs (creat
 
 CREATE TABLE IF NOT EXISTS Snapshots (
 	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-	guild_id BIGINT UNSIGNED NOT NULL REFERENCES Guilds(id) ON DELETE CASCADE,
+	guild_id BIGINT UNSIGNED NOT NULL,
 
 	type TINYINT UNSIGNED NOT NULL, -- import, automatic, manual, etc.
 	pinned BOOLEAN NOT NULL DEFAULT 0, -- 1 if the snapshot is pinned
 
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(3) -- 3 decimal places for milliseconds
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(3), -- 3 decimal places for milliseconds
+
+	FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS snapshots_guild_id ON Snapshots (guild_id);
 
 CREATE TABLE IF NOT EXISTS SnapshotRoles (
-	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
+	snapshot_id INT UNSIGNED NOT NULL,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the role was deleted
 
 	id BIGINT UNSIGNED NOT NULL, -- The ID of the role
@@ -182,13 +192,14 @@ CREATE TABLE IF NOT EXISTS SnapshotRoles (
 	permissions BIGINT UNSIGNED NOT NULL,
 	managed_by BIGINT,
 
-	PRIMARY KEY (snapshot_id, id)
+	PRIMARY KEY (snapshot_id, id),
+	FOREIGN KEY (snapshot_id) REFERENCES Snapshots(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS snapshot_roleID ON SnapshotRoles (id);
 
 
 CREATE TABLE IF NOT EXISTS SnapshotChannels (
-	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
+	snapshot_id INT UNSIGNED NOT NULL,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the channel was deleted
 
 	id BIGINT UNSIGNED NOT NULL,
@@ -203,18 +214,20 @@ CREATE TABLE IF NOT EXISTS SnapshotChannels (
     -- refer to typings in Typings/DatabaseTypes.ts
     permission_overwrites JSON NOT NULL CHECK (JSON_VALID(permission_overwrites)),
 
-	PRIMARY KEY (snapshot_id, id)
+	PRIMARY KEY (snapshot_id, id),
+	FOREIGN KEY (snapshot_id) REFERENCES Snapshots(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS snapshot_channelID ON SnapshotChannels (id);
 
 CREATE TABLE IF NOT EXISTS SnapshotBans (
-	snapshot_id INT UNSIGNED NOT NULL REFERENCES Snapshots(id) ON DELETE CASCADE,
+	snapshot_id INT UNSIGNED NOT NULL,
 	deleted BOOLEAN NOT NULL DEFAULT 0, -- 1 if the user was deleted
 
 	id BIGINT UNSIGNED NOT NULL,
 	reason TEXT,
 
-	PRIMARY KEY (snapshot_id, id)
+	PRIMARY KEY (snapshot_id, id),
+	FOREIGN KEY (snapshot_id) REFERENCES Snapshots(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS snapshot_bans_id ON SnapshotBans (snapshot_id);
 CREATE INDEX IF NOT EXISTS snapshot_bans_userID ON SnapshotBans (id);

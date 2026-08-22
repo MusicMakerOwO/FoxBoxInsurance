@@ -259,12 +259,14 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 			)
 		)
 
-		promises.push( BulkInsert( connection,
-			`INSERT INTO MessageHistory (created_at, guild_id, channel_id) VALUES (?, ?, ?)`,
-			// `filter( () => true )` removes all uninitialized entries regardless of their value
-			// No comparison needed, JS just simply skips them lol
-			messageHistory.filter( () => true ).map(x => [x.created_at, x.guild_id, x.channel_id])
-		));
+		await Promise.all(
+			await BulkInsert( connection,
+				`INSERT INTO MessageHistory (created_at, guild_id, channel_id) VALUES (?, ?, ?)`,
+				// `filter( () => true )` removes all uninitialized entries regardless of their value
+				// No comparison needed, JS just simply skips them lol
+				messageHistory.filter( () => true ).map(x => [x.created_at, x.guild_id, x.channel_id])
+			)
+		);
 
 
 		await connection.query('COMMIT');

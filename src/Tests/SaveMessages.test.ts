@@ -334,6 +334,40 @@ describe('SaveMessages', () => {
 			expect(insert.params[2]).toBe(BigInt(channelId));
 		});
 
+		it('awaits MessageHistory inserts before committing (regression: rows must not race COMMIT/release)', async () => {
+			const order: string[] = [];
+			const query = vi.fn(async (sql: string) => {
+				if (sql === 'COMMIT') order.push('commit');
+				return { affectedRows: 0n, insertId: 0n, warningStatus: 0 };
+			});
+			// A real PREPARE round-trips to the server, so its continuation lands a few
+			// microtask ticks after a plain query() - long enough for an un-awaited
+			// COMMIT to slip in ahead of it if the caller doesn't await the insert.
+			const prepare = vi.fn(async (sql: string) => {
+				await Promise.resolve();
+				await Promise.resolve();
+				await Promise.resolve();
+				return {
+					execute: vi.fn(async () => {
+						if (sql.includes('MessageHistory')) order.push('history-execute');
+						return { affectedRows: 0n };
+					}),
+					close: vi.fn()
+				};
+			});
+			const connection = { query, prepare };
+			GetGuild.mockResolvedValue(makeGuild(GUILD_FEATURES.MESSAGE_SAVING | GUILD_FEATURES.MESSAGE_HISTORY));
+			GetUser.mockResolvedValue(makeUser());
+			getConnection.mockResolvedValue(connection);
+
+			await MessageCreateHandler.execute(makeMessage({ id: '900000000000002001' }));
+			await MessageCreateHandler.execute(makeMessage({ id: '900000000000002002' }));
+			await MessageCreateHandler.execute(makeMessage({ id: '900000000000002003' }));
+			await ProcessMessages({ quiet: true });
+
+			expect(order).toEqual(['history-execute', 'history-execute', 'history-execute', 'commit']);
+		});
+
 		it('does not save message history for guilds without MESSAGE_HISTORY feature', async () => {
 			const connection = makeConnection();
 			GetGuild.mockResolvedValue(makeGuild(GUILD_FEATURES.MESSAGE_SAVING)); // no MESSAGE_HISTORY

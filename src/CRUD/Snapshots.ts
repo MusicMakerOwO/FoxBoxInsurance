@@ -147,12 +147,12 @@ export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<t
 	const connection = await Database.getConnection();
 	await connection.query('START TRANSACTION');
 
-	await connection.query(`
+	const insertResult = await connection.query(`
         INSERT INTO Snapshots (guild_id, type)
         VALUES (?, ?)
-	`, [guild.id, type]);
+	`, [guild.id, type]) as { insertId: bigint };
 
-	const snapshotID = await connection.query('SELECT MAX(id) as id FROM Snapshots WHERE guild_id = ?', [guild.id]).then(rows => rows[0]?.id) as SnapshotMetadata['id'] | null;
+	const snapshotID = insertResult.insertId ? Number(insertResult.insertId) : null;
 	if (!snapshotID) {
 		await connection.query(`ROLLBACK`);
 		Database.releaseConnection(connection);

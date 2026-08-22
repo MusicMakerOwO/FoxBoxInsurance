@@ -30,7 +30,7 @@ describe('ChannelPurge', () => {
 		getConnection.mockResolvedValue(connection);
 
 		const before = Date.now();
-		await ChannelPurge({ silent: true });
+		await ChannelPurge();
 
 		const expiredCall = connection.query.mock.calls.find(([sql]) => sql.includes('DELETE FROM Messages WHERE created_at'));
 		expect(expiredCall).toBeDefined();
@@ -48,7 +48,7 @@ describe('ChannelPurge', () => {
 		const connection = makeConnection([{ channel_id: 111n, message_count: 10050n }]);
 		getConnection.mockResolvedValue(connection);
 
-		await ChannelPurge({ silent: true });
+		await ChannelPurge();
 
 		const overflowCall = connection.query.mock.calls.find(([sql, params]) =>
 			sql.includes('DELETE FROM Messages') && sql.includes('LIMIT') && (params as unknown[])[0] === 111n
@@ -61,7 +61,7 @@ describe('ChannelPurge', () => {
 		const connection = makeConnection([{ channel_id: 222n, message_count: 10000n }]);
 		getConnection.mockResolvedValue(connection);
 
-		await ChannelPurge({ silent: true });
+		await ChannelPurge();
 
 		const overflowCall = connection.query.mock.calls.find(([sql, params]) =>
 			sql.includes('DELETE FROM Messages') && sql.includes('LIMIT') && (params as unknown[])[0] === 222n

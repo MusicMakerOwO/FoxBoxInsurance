@@ -119,7 +119,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ content: '' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0];
 		expect(insert).toBeDefined();
@@ -134,7 +134,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ authorBot: true, content: 'I am a bot' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		expect(findInserts(connection.calls, 'Messages')).toHaveLength(1);
 	});
@@ -146,7 +146,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ authorBot: true, ephemeral: true, content: 'hidden response' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		expect(findInserts(connection.calls, 'Messages')).toHaveLength(0);
 	});
@@ -158,7 +158,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ content: 'Hello world, no emojis here' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		const data = JSON.parse(insert.params[8] as string);
@@ -172,7 +172,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ content: 'Great job! \u{1F600}\u{1F389}' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		expect(insert.params[4]).toEqual(Buffer.from('Great job! \u{1F600}\u{1F389}', 'utf8'));
@@ -187,7 +187,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ content: 'Check this out <:pepe:123456789012345678>' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		const data = JSON.parse(insert.params[8] as string);
@@ -203,7 +203,7 @@ describe('SaveMessages', () => {
 		await MessageCreateHandler.execute(makeMessage({
 			sticker: { id: '999000000000000001', name: 'Cool Sticker', url: 'https://cdn.discordapp.com/stickers/999.png' }
 		}));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		expect(insert.params[6]).toBe(999000000000000001n); // sticker_id
@@ -221,7 +221,7 @@ describe('SaveMessages', () => {
 
 		const embed = { title: 'Full Embed', description: 'With everything', fields: [{ name: 'f1', value: 'v1' }] };
 		await MessageCreateHandler.execute(makeMessage({ embeds: [embed] }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		const data = JSON.parse(insert.params[8] as string);
@@ -236,7 +236,7 @@ describe('SaveMessages', () => {
 
 		const component = { type: 1, components: [{ type: 2, label: 'Click me', style: 1 }] };
 		await MessageCreateHandler.execute(makeMessage({ components: [component] }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		const data = JSON.parse(insert.params[8] as string);
@@ -251,7 +251,7 @@ describe('SaveMessages', () => {
 
 		const attachment = { id: '555000000000000001', name: 'image.png', url: 'https://cdn.discordapp.com/attachments/x/image.png', width: 100, height: 100 };
 		await MessageCreateHandler.execute(makeMessage({ attachments: [attachment] }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		const data = JSON.parse(insert.params[8] as string);
@@ -269,7 +269,7 @@ describe('SaveMessages', () => {
 			sticker: { id: '999000000000000002', name: 'Sticker', url: 'https://x' },
 			embeds: [{ title: 'x' }]
 		}));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		expect(insert.params[4]).toBeNull(); // content
@@ -286,7 +286,7 @@ describe('SaveMessages', () => {
 		getConnection.mockResolvedValue(connection);
 
 		await MessageCreateHandler.execute(makeMessage({ content: 'Should be redacted - user status unknown' }));
-		await ProcessMessages({ quiet: true });
+		await ProcessMessages();
 
 		const insert = findInserts(connection.calls, 'Messages')[0]!;
 		expect(insert.params[4]).toBeNull(); // content
@@ -301,7 +301,7 @@ describe('SaveMessages', () => {
 			getConnection.mockResolvedValue(connection);
 
 			await MessageCreateHandler.execute(makeMessage({}));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			expect(findInserts(connection.calls, 'MessageHistory')).toHaveLength(1);
 		});
@@ -314,7 +314,7 @@ describe('SaveMessages', () => {
 
 			await MessageCreateHandler.execute(makeMessage({ id: '900000000000001001' }));
 			await MessageCreateHandler.execute(makeMessage({ id: '900000000000001002' }));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			expect(findInserts(connection.calls, 'MessageHistory')).toHaveLength(2);
 		});
@@ -327,7 +327,7 @@ describe('SaveMessages', () => {
 			getConnection.mockResolvedValue(connection);
 
 			await MessageCreateHandler.execute(makeMessage({ guildId }));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			const insert = findInserts(connection.calls, 'MessageHistory')[0]!;
 			// columns: created_at, guild_id, channel_id
@@ -342,7 +342,7 @@ describe('SaveMessages', () => {
 			getConnection.mockResolvedValue(connection);
 
 			await MessageCreateHandler.execute(makeMessage({ channelId }));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			const insert = findInserts(connection.calls, 'MessageHistory')[0]!;
 			expect(insert.params[2]).toBe(BigInt(channelId));
@@ -377,7 +377,7 @@ describe('SaveMessages', () => {
 			await MessageCreateHandler.execute(makeMessage({ id: '900000000000002001' }));
 			await MessageCreateHandler.execute(makeMessage({ id: '900000000000002002' }));
 			await MessageCreateHandler.execute(makeMessage({ id: '900000000000002003' }));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			expect(order).toEqual(['history-execute', 'history-execute', 'history-execute', 'commit']);
 		});
@@ -389,7 +389,7 @@ describe('SaveMessages', () => {
 			getConnection.mockResolvedValue(connection);
 
 			await MessageCreateHandler.execute(makeMessage({}));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			expect(findInserts(connection.calls, 'MessageHistory')).toHaveLength(0);
 		});
@@ -401,7 +401,7 @@ describe('SaveMessages', () => {
 			getConnection.mockResolvedValue(connection);
 
 			await MessageCreateHandler.execute(makeMessage({}));
-			await ProcessMessages({ quiet: true });
+			await ProcessMessages();
 
 			expect(findInserts(connection.calls, 'MessageHistory')).toHaveLength(0);
 			// content saving is independent of MESSAGE_HISTORY - it should still happen

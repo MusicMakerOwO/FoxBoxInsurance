@@ -5,7 +5,7 @@ import { SimpleMessage } from "../../Typings/DatabaseTypes.js";
 
 const MAX_MESSAGES_PER_CHANNEL = 10_000n;
 
-export async function ChannelPurge(opts: { silent?: boolean } = {}): Promise<void> {
+export async function ChannelPurge(): Promise<void> {
 	const connection = await Database.getConnection();
 	// any messages older than 60 days
 	const expired =  new Date( Date.now() - SECONDS.DAY * 60 * 1000 );
@@ -40,8 +40,6 @@ export async function ChannelPurge(opts: { silent?: boolean } = {}): Promise<voi
 
 	await connection.query("COMMIT");
 	Database.releaseConnection(connection);
-
-	if (opts.silent) return;
 
 	// little hack to count the total number of channels in db without a dedicated query
 	Log('DELETE', `Checked ${channelMessageCounts.length + Number(emptyChannels)} channels`);

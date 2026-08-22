@@ -51,12 +51,7 @@ function QueueMessageForProcessing(message: Message<true>) {
 	}
 }
 
-export type ProcessOptions = {
-	/** Disables final log with timing */
-	quiet?: boolean;
-}
-
-export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> {
+export async function ProcessMessages(): Promise<void> {
 	timeout = undefined;
 
 	// clone the original queue, breaking reference
@@ -278,7 +273,7 @@ export async function ProcessMessages(opts: ProcessOptions = {}): Promise<void> 
 		Database.releaseConnection(connection);
 	}
 
-	if (!opts.quiet) Log('TRACE', `Inserted ${messageData.filter( () => true ).length} messages :D`);
+	Log('TRACE', `Inserted ${messageData.filter( () => true ).length} messages :D`);
 }
 
 async function BulkInsert(connection: PoolConnection, sql: string, rows: unknown[][]): Promise<Promise<unknown>[]> {

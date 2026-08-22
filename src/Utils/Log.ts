@@ -45,11 +45,17 @@ function GetTimestamp(): string {
 	return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+// Tests exercise a lot of error/warning paths on purpose; keep their output out of the way
+// by default. Set LOG_VERBOSE=1 to see it again while debugging a test.
+const SUPPRESS_LOGS = process.env.VITEST === 'true' && process.env.LOG_VERBOSE !== '1';
+
 function Log(type: keyof typeof LOG_TYPE, ... messages: unknown[]): void {
 	if (!LOG_TYPE[type]) {
 		console.error(`${COLOR.RED}Invalid log type: ${type}. Valid types are: ${Object.keys(LOG_TYPE).join(', ')}${COLOR.RESET}`);
 		return;
 	}
+
+	if (SUPPRESS_LOGS) return;
 
 	const logType = '[ ' + type.toUpperCase().padEnd(LONGEST_LOG_TYPE, ' ') + ' ]';
 

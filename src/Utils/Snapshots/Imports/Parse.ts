@@ -32,10 +32,10 @@ export async function BuildSnapshotFromImport(input: unknown): Promise<JSONSnaps
 	const parseImport = SnapshotParsers[data.version];
 	if (!parseImport) throw new Error('Unknown export version, unable to convert snapshot');
 
-	if (cache.has(data.id)) return cache.get(data.id)!;
-
 	const exportMetadata = await Database.query(`SELECT * FROM SnapshotExports WHERE id = ?`, [data.id]).then(x => x[0]) as SnapshotExportMetadata | null;
 	if (!exportMetadata || exportMetadata.revoked) throw new Error('Something went wrong trying to parse the snapshot');
+
+	if (cache.has(data.id)) return cache.get(data.id)!;
 
 	const str = JSON.stringify(data);
 	if (exportMetadata.length !== str.length) {

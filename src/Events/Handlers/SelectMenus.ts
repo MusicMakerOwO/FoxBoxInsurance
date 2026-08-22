@@ -24,7 +24,11 @@ export default {
 		}
 
 		const errorResponse = await CheckHandlerAccess(interaction, handler);
-		if (errorResponse) return interaction.editReply(errorResponse);
+		if (errorResponse) {
+			return interaction.deferred || interaction.replied
+				? interaction.editReply(errorResponse)
+				: interaction.reply(errorResponse);
+		}
 
 		const response = await handler.execute(interaction, client, args);
 		if (!response) return Log('WARN', 'No response received from handler - possible error?');

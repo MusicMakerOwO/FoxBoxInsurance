@@ -51,6 +51,14 @@ describe('SetUserTOSVersion', () => {
 
 		await expect(SetUserTOSVersion(1n, 3)).rejects.toThrow('User ID does not exist or cannot be accessed');
 	});
+
+	it('propagates a failed save instead of silently losing the accepted TOS version', async () => {
+		const user = makeUser({ terms_version_accepted: 1 });
+		GetUser.mockResolvedValue(user);
+		SaveUser.mockRejectedValue(new Error('db unavailable'));
+
+		await expect(SetUserTOSVersion(user.id, 3)).rejects.toThrow('db unavailable');
+	});
 });
 
 describe('CanUserAccessTOSFeature', () => {

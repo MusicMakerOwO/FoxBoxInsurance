@@ -7,15 +7,17 @@ import {PushStats} from "./PushStats.js";
 import {ChannelPurge} from "./ChannelPurge.js";
 import { EncryptMessages } from "./EncryptMessages.js";
 import { UploadFiles } from "./UploadFiles.js";
+import { PurgeInteractionLogs } from "./PurgeInteractionLogs.js";
 
 const TIME_BETWEEN_TASKS = SECONDS.MINUTE * 10; // 10 minutes
 
 const TASKS: [name: string, callback: () => Promise<void>, interval: number ][] = [
-    [ 'server_snapshots'  , SnapshotServers  , SECONDS.HOUR * 1000     ],
-    [ 'upload_files'      , UploadFiles      , SECONDS.HOUR * 1000     ],
-    [ 'upload_stats'      , PushStats        , SECONDS.HOUR * 1000     ],
-    [ 'encrypt_messages'  , EncryptMessages  , SECONDS.HOUR * 1000 * 2 ],
-    [ 'channel_purge'     , ChannelPurge     , SECONDS.WEEK * 1000     ],
+    [ 'server_snapshots'        , SnapshotServers       , SECONDS.HOUR * 1000     ],
+    [ 'upload_files'            , UploadFiles           , SECONDS.HOUR * 1000     ],
+    [ 'upload_stats'            , PushStats             , SECONDS.HOUR * 1000     ],
+    [ 'encrypt_messages'        , EncryptMessages       , SECONDS.HOUR * 1000 * 2 ],
+    [ 'channel_purge'           , ChannelPurge          , SECONDS.WEEK * 1000     ],
+    [ 'purge_interaction_logs'  , PurgeInteractionLogs  , SECONDS.WEEK * 1000     ],
 ] as const;
 
 const LONGEST_NAME_LENGTH = Math.max( ... TASKS.map(t => t[0].length) );

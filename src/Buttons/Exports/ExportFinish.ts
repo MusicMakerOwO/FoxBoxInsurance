@@ -6,6 +6,7 @@ import {UploadCDN} from "../../Utils/UploadCDN.js";
 import {Log} from "../../Utils/Log.js";
 import {Database} from "../../Database.js";
 import {ExportChannel} from "../../Utils/Parsers/Export.js";
+import {UploadFiles} from "../../Utils/Tasks/UploadFiles.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 
@@ -24,7 +25,7 @@ export default {
 		// flush all the caches first to make sure we have the latest data
 		// We don't want any missing assets or holes in the data
 		await DownloadAssets(); // download files
-		// await UploadFiles(); // upload files to the CDN
+		await UploadFiles(); // upload files to the CDN
 
 		let file: Awaited<ReturnType<typeof ExportChannel>>;
 		try {

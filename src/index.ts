@@ -18,6 +18,7 @@ import {client} from './Client.js';
 import {ProcessMessages} from "./Events/Messages.js";
 import {SaveGuild} from "./CRUD/Guilds.js";
 import {EncryptMessages} from "./Utils/Tasks/EncryptMessages.js";
+import {UploadFiles} from "./Utils/Tasks/UploadFiles.js";
 
 import * as Commands from "./Commands/index.js";
 import * as Buttons from "./Buttons/index.js";
@@ -43,12 +44,19 @@ for (const modal of Object.values(Modals)) {
 	client.modals.set(modal.customID, modal);
 }
 for (const event of Object.values(Events)) {
-	client.on(event.name, event.execute);
+	client[event.once ? 'once' : 'on'](event.name, event.execute);
 }
 
 const preloadEnd = process.hrtime.bigint();
 const preloadTime = Number(preloadEnd - preloadStart) / 1e6;
 Log('DEBUG', `Preload time: ${~~preloadTime}ms`);
+
+const pepper = process.env.PEPPER ? Buffer.from(process.env.PEPPER, 'base64') : null;
+if (!pepper || pepper.length !== 32) {
+	Log('ERROR', 'Missing or invalid PEPPER environment variable (must be 32 bytes, base64-encoded)');
+	// eslint-disable-next-line unicorn/no-process-exit
+	process.exit(1);
+}
 
 Log('INFO', `Logging in...`);
 void client.login(process.env.TOKEN);
@@ -82,6 +90,7 @@ async function Shutdown() {
 	Log('WARN', 'Flushing caches...');
 	await ProcessMessages().catch(ErrorCallback);
 	await DownloadAssets().catch(ErrorCallback);
+	await UploadFiles().catch(ErrorCallback);
 
 	Log('WARN', 'Encrypting messages...');
 	await EncryptMessages().catch(ErrorCallback);

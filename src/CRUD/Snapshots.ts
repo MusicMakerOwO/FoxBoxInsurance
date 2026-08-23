@@ -15,6 +15,7 @@ import { ObjectValues } from "../Typings/HelperTypes.js";
 import { PoolConnection } from "mariadb";
 import { CreateSnapshotDiff } from "../Utils/Snapshots/GuildDiff.js";
 import { BuildSnapshotComparison } from "../Utils/Snapshots/BuildSnapshotComparison.js";
+import { GenerateRandomID } from "../Utils/GenerateRandomID.js";
 
 
 export type Snapshot = SnapshotMetadata & {
@@ -343,22 +344,11 @@ export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']): Promis
 }
 
 
-// reduced character set to help with confusion, ie O vs 0 or I vs l
-const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';
-
-async function GenerateExportID(connection: PoolConnection, attempts = 5): Promise<string> {
-	if (attempts <= 0) throw new Error('Failed to generate snapshot ID');
-	// XXXX-XXXX-XXXX-XXXX
-	const id = [];
-	for (let i = 0; i < 4; i++) {
-		for (let j = 0; j < 4; j++) {
-			id.push(chars[Math.floor(Math.random() * chars.length)]);
-		}
-		if (i !== 3) id.push('-');
-	}
-	const idString = id.join('');
-	const exists = await connection.query('SELECT * FROM SnapshotExports WHERE id = ? LIMIT 1', [idString]).then(x => x[0]);
-	return exists ? GenerateExportID(connection, attempts - 1) : idString;
+async function GenerateExportID(connection: PoolConnection): Promise<string> {
+	return GenerateRandomID(connection, async (c, id) => {
+		const exists = await c.query('SELECT * FROM SnapshotExports WHERE id = ? LIMIT 1', [id]).then(x => x[0]);
+		return Boolean(exists);
+	});
 }
 
 export async function ExportSnapshot(snapshotID: SnapshotMetadata['id']): Promise<JSONSnapshot> {

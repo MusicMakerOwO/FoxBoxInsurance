@@ -16,6 +16,7 @@ import { GetUserBulk } from "../../CRUD/Users.js";
 import { GetAssetBulk } from "../../CRUD/Assets.js";
 import { GetStickerBulk } from "../../CRUD/Stickers.js";
 import { GetEmojiBulk } from "../../CRUD/Emojis.js";
+import { GenerateRandomID } from "../GenerateRandomID.js";
 import { createHash } from "node:crypto";
 import { JSONReplacer, JSONStringify } from "../../JSON.js";
 import { readFileSync } from "node:fs";
@@ -74,21 +75,11 @@ export type ExportOptions = {
 	messageCount: number;
 }
 
-const chars = 'ABCDEFGHKLMNPQRSTVWXYZ23456789';
-
-async function GenerateExportID(connection: PoolConnection, attempts = 5): Promise<string> {
-	if (attempts <= 0) throw new Error('Failed to generate export ID');
-	// XXXX-XXXX-XXXX-XXXX
-	const id = [];
-	for (let i = 0; i < 4; i++) {
-		for (let j = 0; j < 4; j++) {
-			id.push(chars[Math.floor(Math.random() * chars.length)]);
-		}
-		if (i !== 3) id.push('-');
-	}
-	const idString = id.join('');
-	const [exists] = await connection.query('SELECT id FROM Exports WHERE id = ?', [idString]);
-	return exists ? GenerateExportID(connection, attempts - 1) : idString;
+async function GenerateExportID(connection: PoolConnection): Promise<string> {
+	return GenerateRandomID(connection, async (c, id) => {
+		const [exists] = await c.query('SELECT id FROM Exports WHERE id = ?', [id]);
+		return Boolean(exists);
+	});
 }
 
 type ExportContext = {

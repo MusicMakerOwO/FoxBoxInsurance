@@ -10,6 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      # Throwaway value used only to satisfy the encryption tests in this ephemeral CI environment - not a real secret
       PEPPER: ftOIKjYGK38MekzrwDoWqRjTDulOCTXuG4LOzI9jOQg=
 
     steps:

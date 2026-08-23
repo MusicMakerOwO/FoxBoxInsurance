@@ -6,7 +6,7 @@ import unicorn from "eslint-plugin-unicorn";
 export default defineConfig(
 	// Ignore files not in the TypeScript project
 	{
-		ignores: ["scripts/**", "dist/**", "build/**", "node_modules/**", "examples/**", "vitest.config.ts", "eslint.config.ts", "tsup.config.ts", "UploadCache/**"],
+		ignores: ["build/**", "node_modules/**", "vitest.config.ts", "eslint.config.ts", "UploadCache/**"],
 	},
 
 	// Base JS recommended rules

@@ -1,5 +1,6 @@
-- [ ] Harden all public facing snapshot actions to check guild ID
+- [x] Harden all public facing snapshot actions to check guild ID
 	- Referring to buttons, commands, etc.
+	- Fixed: `Buttons/Snapshots/Export.ts` now compares `snapshot.guild_id` against `interaction.guildId`; the entire import preview/confirm flow (`Commands/Snapshot.ts`, `Buttons/Imports/Confirm.ts`, `Buttons/Imports/View/*.ts`) now reads exclusively through `GetImportsForGuild` (guild-scoped) instead of the unscoped `client.importCache`, which has been removed.
 - [x] Snapshot imports expire in 10 minutes but users are told 60 minutes
 - [x] `src/CRUD/Messages.ts`: `GetMessageBulk()` does not pass in message IDs to query
 - [x] `src/CRUD/*`: Searches returning nothing should not permanently invalidate future searches

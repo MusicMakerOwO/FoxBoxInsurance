@@ -23,7 +23,7 @@ export default {
 		if (isNaN(page) || page < 0) throw new Error('Invalid page number provided.');
 
 		const availableImports = GetImportsForGuild(interaction.guildId!);
-		const importData = availableImports.get(importID) ?? client.importCache.get(importID);
+		const importData = availableImports.get(importID);
 		if (!importData) return {
 			embeds: [{
 				color: COLOR.ERROR,

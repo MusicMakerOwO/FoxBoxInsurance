@@ -1,6 +1,6 @@
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
 import {COLOR, EMOJI, SECONDS} from "../../Utils/Constants.js";
-import {SaveImportForGuild} from "../../CRUD/SnapshotImports.js";
+import {GetImportsForGuild, SaveImportForGuild} from "../../CRUD/SnapshotImports.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
@@ -15,7 +15,7 @@ export default {
 	execute       : async function(interaction, client, args) {
 		const importID = args[0];
 
-		const importData = client.importCache.get(importID);
+		const importData = GetImportsForGuild(interaction.guildId!).get(importID);
 		if (!importData) {
 			return {
 				embeds: [{

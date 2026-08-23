@@ -1,4 +1,4 @@
-import { COLOR, EMOJI, RandomLoadingEmbed, SECONDS, SNAPSHOT_TYPE } from "../Utils/Constants.js";
+import { COLOR, EMOJI, RandomLoadingEmbed, SNAPSHOT_TYPE } from "../Utils/Constants.js";
 import {ButtonInteraction, SlashCommandBuilder} from "discord.js";
 import {CommandHandler} from "../Typings/HandlerTypes.js";
 import {GetGuild} from "../CRUD/Guilds.js";
@@ -9,6 +9,7 @@ import {Log} from "../Utils/Log.js";
 import { TOS_FEATURES } from "../TOSConstants.js";
 import { DiscordPermissions } from "../Utils/DiscordConstants.js";
 import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures.js";
+import { SaveImportForGuild } from "../CRUD/SnapshotImports.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -204,7 +205,7 @@ ${error.message}
 				return {};
 			}
 
-			client.importCache.set(importData.id, importData, SECONDS.HOUR * 1000);
+			SaveImportForGuild(interaction.guildId!, importData);
 
 			const importSnapshot = client.buttons.get('import')!;
 			return importSnapshot.execute(interaction as unknown as ButtonInteraction, client, [importData.id]);

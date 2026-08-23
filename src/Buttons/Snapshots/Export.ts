@@ -1,16 +1,11 @@
 import {COLOR} from "../../Utils/Constants.js";
-import {Database} from "../../Database.js";
 import {ExportSnapshot, GetSnapshot} from "../../CRUD/Snapshots.js";
 import {SnapshotParsers} from "../../Utils/Snapshots/Imports/Parse.js";
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
-import {JSONReplacer} from "../../JSON.js";
-import {createHash} from "node:crypto";
 import {UploadCDN} from "../../Utils/UploadCDN.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
-
-const HASH_ALGORITHM = 'sha256';
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -25,7 +20,7 @@ export default {
 		if (isNaN(snapshotID) || snapshotID < 1) throw new Error(`Invalid snapshot ID provided: ${args[0]}`);
 
 		const snapshot = await GetSnapshot(snapshotID);
-		if (!snapshot) {
+		if (!snapshot || snapshot.guild_id !== BigInt(interaction.guildId!)) {
 			return {
 				embeds: [{
 					color: COLOR.ERROR,
@@ -35,34 +30,11 @@ export default {
 			}
 		}
 
-		const data = await ExportSnapshot(snapshotID);
+		const { data, serialized: serializedData } = await ExportSnapshot(snapshotID, BigInt(interaction.user.id));
 		if (!SnapshotParsers[data.version]) {
 			// sanity check, should never happen
 			throw new Error(`No parse function registered for snapshot version ${data.version}`);
 		}
-
-		const serializedData = JSON.stringify(data, JSONReplacer);
-
-		const hash = createHash(HASH_ALGORITHM).update(serializedData).digest('hex');
-
-		void Database.query(`
-			INSERT INTO SnapshotExports (
-				id,
-				snapshot_id, guild_id, user_id,
-				version, length,
-				hash, algorithm
-			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		`, [
-			data.id,
-			snapshotID,
-			BigInt(interaction.guildId!),
-			BigInt(interaction.user.id),
-			data.version,
-			serializedData.length,
-			hash,
-			HASH_ALGORITHM
-		]);
 
 		const lookup = await UploadCDN(`snapshot-${snapshotID}.json`, Buffer.from(serializedData, 'utf8'), 1); // 1 url = 1 download
 

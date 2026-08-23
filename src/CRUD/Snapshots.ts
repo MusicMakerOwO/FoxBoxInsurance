@@ -16,6 +16,8 @@ import { PoolConnection } from "mariadb";
 import { CreateSnapshotDiff } from "../Utils/Snapshots/GuildDiff.js";
 import { BuildSnapshotComparison } from "../Utils/Snapshots/BuildSnapshotComparison.js";
 import { GenerateRandomID } from "../Utils/GenerateRandomID.js";
+import { JSONReplacer } from "../JSON.js";
+import { createHash } from "node:crypto";
 
 
 export type Snapshot = SnapshotMetadata & {
@@ -344,6 +346,8 @@ export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']): Promis
 }
 
 
+const EXPORT_HASH_ALGORITHM = 'sha256';
+
 async function GenerateExportID(connection: PoolConnection): Promise<string> {
 	return GenerateRandomID(connection, async (c, id) => {
 		const exists = await c.query('SELECT * FROM SnapshotExports WHERE id = ? LIMIT 1', [id]).then(x => x[0]);
@@ -351,28 +355,41 @@ async function GenerateExportID(connection: PoolConnection): Promise<string> {
 	});
 }
 
-export async function ExportSnapshot(snapshotID: SnapshotMetadata['id']): Promise<JSONSnapshot> {
+export async function ExportSnapshot(snapshotID: SnapshotMetadata['id'], userID: bigint): Promise<{ data: JSONSnapshot, serialized: string }> {
 	const snapshotData = await GetSnapshot(snapshotID);
 	if (!snapshotData) throw new Error('Unknown snapshot ID');
 
 	const connection = await Database.getConnection();
-	const exportID = await GenerateExportID(connection).catch(() => null);
-	if (!exportID) {
+	try {
+		const exportID = await GenerateExportID(connection).catch(() => null);
+		if (!exportID) throw new Error('Failed to generate export ID');
+
+		const snapshotExport: JSONSnapshot = {
+			id         : exportID,
+			version    : 2,
+			type       : SNAPSHOT_TYPE.IMPORT,
+			channels   : Array.from(snapshotData.channels.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted'])),
+			roles      : Array.from(snapshotData.roles.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted'])),
+			bans       : Array.from(snapshotData.bans.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted']))
+		}
+
+		const serialized = JSON.stringify(snapshotExport, JSONReplacer);
+		const hash = createHash(EXPORT_HASH_ALGORITHM).update(serialized).digest('hex');
+
+		await connection.query(`
+			INSERT INTO SnapshotExports (
+				id, snapshot_id, guild_id, user_id, version, length, hash, algorithm
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`, [
+			exportID, snapshotID, snapshotData.guild_id, userID,
+			snapshotExport.version, serialized.length, hash, EXPORT_HASH_ALGORITHM
+		]);
+
+		return { data: snapshotExport, serialized };
+	} finally {
 		Database.releaseConnection(connection);
-		throw new Error('Failed to generate export ID');
 	}
-
-	const snapshotExport = {
-		id         : exportID,
-		version    : 2,
-		type       : SNAPSHOT_TYPE.IMPORT,
-		channels   : Array.from(snapshotData.channels.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted'])),
-		roles      : Array.from(snapshotData.roles.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted'])),
-		bans       : Array.from(snapshotData.bans.values()).map(x => OmitKeys(x, ['snapshot_id', 'deleted']))
-	}
-
-	Database.releaseConnection(connection);
-	return snapshotExport;
 }
 
 export async function IsSnapshotQueuedForDeletion(snapshotID: SnapshotMetadata['id']): Promise<boolean> {

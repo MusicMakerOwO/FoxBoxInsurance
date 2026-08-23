@@ -15,7 +15,8 @@ import {
 	SetSnapshotPinStatus,
 	IsSnapshotQueuedForDeletion,
 	IsSnapshotDeletable,
-	GetSnapshot
+	GetSnapshot,
+	ExportSnapshot
 } from '../CRUD/Snapshots.js';
 
 // Snapshot/guild IDs must stay disjoint across tests - GetSnapshot/ResolveGuildFromSnapshotID
@@ -37,6 +38,12 @@ function seed(snapshots: SnapshotRow[]) {
 		}
 		if (sql.includes('FROM SnapshotRoles') || sql.includes('FROM SnapshotChannels') || sql.includes('FROM SnapshotBans')) {
 			return [];
+		}
+		if (sql.includes('FROM SnapshotExports')) {
+			return [];
+		}
+		if (sql.includes('INSERT INTO SnapshotExports')) {
+			return { affectedRows: 1n };
 		}
 		throw new Error(`Unhandled mock query: ${sql}`);
 	});
@@ -119,5 +126,19 @@ describe('Snapshots', () => {
 		seed([{ id: 701, guild_id: 106n, type: 0, pinned: 0 }]);
 
 		expect(await GetSnapshot(999)).toBeNull();
+	});
+
+	it('persists the SnapshotExports row before returning, so the export ID is immediately importable', async () => {
+		seed([{ id: 901, guild_id: 901n, type: 0, pinned: 0 }]);
+
+		const { data, serialized } = await ExportSnapshot(901, 12345n);
+
+		expect(data.id).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+		expect(JSON.parse(serialized).id).toBe(data.id);
+
+		const insertCall = query.mock.calls.find(([sql]) => sql.includes('INSERT INTO SnapshotExports'));
+		expect(insertCall).toBeDefined();
+		const [, params] = insertCall!;
+		expect(params).toEqual([data.id, 901, 901n, 12345n, 2, serialized.length, expect.any(String), 'sha256']);
 	});
 });

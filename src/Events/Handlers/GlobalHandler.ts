@@ -31,7 +31,6 @@ export default {
 					type = 'command';
 				} else {
 					Log('INFO', `${interaction.user.tag} (${interaction.user.id}) > :${interaction.commandName}:`);
-					client.emit('context-interaction', interaction);
 					type = 'context';
 				}
 				break;

@@ -28,34 +28,70 @@ export async function SaveUser(user: User | SimpleUser): Promise<void> {
 	}
 }
 
-export async function GetUser(id: string | bigint): Promise<SimpleUser | null | undefined> {
-	id = BigInt(id);
-	if (cache.has(id)) return cache.get(id)!;
+export async function GetUser(id: string | bigint): Promise<SimpleUser | null> {
+	return (await GetUserBulk([id])).get(BigInt(id)) ?? null;
+}
 
-	const stringID = id.toString();
-	if (INVALID_USER_IDS.has(stringID)) return null;
+/** Resolves many users, batching the DB lookup into a single query for whatever isn't already cached or in Discord's own cache. */
+export async function GetUserBulk(ids: (string | bigint)[]): Promise<Map<SimpleUser['id'], SimpleUser | null >> {
+	const result = new Map<SimpleUser['id'], SimpleUser | null>();
+	const unresolved = new Set<bigint>();
 
-	if (client.users.cache.has(stringID)) {
-		const cached = client.users.cache.get(stringID)!;
-		await SaveUser(cached);
-		return cache.get(id);
+	for (const rawID of new Set(ids.map(x => BigInt(x)))) {
+		if (cache.has(rawID)) {
+			result.set(rawID, cache.get(rawID)!);
+			continue;
+		}
+		if (INVALID_USER_IDS.has(rawID.toString())) {
+			result.set(rawID, null);
+			continue;
+		}
+		unresolved.add(rawID);
 	}
 
-	const dbUser = await Database.query('SELECT * FROM Users WHERE id = ?', [id]).then(x => x[0]) as SimpleUser | null;
-	if (dbUser) {
-		cache.set(dbUser.id, dbUser);
-		return dbUser;
+	if (unresolved.size === 0) return result;
+
+	const stillUnresolved = new Set<bigint>();
+	for (const id of unresolved) {
+		const stringID = id.toString();
+		if (client.users.cache.has(stringID)) {
+			await SaveUser(client.users.cache.get(stringID)!);
+			result.set(id, cache.get(id));
+		} else {
+			stillUnresolved.add(id);
+		}
 	}
 
-	const fetched = await client.users.fetch(stringID).catch( () => null)
-	if (!fetched) {
-		INVALID_USER_IDS.add(stringID);
-		setTimeout( () => INVALID_USER_IDS.delete(stringID),  SECONDS.MINUTE * 10 * 1000 ).unref();
-		return null;
+	if (stillUnresolved.size > 0) {
+		const idArray = [... stillUnresolved];
+		const dbUsers = await Database.query(
+			`SELECT * FROM Users WHERE id IN (${'?,'.repeat(idArray.length - 1)}?)`,
+			idArray
+		) as SimpleUser[];
+
+		for (const user of dbUsers) {
+			cache.set(user.id, user);
+			stillUnresolved.delete(user.id);
+			result.set(user.id, user);
+		}
 	}
 
-	await SaveUser(fetched);
-	return cache.get(id);
+	if (stillUnresolved.size > 0) {
+		await Promise.all([... stillUnresolved].map(async id => {
+			const stringID = id.toString();
+			const fetched = await client.users.fetch(stringID).catch( () => null);
+			if (!fetched) {
+				INVALID_USER_IDS.add(stringID);
+				setTimeout( () => INVALID_USER_IDS.delete(stringID),  SECONDS.MINUTE * 10 * 1000 ).unref();
+				result.set(id, null);
+				return;
+			}
+			await SaveUser(fetched);
+			result.set(id, cache.get(id));
+		}));
+	}
+
+	return result;
 }
 
 /**

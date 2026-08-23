@@ -12,10 +12,10 @@ import { OmitKeys } from "../Omit.js";
 import { PoolConnection } from "mariadb";
 import { Database } from "../../Database.js";
 import { ObjectValues } from "../../Typings/HelperTypes.js";
-import { GetUser } from "../../CRUD/Users.js";
-import { GetAsset } from "../../CRUD/Assets.js";
-import { GetSticker } from "../../CRUD/Stickers.js";
-import { GetEmoji } from "../../CRUD/Emojis.js";
+import { GetUserBulk } from "../../CRUD/Users.js";
+import { GetAssetBulk } from "../../CRUD/Assets.js";
+import { GetStickerBulk } from "../../CRUD/Stickers.js";
+import { GetEmojiBulk } from "../../CRUD/Emojis.js";
 import { createHash } from "node:crypto";
 import { JSONReplacer, JSONStringify } from "../../JSON.js";
 import { readFileSync } from "node:fs";
@@ -190,32 +190,34 @@ export async function ExportChannel(options: ExportOptions): Promise<{
 		}
 	}
 
-	for (const userID of userIDs) {
-		const user = await GetUser(userID);
+	const [users, stickers, emojis, assets] = await Promise.all([
+		GetUserBulk   ([ ... userIDs    ]),
+		GetStickerBulk([ ... stickerIDs ]),
+		GetEmojiBulk  ([ ... emojiIDs   ]),
+		GetAssetBulk  ([ ... assetIDs   ])
+	]);
+
+	for (const [userID, user] of users) {
 		context.users.set(userID, user ? {
 			id      : user.id,
 			username: user.username,
 			bot     : user.bot
 		} : null);
 	}
-	for (const stickerID of stickerIDs) {
-		const sticker = await GetSticker(stickerID);
+	for (const [stickerID, sticker] of stickers) {
 		context.stickers.set(stickerID, sticker ? {
 			id  : sticker.id,
 			name: sticker.name
 		} : null);
 	}
-	for (const emojiID of emojiIDs) {
-		const emoji = await GetEmoji(emojiID);
+	for (const [emojiID, emoji] of emojis) {
 		context.emojis.set(emojiID, emoji ? {
 			id      : emoji.id,
 			name    : emoji.name,
 			animated: emoji.animated
 		} : null);
 	}
-
-	for (const assetID of assetIDs) {
-		const asset = await GetAsset(assetID);
+	for (const [assetID, asset] of assets) {
 		context.assets.set(assetID, asset ? {
 			discord_id : asset.discord_id,
 			type       : asset.type,

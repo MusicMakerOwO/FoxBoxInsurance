@@ -8,17 +8,17 @@ const { getConnection, releaseConnection } = vi.hoisted(() => ({
 }));
 vi.mock('../Database.js', () => ({ Database: { getConnection, releaseConnection } }));
 
-const { GetUser } = vi.hoisted(() => ({ GetUser: vi.fn() }));
-vi.mock('../CRUD/Users.js', () => ({ GetUser }));
+const { GetUserBulk } = vi.hoisted(() => ({ GetUserBulk: vi.fn() }));
+vi.mock('../CRUD/Users.js', () => ({ GetUserBulk }));
 
-const { GetSticker } = vi.hoisted(() => ({ GetSticker: vi.fn() }));
-vi.mock('../CRUD/Stickers.js', () => ({ GetSticker }));
+const { GetStickerBulk } = vi.hoisted(() => ({ GetStickerBulk: vi.fn() }));
+vi.mock('../CRUD/Stickers.js', () => ({ GetStickerBulk }));
 
-const { GetEmoji } = vi.hoisted(() => ({ GetEmoji: vi.fn() }));
-vi.mock('../CRUD/Emojis.js', () => ({ GetEmoji }));
+const { GetEmojiBulk } = vi.hoisted(() => ({ GetEmojiBulk: vi.fn() }));
+vi.mock('../CRUD/Emojis.js', () => ({ GetEmojiBulk }));
 
-const { GetAsset } = vi.hoisted(() => ({ GetAsset: vi.fn() }));
-vi.mock('../CRUD/Assets.js', () => ({ GetAsset }));
+const { GetAssetBulk } = vi.hoisted(() => ({ GetAssetBulk: vi.fn() }));
+vi.mock('../CRUD/Assets.js', () => ({ GetAssetBulk }));
 
 const { ResolveUserKeyBulk } = vi.hoisted(() => ({ ResolveUserKeyBulk: vi.fn() }));
 vi.mock('../Services/UserEncryptionKeys.js', () => ({ ResolveUserKeyBulk }));
@@ -117,7 +117,7 @@ function baseFixture(): Fixture {
 function setupMocks(fixture: Fixture) {
 	getConnection.mockResolvedValue(makeConnection(fixture));
 
-	GetUser.mockImplementation(async (id: bigint) => {
+	GetUserBulk.mockImplementation(async (ids: bigint[]) => {
 		const users: Record<string, SimpleUser> = {
 			[RELEVANT_USER_A.toString()]: {
 				id: RELEVANT_USER_A, username: 'alice', bot: 0, terms_version_accepted: 3,
@@ -128,24 +128,22 @@ function setupMocks(fixture: Fixture) {
 				wrapped_key: null, rotation_hour: 5, opt_out_collection: 0
 			}
 		};
-		return users[id.toString()] ?? null;
+		return new Map(ids.map(id => [id, users[id.toString()] ?? null]));
 	});
 
-	GetEmoji.mockImplementation(async (id: bigint) => {
-		if (id === RELEVANT_EMOJI) {
-			return { id: RELEVANT_EMOJI, name: 'wave', animated: 0, internal_note: 'should not leak' } as unknown as SimpleEmoji;
-		}
-		return null;
+	GetEmojiBulk.mockImplementation(async (ids: bigint[]) => {
+		return new Map(ids.map(id => [id, id === RELEVANT_EMOJI
+			? { id: RELEVANT_EMOJI, name: 'wave', animated: 0, internal_note: 'should not leak' } as unknown as SimpleEmoji
+			: null]));
 	});
 
-	GetSticker.mockImplementation(async (id: bigint) => {
-		if (id === RELEVANT_STICKER) {
-			return { id: RELEVANT_STICKER, name: 'Cool Sticker', internal_note: 'should not leak' } as unknown as SimpleSticker;
-		}
-		return null;
+	GetStickerBulk.mockImplementation(async (ids: bigint[]) => {
+		return new Map(ids.map(id => [id, id === RELEVANT_STICKER
+			? { id: RELEVANT_STICKER, name: 'Cool Sticker', internal_note: 'should not leak' } as unknown as SimpleSticker
+			: null]));
 	});
 
-	GetAsset.mockResolvedValue(null);
+	GetAssetBulk.mockImplementation(async (ids: bigint[]) => new Map(ids.map(id => [id, null])));
 	ResolveUserKeyBulk.mockResolvedValue(new Map());
 }
 
@@ -157,10 +155,10 @@ async function exportJSON(overrides: Partial<ExportOptions> = {}): Promise<JSONE
 beforeEach(() => {
 	getConnection.mockReset();
 	releaseConnection.mockReset();
-	GetUser.mockReset();
-	GetSticker.mockReset();
-	GetEmoji.mockReset();
-	GetAsset.mockReset();
+	GetUserBulk.mockReset();
+	GetStickerBulk.mockReset();
+	GetEmojiBulk.mockReset();
+	GetAssetBulk.mockReset();
 	ResolveUserKeyBulk.mockReset();
 });
 
@@ -309,7 +307,7 @@ describe('ExportChannel', () => {
 		const result = await exportJSON();
 
 		expect(Object.keys(result.users).sort()).toEqual([RELEVANT_USER_A.toString(), RELEVANT_USER_B.toString()].sort());
-		expect(GetUser).not.toHaveBeenCalledWith(UNRELATED_USER);
+		expect(GetUserBulk.mock.calls[0]![0]).not.toContain(UNRELATED_USER);
 	});
 
 	it('should only export public data for users', async () => {
@@ -324,7 +322,7 @@ describe('ExportChannel', () => {
 		const result = await exportJSON();
 
 		expect(Object.keys(result.emojis)).toEqual([RELEVANT_EMOJI.toString()]);
-		expect(GetEmoji).not.toHaveBeenCalledWith(UNRELATED_EMOJI);
+		expect(GetEmojiBulk.mock.calls[0]![0]).not.toContain(UNRELATED_EMOJI);
 	});
 
 	it('should only export public data for emojis', async () => {
@@ -339,7 +337,7 @@ describe('ExportChannel', () => {
 		const result = await exportJSON();
 
 		expect(Object.keys(result.stickers)).toEqual([RELEVANT_STICKER.toString()]);
-		expect(GetSticker).not.toHaveBeenCalledWith(UNRELATED_STICKER);
+		expect(GetStickerBulk.mock.calls[0]![0]).not.toContain(UNRELATED_STICKER);
 	});
 
 	it('should only export public data for sticker', async () => {

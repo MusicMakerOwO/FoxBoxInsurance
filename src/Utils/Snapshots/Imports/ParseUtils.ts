@@ -11,7 +11,7 @@ export function ValidNumber(x: number, opts: Partial<NumberOptions> = {}): boole
 	if (x < Number.MIN_SAFE_INTEGER) return false;
 	if (opts.min !== undefined && x < opts.min) return false;
 	if (opts.max !== undefined && x > opts.max) return false;
-	if (opts.allow_decimals === false && !Number.isInteger(x)) return false;
+	if (opts.allow_decimals !== true && !Number.isInteger(x)) return false;
 	return true;
 }
 

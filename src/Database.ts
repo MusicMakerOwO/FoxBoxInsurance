@@ -59,12 +59,13 @@ class DatabaseWrapper {
 		}
 	}
 
-	async transaction(callback: (connection: PoolConnection) => Awaitable<void>) {
+	async transaction<T = void>(callback: (connection: PoolConnection) => Awaitable<T>): Promise<T> {
 		const connection = await this.getConnection();
 		try {
 			await connection.beginTransaction();
-			await callback(connection);
+			const result = await callback(connection);
 			await connection.commit();
+			return result;
 		} catch (error) {
 			await connection.rollback();
 			throw error;

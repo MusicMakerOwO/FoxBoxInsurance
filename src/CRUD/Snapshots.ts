@@ -141,22 +141,15 @@ export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<t
 	const snapshotData = await BuildSnapshotComparison(lastSnapshot);
 	const serverDiff = CreateSnapshotDiff(snapshotData, guildData);
 
-	const connection = await Database.getConnection();
-	await connection.query('START TRANSACTION');
-
-	const insertResult = await connection.query(`
+	return Database.transaction(async (connection) => {
+		const insertResult = await connection.query(`
         INSERT INTO Snapshots (guild_id, type)
         VALUES (?, ?)
-	`, [guild.id, type]) as { insertId: bigint };
+		`, [guild.id, type]) as { insertId: bigint };
 
-	const snapshotID = insertResult.insertId ? Number(insertResult.insertId) : null;
-	if (!snapshotID) {
-		await connection.query(`ROLLBACK`);
-		Database.releaseConnection(connection);
-		throw new Error('Snapshot not found after insertion - Is this within a transaction?');
-	}
+		const snapshotID = insertResult.insertId ? Number(insertResult.insertId) : null;
+		if (!snapshotID) throw new Error('Snapshot not found after insertion - Is this within a transaction?');
 
-	try {
 		const promiseQueue: Promise<unknown>[] = [];
 
 		if (serverDiff.roles.size > 0) promiseQueue.push(
@@ -207,17 +200,10 @@ export async function CreateSnapshot(guild: AnonymousGuild, type: ObjectValues<t
 
 		await Promise.all(promiseQueue);
 
-		await connection.query('COMMIT');
-
 		if (process.env.DEV_MODE) Log('TRACE', `Snapshot #${snapshotID} created for ${guild.name} (${guild.id})`);
 
 		return snapshotID;
-	} catch (error) {
-		await connection.query('ROLLBACK');
-		throw error;
-	} finally {
-		Database.releaseConnection(connection);
-	}
+	});
 }
 
 export async function DeleteSnapshot(snapshotID: SnapshotMetadata['id']): Promise<void> {

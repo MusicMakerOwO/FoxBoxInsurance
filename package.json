@@ -8,7 +8,7 @@
 		"discord-api-types": "^0.38.41",
 		"discord.js": "^14.25.1",
 		"dotenv": "^17.4.2",
-		"html-minifier-next": "^6.2.11",
+		"html-minifier-next": "^8.1.0",
 		"mariadb": "^3.4.5",
 		"source-map-support": "^0.5.21"
 	},
@@ -22,7 +22,6 @@
 		"db-setup": "node build/DatabaseSetup.js"
 	},
 	"devDependencies": {
-		"@eslint/core": "^1.2.1",
 		"@eslint/js": "^10.0.1",
 		"@types/node": "^25.3.5",
 		"@typescript/native-preview": "^7.0.0-dev.20260615.1",

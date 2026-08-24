@@ -195,82 +195,73 @@ export async function ProcessMessages(): Promise<void> {
 		})
 	}
 
-	const connection = await Database.getConnection();
-
-	await connection.query('BEGIN');
-
 	try {
+		await Database.transaction(async (connection) => {
+			const promises: Promise<unknown>[] = [];
 
-		const promises: Promise<unknown>[] = [];
-
-		promises.push( BulkInsert( connection,
-			`INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
-			Array.from(guilds.values()).map( x => [
-				BigInt(x.id), x.name, Object.values(GUILD_FEATURES).reduce((a, b) => a | b, 0),
-			])
-		));
-		promises.push( BulkInsert( connection,
-			`INSERT INTO Channels (id, guild_id, name, type) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
-			Array.from(channels.values()).map( x => [
-				BigInt(x.id), BigInt(x.guildId), x.name, x.type
-			])
-		));
-		promises.push( BulkInsert( connection,
-			`INSERT INTO Users (id, username, bot) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE username = VALUES(username)`,
-			Array.from(users.values()).map( x => [
-				BigInt(x.id), x.username, x.bot
-			])
-		));
-		promises.push( BulkInsert( connection,
-			`INSERT INTO Stickers (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
-			Array.from(stickers.values()).map( x => [
-				BigInt(x.id), x.name
-			])
-		));
-		promises.push( BulkInsert(connection,
-			`INSERT INTO Emojis (id, name, animated) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
-			Array.from(emojis.values()).map( x => [
-				x.id, x.name, x.animated
-			])
-		));
-
-		await Promise.all(promises);
-
-		await Promise.all(
-			await BulkInsert( connection,
-				`INSERT INTO Messages (
-						  id, guild_id, channel_id, user_id,
-						  content, length, sticker_id,
-						  reply_to,
-						  data
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				// `filter( () => true )` removes all uninitialized entries regardless of their value
-				// No comparison needed, JS just simply skips them lol
-				messageData.filter( () => true ).map( x => [
-					x.id, x.guild_id, x.channel_id, x.user_id,
-					x.content, x.length, x.sticker_id,
-					x.reply_to,
-					JSON.stringify(x.data, JSONReplacer)
+			promises.push( BulkInsert( connection,
+				`INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+				Array.from(guilds.values()).map( x => [
+					BigInt(x.id), x.name, Object.values(GUILD_FEATURES).reduce((a, b) => a | b, 0),
 				])
+			));
+			promises.push( BulkInsert( connection,
+				`INSERT INTO Channels (id, guild_id, name, type) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+				Array.from(channels.values()).map( x => [
+					BigInt(x.id), BigInt(x.guildId), x.name, x.type
+				])
+			));
+			promises.push( BulkInsert( connection,
+				`INSERT INTO Users (id, username, bot) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE username = VALUES(username)`,
+				Array.from(users.values()).map( x => [
+					BigInt(x.id), x.username, x.bot
+				])
+			));
+			promises.push( BulkInsert( connection,
+				`INSERT INTO Stickers (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+				Array.from(stickers.values()).map( x => [
+					BigInt(x.id), x.name
+				])
+			));
+			promises.push( BulkInsert(connection,
+				`INSERT INTO Emojis (id, name, animated) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+				Array.from(emojis.values()).map( x => [
+					x.id, x.name, x.animated
+				])
+			));
+
+			await Promise.all(promises);
+
+			await Promise.all(
+				await BulkInsert( connection,
+					`INSERT INTO Messages (
+							  id, guild_id, channel_id, user_id,
+							  content, length, sticker_id,
+							  reply_to,
+							  data
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					// `filter( () => true )` removes all uninitialized entries regardless of their value
+					// No comparison needed, JS just simply skips them lol
+					messageData.filter( () => true ).map( x => [
+						x.id, x.guild_id, x.channel_id, x.user_id,
+						x.content, x.length, x.sticker_id,
+						x.reply_to,
+						JSON.stringify(x.data, JSONReplacer)
+					])
+				)
 			)
-		)
 
-		await Promise.all(
-			await BulkInsert( connection,
-				`INSERT INTO MessageHistory (created_at, guild_id, channel_id) VALUES (?, ?, ?)`,
-				// `filter( () => true )` removes all uninitialized entries regardless of their value
-				// No comparison needed, JS just simply skips them lol
-				messageHistory.filter( () => true ).map(x => [x.created_at, x.guild_id, x.channel_id])
-			)
-		);
-
-
-		await connection.query('COMMIT');
+			await Promise.all(
+				await BulkInsert( connection,
+					`INSERT INTO MessageHistory (created_at, guild_id, channel_id) VALUES (?, ?, ?)`,
+					// `filter( () => true )` removes all uninitialized entries regardless of their value
+					// No comparison needed, JS just simply skips them lol
+					messageHistory.filter( () => true ).map(x => [x.created_at, x.guild_id, x.channel_id])
+				)
+			);
+		});
 	} catch (error) {
 		Log('ERROR', error);
-		await connection.query('ROLLBACK');
-	} finally {
-		Database.releaseConnection(connection);
 	}
 
 	Log('TRACE', `Inserted ${messageData.filter( () => true ).length} messages :D`);

@@ -14,11 +14,28 @@ vi.mock('../Utils/Processing/Images.js', () => ({
 	ASSET_TYPE: { GUILD: 0, USER: 1, EMOJI: 2, STICKER: 3, ATTACHMENT: 4 }
 }));
 
-const { getConnection, releaseConnection } = vi.hoisted(() => ({
-	getConnection: vi.fn(),
-	releaseConnection: vi.fn()
-}));
-vi.mock('../Database.js', () => ({ Database: { getConnection, releaseConnection } }));
+const { getConnection, releaseConnection, transaction } = vi.hoisted(() => {
+	const getConnection = vi.fn();
+	const releaseConnection = vi.fn();
+	// Mirrors Database.transaction()'s begin/commit/rollback/release contract, but
+	// leaves a COMMIT/ROLLBACK breadcrumb via query() since the fake connections
+	// in this file only implement query()/prepare(), not commit()/rollback().
+	const transaction = vi.fn(async (callback: (connection: { query: (sql: string, params?: unknown[]) => Promise<unknown> }) => Promise<unknown>) => {
+		const connection = await getConnection();
+		try {
+			const result = await callback(connection);
+			await connection.query('COMMIT');
+			return result;
+		} catch (error) {
+			await connection.query('ROLLBACK');
+			throw error;
+		} finally {
+			releaseConnection(connection);
+		}
+	});
+	return { getConnection, releaseConnection, transaction };
+});
+vi.mock('../Database.js', () => ({ Database: { getConnection, releaseConnection, transaction } }));
 
 import MessageCreateHandler, { ProcessMessages } from '../Events/Messages.js';
 

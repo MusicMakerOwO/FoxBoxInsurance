@@ -269,6 +269,22 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Added the ability to opt out of data collection (redacts all future messages)",
 			"Reduced message retention from 60 days to 30 days",
 		]
+	},
+	"5.1.1": {
+		date: "2026 August 24th",
+		changes: [
+			"Fixed a security issue that could let malicious code run in HTML exports",
+			"Fixed exporting large channels being much slower than it should be",
+			"Fixed several bugs with importing and exporting snapshots",
+			"Fixed some cases where data could be lost if the bot restarted at the wrong moment",
+			"Fixed opt-out from data collection not always being respected",
+			"Fixed 12-hour times showing incorrectly at noon and midnight in text exports",
+			"Fixed the wrong feature name showing up when enabling/disabling snapshots",
+			"Fixed exporting an empty channel crashing instead of showing an error",
+			"Old interaction logs are now automatically cleaned up after 60 days",
+			"Rebuilt our internal testing from the ground up for better reliability going forward",
+			"A bunch of smaller bug fixes and stability improvements",
+		]
 	}
 } as const;
 

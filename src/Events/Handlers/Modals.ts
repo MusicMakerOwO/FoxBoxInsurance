@@ -27,7 +27,7 @@ export default {
 		if (errorResponse) return interaction.editReply(errorResponse);
 
 		const response = await handler.execute(interaction, client, args);
-		if (!response) return Log('WARN', 'No response received from handler - possible error?');
+		if (!response) throw new Error('No response received from handler - possible error?');
 
 		void interaction.editReply(response);
 	}

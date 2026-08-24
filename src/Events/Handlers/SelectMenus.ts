@@ -31,7 +31,7 @@ export default {
 		}
 
 		const response = await handler.execute(interaction, client, args);
-		if (!response) return Log('WARN', 'No response received from handler - possible error?');
+		if (!response) throw new Error('No response received from handler - possible error?');
 
 		if (handler.response_type === 'modal') {
 			if (!('title' in response)) throw new Error('Component cannot defer and send a modal at the same time');

@@ -29,6 +29,29 @@ for (const command of Object.values(Commands)) {
 	}
 }
 
+const commandList = new Set<string>();
+for (const payload of commands) {
+	const subcommands = payload.options?.filter(x => x.type === 1) ?? [];
+	if (subcommands.length === 0) {
+		if (commandList.has(payload.name)) {
+			Log('ERROR', `Duplicate entry found - command "${payload.name}"`);
+			// eslint-disable-next-line unicorn/no-process-exit
+			process.exit(1);
+		}
+		commandList.add(payload.name);
+	}
+
+	for (const sub of subcommands) {
+		const key = `${payload.name}:${sub.name}`
+		if (commandList.has(key)) {
+			Log('ERROR', `Duplicate entry found - command "${key}", subcommand ${sub.name}`);
+			// eslint-disable-next-line unicorn/no-process-exit
+			process.exit(1);
+		}
+		commandList.add(key);
+	}
+}
+
 void ( async() => {
 	const response = await fetch(PUBLIC_ROUTE, {
 		method: "PUT",
@@ -39,7 +62,7 @@ void ( async() => {
 		body: JSON.stringify(commands)
 	});
 	if (response.ok) {
-		Log('INFO', '(/) Finished!');
+		Log('INFO', `(/) Finished - ${commandList.size} commands`);
 	} else {
 		Log('ERROR', await response.text());
 	}

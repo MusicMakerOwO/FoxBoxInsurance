@@ -20,6 +20,6 @@ export default {
 		),
 	execute: async function (interaction, client) {
 		const button = client.buttons.get('activity')!;
-		return await button.execute(interaction as unknown as ButtonInteraction, client, ['day']) as InteractionResponse;
+		return await button.execute(interaction as unknown as ButtonInteraction, client, ['week']) as InteractionResponse;
 	}
 } satisfies CommandHandler as CommandHandler;

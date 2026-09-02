@@ -285,6 +285,17 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Rebuilt our internal testing from the ground up for better reliability going forward",
 			"A bunch of smaller bug fixes and stability improvements",
 		]
+	},
+	"5.2.0": {
+		date: "2026 August 29th",
+		changes: [
+			"Added snapshot restore - roll a server back until its channels, roles and bans match a snapshot",
+			"Restores show you every single change first, grouped by category, with the destructive ones called out",
+			"You have to type the server name to start a restore, and nothing is touched until you do",
+			"A safety snapshot is taken automatically before every restore, so a restore can itself be undone",
+			"Restores post a live progress log in the channel, and can be stopped partway through",
+			"Deleting a channel takes its message history with it - we cannot bring those back, so read the preview",
+		]
 	}
 } as const;
 

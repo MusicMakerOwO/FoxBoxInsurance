@@ -14,3 +14,5 @@ config.json
 .env
 
 UploadCache/
+
+CLAUDE.md

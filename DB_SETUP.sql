@@ -1,27 +1,3 @@
-# SET foreign_key_checks = 0;
-#
-# DROP TABLE IF EXISTS Timers;
-# DROP TABLE IF EXISTS Guilds;
-# DROP TABLE IF EXISTS GuildBlocks;
-# DROP TABLE IF EXISTS Channels;
-# DROP TABLE IF EXISTS Users;
-# DROP TABLE IF EXISTS Emojis;
-# DROP TABLE IF EXISTS Stickers;
-# DROP TABLE IF EXISTS Messages;
-# DROP TABLE IF EXISTS Attachments;
-# DROP TABLE IF EXISTS Embeds;
-# DROP TABLE IF EXISTS EmbedFields;
-# DROP TABLE IF EXISTS MessageEmojis;
-# DROP TABLE IF EXISTS InteractionLogs;
-# DROP TABLE IF EXISTS Snapshots;
-# DROP TABLE IF EXISTS SnapshotPermissions;
-# DROP TABLE IF EXISTS SnapshotBans;
-# DROP TABLE IF EXISTS SnapshotExports;
-# DROP TABLE IF EXISTS SnapshotChannels;
-# DROP TABLE IF EXISTS SnapshotRoles;
-# DROP TABLE IF EXISTS Assets;
-# DROP TABLE IF EXISTS Exports;
-
 -- NodeJS can only make timers so long
 -- For long-running tasks like channel purging we need a more permanent solution
 -- This will keep the run time data even on restart
@@ -161,15 +137,6 @@ CREATE TABLE IF NOT EXISTS InteractionLogs (
 );
 CREATE INDEX IF NOT EXISTS interaction_logs_created_at ON InteractionLogs (created_at ASC);
 
-
-
-
--- DROP TABLE Snapshots;
--- DROP TABLE SnapshotRoles;
--- DROP TABLE SnapshotChannels;
--- DROP TABLE SnapshotPermissions;
--- DROP TABLE SnapshotBans;
-
 CREATE TABLE IF NOT EXISTS Snapshots (
 	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
 	guild_id BIGINT UNSIGNED NOT NULL,
@@ -254,7 +221,7 @@ CREATE INDEX IF NOT EXISTS snapshot_exports_user_id ON SnapshotExports (user_id)
 
 
 -- No primary key
-CREATE TABLE MessageHistory (
+CREATE TABLE IF NOT EXISTS MessageHistory (
     created_at BIGINT UNSIGNED NOT NULL,
     guild_id BIGINT UNSIGNED NOT NULL,
     channel_id BIGINT UNSIGNED NOT NULL

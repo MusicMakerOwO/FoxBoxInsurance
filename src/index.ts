@@ -64,6 +64,7 @@ client.on('clientReady', function () {
 	Log('DEBUG', `Logged in as ${client.user!.tag}!`);
 
 	for (const guild of client.guilds.cache.values()) {
+		if (!guild.available) continue;
 		void SaveGuild(guild);
 	}
 
@@ -82,6 +83,7 @@ async function Shutdown() {
 	const start = process.hrtime.bigint();
 
 	Log('WARN', 'Shutting down...');
+
 	await client.destroy().catch(ErrorCallback);
 
 	Log('WARN', 'Stopping tasks...');

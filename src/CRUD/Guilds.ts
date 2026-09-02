@@ -11,6 +11,7 @@ const INVALID_GUILD_IDS = new Set<Guild['id']>();
 
 export async function SaveGuild(guild: Guild | SimpleGuild): Promise<void> {
 	const connection = await Database.getConnection();
+	if ('available' in guild && !guild.available) throw new Error("Guild only has partial data do to an outage, make sure to check `guild.available`");
 
 	try {
 		if (guild instanceof Guild) {

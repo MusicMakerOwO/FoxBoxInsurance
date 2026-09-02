@@ -97,11 +97,14 @@ export const EMOJI = {
 	EXPORT        : '📤',
 	IMPORT        : '📥',
 	PIN           : '📌',
+	RESTORE       : '🔄',
 
 	FIRST_PAGE    : '⏪',
 	PREVIOUS_PAGE : '◀️',
 	NEXT_PAGE     : '▶️',
 	LAST_PAGE     : '⏩',
+
+	STOP          : '⏹️',
 
 	DELETE        : '🗑️',
 	EDIT          : '✏️',
@@ -144,19 +147,71 @@ export function RandomLoadingEmbed(): { color: ObjectValues<typeof COLOR>, descr
 }
 
 export const RESTORE_OPTIONS = {
-	CHANNELS : 1,
-	ROLES    : 2,
-	BANS     : 3,
+	CHANNELS : 1 << 0,
+	ROLES    : 1 << 1,
+	BANS     : 1 << 2,
+	/** Not implemented - rendered as a permanently disabled toggle */
+	MESSAGES : 1 << 3,
 } as const;
 
 export const RESTORE_OPTION_NAMES: { [K in keyof typeof RESTORE_OPTIONS as (typeof RESTORE_OPTIONS)[K]]: string } = {
 	[RESTORE_OPTIONS.CHANNELS] : '📁 Channels',
 	[RESTORE_OPTIONS.ROLES   ] : '👥 Roles',
-	[RESTORE_OPTIONS.BANS    ] : '🚫 Bans'
+	[RESTORE_OPTIONS.BANS    ] : '🚫 Bans',
+	[RESTORE_OPTIONS.MESSAGES] : '💬 Messages'
+} as const;
+
+export const RESTORE_PRESETS = {
+	FULL      : RESTORE_OPTIONS.CHANNELS | RESTORE_OPTIONS.ROLES | RESTORE_OPTIONS.BANS,
+	STRUCTURE : RESTORE_OPTIONS.CHANNELS | RESTORE_OPTIONS.ROLES,
+	BANS      : RESTORE_OPTIONS.BANS,
+	CUSTOM    : 0,
+} as const;
+
+/** Lifecycle of a `SnapshotRestores` row */
+export const RESTORE_STATUS = {
+	RUNNING     : 0,
+	COMPLETE    : 1,
+	/** Finished, but at least one action failed */
+	FAILED      : 2,
+	/** An admin pressed Stop - the remaining actions were skipped */
+	STOPPED     : 3,
+	/** The bot restarted mid-run. Not resumed; reported honestly instead */
+	INTERRUPTED : 4,
+} as const;
+
+export const RESTORE_STATUS_NAMES: { [K in keyof typeof RESTORE_STATUS as (typeof RESTORE_STATUS)[K]]: string } = {
+	[RESTORE_STATUS.RUNNING    ] : 'Running',
+	[RESTORE_STATUS.COMPLETE   ] : 'Complete',
+	[RESTORE_STATUS.FAILED     ] : 'Finished with failures',
+	[RESTORE_STATUS.STOPPED    ] : 'Stopped',
+	[RESTORE_STATUS.INTERRUPTED] : 'Interrupted',
+} as const;
+
+/** Outcome of a single `SnapshotRestoreActions` row */
+export const RESTORE_RESULT = {
+	PENDING : 0,
+	OK      : 1,
+	FAILED  : 2,
+	/** Nothing to do - the target was already gone, or already in the desired state */
+	SKIPPED : 3,
 } as const;
 
 export const DIFF_CHANGE_TYPE = {
 	CREATE: 0,
 	UPDATE: 1,
 	DELETE: 2
+} as const;
+
+/**
+ * How a change type is drawn to users. Shared by the restore preview's per-category breakdown and
+ * the action list, which would otherwise each carry their own copy and drift.
+ *
+ * The delete marker is U+2212 MINUS SIGN, not a hyphen - it lines up with `+` at Discord's font
+ * weights, where a hyphen reads as half a character.
+ */
+export const DIFF_CHANGE_PREFIX: { [K in keyof typeof DIFF_CHANGE_TYPE as (typeof DIFF_CHANGE_TYPE)[K]]: string } = {
+	[DIFF_CHANGE_TYPE.CREATE]: '+',
+	[DIFF_CHANGE_TYPE.UPDATE]: '~',
+	[DIFF_CHANGE_TYPE.DELETE]: '−'
 } as const;

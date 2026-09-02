@@ -218,6 +218,68 @@ CREATE TABLE IF NOT EXISTS SnapshotExports (
 );
 CREATE INDEX IF NOT EXISTS snapshot_exports_user_id ON SnapshotExports (user_id);
 
+-- One row per restore run. Durable so a restart can report an interrupted run honestly
+-- rather than leaving its step log message stuck on "Channels 12 / 25" forever.
+CREATE TABLE IF NOT EXISTS SnapshotRestores (
+	id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	guild_id BIGINT UNSIGNED NOT NULL,
+
+	snapshot_id INT UNSIGNED, -- NULL for imports
+	import_id CHAR(19), -- xxxx-xxxx-xxxx-xxxx, NULL for stored snapshots
+
+	-- The snapshot taken immediately before this run, which is the way back.
+	-- Deliberately no foreign key: it may be unpinned and rotated away later
+	safety_snapshot_id INT UNSIGNED,
+
+	user_id BIGINT UNSIGNED NOT NULL, -- The admin who confirmed the restore
+	channel_id BIGINT UNSIGNED NOT NULL,
+	message_id BIGINT UNSIGNED, -- The public step log message, NULL until it has been posted
+
+	mask INT UNSIGNED NOT NULL, -- bitmap of restored categories, see RESTORE_OPTIONS in ./Typings/Constants
+	status TINYINT UNSIGNED NOT NULL, -- see RESTORE_STATUS in ./Utils/Constants
+
+	total_actions INT UNSIGNED NOT NULL,
+	applied_actions INT UNSIGNED NOT NULL DEFAULT 0,
+
+	started_at BIGINT UNSIGNED NOT NULL, -- Unix timestamp in milliseconds
+	finished_at BIGINT UNSIGNED, -- Unix timestamp in milliseconds, NULL while running
+
+	FOREIGN KEY (guild_id) REFERENCES Guilds(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS snapshot_restores_guild_id ON SnapshotRestores (guild_id);
+CREATE INDEX IF NOT EXISTS snapshot_restores_status ON SnapshotRestores (status);
+
+-- Every action of a run, in apply order, with its outcome
+CREATE TABLE IF NOT EXISTS SnapshotRestoreActions (
+	restore_id INT UNSIGNED NOT NULL,
+	seq INT UNSIGNED NOT NULL, -- Position in the apply order, 0 indexed
+
+	category TINYINT UNSIGNED NOT NULL, -- see RESTORE_OPTIONS in ./Utils/Constants
+	change_type TINYINT UNSIGNED NOT NULL, -- see DIFF_CHANGE_TYPE in ./Utils/Constants
+
+	target_id BIGINT UNSIGNED NOT NULL, -- Live entity for UPDATE/DELETE, snapshot entity for CREATE
+	new_id BIGINT UNSIGNED, -- The ID the entity was actually created with, CREATE only
+	label VARCHAR(200) NOT NULL, -- Display name resolved at plan time, e.g. "#raid-log"
+
+	-- The desired end state for this entity, NULL for DELETE. Persisted so a retry replays the
+	-- exact actions the admin confirmed, rather than rebuilding a plan against a server that has
+	-- drifted since. Also what lets the downloadable log say what a failed action was setting.
+	-- Refer to typings in Typings/DatabaseTypes.ts
+	payload JSON CHECK (payload IS NULL OR JSON_VALID(payload)),
+
+	result TINYINT UNSIGNED NOT NULL, -- see RESTORE_RESULT in ./Utils/Constants
+	error TEXT, -- Short human-readable cause, NULL unless result is FAILED
+
+	PRIMARY KEY (restore_id, seq),
+	FOREIGN KEY (restore_id) REFERENCES SnapshotRestores(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS snapshot_restore_actions_result ON SnapshotRestoreActions (restore_id, result);
+
+-- Guild rows only receive their feature bitmap on INSERT (see SaveGuild in ./CRUD/Guilds), so guilds
+-- already in the table never pick up a newly added feature. 64 is GUILD_FEATURES.RESTORE_SNAPSHOTS
+-- in ./Typings/DatabaseTypes - this file has no access to the constant. Idempotent, safe to re-run.
+UPDATE Guilds SET features = features | 64 WHERE (features & 64) = 0;
+
 CREATE TABLE IF NOT EXISTS UserTimezones (
     user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
 #     IANA Zone - i.e. America/New_York

@@ -1,6 +1,6 @@
 import { ObjectValues } from "./HelperTypes.js";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
-import { FORMAT, SNAPSHOT_TYPE } from "../Utils/Constants.js";
+import { DIFF_CHANGE_TYPE, FORMAT, RESTORE_OPTIONS, RESTORE_RESULT, RESTORE_STATUS, SNAPSHOT_TYPE } from "../Utils/Constants.js";
 import { JSONStringify } from "../JSON.js";
 import { TIMEZONE_ZONES } from "../CRUD/UserTimezones.js";
 
@@ -26,6 +26,8 @@ export const GUILD_FEATURES = {
 	MESSAGE_SAVING: 1 << 4,
 	/** Allows historical timestamps for message, indexable by guild and channel */
 	MESSAGE_HISTORY: 1 << 5,
+	/** Allows restoring a guild's channels, roles, and bans from a snapshot */
+	RESTORE_SNAPSHOTS: 1 << 6,
 } as const;
 
 export type Asset = {
@@ -186,6 +188,74 @@ export type SnapshotBan = {
 
 	id: bigint,
 	reason: string
+}
+
+/** One restore run - see Services/RestoreRunner.ts */
+export type SnapshotRestore = {
+	id: number,
+	guild_id: bigint,
+
+	/** Set for stored snapshots, null for imports */
+	snapshot_id: SnapshotMetadata['id'] | null,
+	/** Set for imports (xxxx-xxxx-xxxx-xxxx), null for stored snapshots */
+	import_id: string | null,
+	/** The snapshot taken immediately before this run - the way back */
+	safety_snapshot_id: SnapshotMetadata['id'] | null,
+
+	/** The admin who confirmed the restore */
+	user_id: bigint,
+	channel_id: bigint,
+	/** The public step log message, null until it has been posted */
+	message_id: bigint | null,
+
+	/** Bitmask of restored categories, see RESTORE_OPTIONS */
+	mask: number,
+	status: ObjectValues<typeof RESTORE_STATUS>,
+
+	total_actions: number,
+	applied_actions: number,
+
+	/** Unix timestamp in milliseconds */
+	started_at: bigint,
+	/** Unix timestamp in milliseconds, null while running */
+	finished_at: bigint | null,
+}
+
+/** The desired end state of a restore action, as callers consume it */
+export type SnapshotRestorePayload =
+	| Omit<SnapshotChannel, 'snapshot_id' | 'deleted'>
+	| Omit<SnapshotRole   , 'snapshot_id' | 'deleted'>
+	| Omit<SnapshotBan    , 'snapshot_id' | 'deleted'>
+
+/**
+ * The same payload as it sits in the `payload` JSON column - `id`, `parent_id`, `permissions` and
+ * `managed_by` are strings out there. There is no JSON reviver in this codebase, so
+ * CRUD/SnapshotRestores.ts coerces them back by `category` on the way out.
+ */
+export type StoredRestorePayload = JSONStringify<SnapshotRestorePayload>
+
+/** One action of a restore run, in apply order, with its outcome */
+export type SnapshotRestoreAction = {
+	restore_id: SnapshotRestore['id'],
+	/** Position in the apply order, 0 indexed */
+	seq: number,
+
+	category: ObjectValues<typeof RESTORE_OPTIONS>,
+	change_type: ObjectValues<typeof DIFF_CHANGE_TYPE>,
+
+	/** Live entity for UPDATE/DELETE, snapshot entity for CREATE */
+	target_id: bigint,
+	/** The ID the entity was actually created with, CREATE only */
+	new_id: bigint | null,
+	/** Display name resolved at plan time, e.g. "#raid-log" */
+	label: string,
+
+	/** Null for DELETE */
+	payload: SnapshotRestorePayload | null,
+
+	result: ObjectValues<typeof RESTORE_RESULT>,
+	/** Short human readable cause, null unless `result` is FAILED */
+	error: string | null,
 }
 
 export type SimpleMessageExport = {

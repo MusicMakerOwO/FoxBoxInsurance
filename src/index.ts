@@ -22,6 +22,7 @@ import {ProcessMessages} from "./Events/Messages.js";
 import {SaveGuild} from "./CRUD/Guilds.js";
 import {EncryptMessages} from "./Utils/Tasks/EncryptMessages.js";
 import {UploadFiles} from "./Utils/Tasks/UploadFiles.js";
+import {ReconcileInterruptedRestores, StopActiveRestores} from "./Services/RestoreRunner.js";
 
 import * as Commands from "./Commands/index.js";
 import * as Buttons from "./Buttons/index.js";
@@ -63,6 +64,8 @@ if (!pepper || pepper.length !== 32) {
 
 Log('INFO', `Logging in...`);
 void client.login(process.env.TOKEN);
+const ErrorCallback = Log.bind(null, 'ERROR');
+
 client.on('clientReady', function () {
 	Log('DEBUG', `Logged in as ${client.user!.tag}!`);
 
@@ -71,10 +74,12 @@ client.on('clientReady', function () {
 		void SaveGuild(guild);
 	}
 
+	// Any run still marked RUNNING was killed mid-restore. Report it honestly rather than leaving
+	// its step log stuck on "Channels 12 / 25" forever
+	void ReconcileInterruptedRestores().catch(ErrorCallback);
+
 	void StartAutomaticTasks()
 });
-
-const ErrorCallback = Log.bind(null, 'ERROR');
 
 let isShuttingDown = false;
 async function Shutdown() {
@@ -86,6 +91,10 @@ async function Shutdown() {
 	const start = process.hrtime.bigint();
 
 	Log('WARN', 'Shutting down...');
+
+	// Before client.destroy(), or the final step log edit has no connection to go out on
+	Log('WARN', 'Stopping restores...');
+	await StopActiveRestores().catch(ErrorCallback);
 
 	await client.destroy().catch(ErrorCallback);
 

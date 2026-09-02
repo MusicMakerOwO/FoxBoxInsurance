@@ -10,6 +10,27 @@ import { TOS_FEATURES } from "../TOSConstants.js";
 import { DiscordPermissions } from "../Utils/DiscordConstants.js";
 import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures.js";
 import { SaveImportForGuild } from "../CRUD/SnapshotImports.js";
+import { IsRestoreRunning } from "../Services/RestoreRunner.js";
+
+/** Shown when a restore is in flight and the admin is about to look at snapshot data anyway */
+const RestoreWarningEmbed = {
+	color      : COLOR.PRIMARY,
+	title      : `${EMOJI.WARNING} Restore In Progress`,
+	description: `
+This server is being restored right now, so its channels, roles and bans are changing as you read this.
+
+Anything you see here may be out of date, and starting a second restore is not possible until this one finishes.`
+} as const;
+
+/** Shown when a restore is in flight and the requested action would fight it */
+const RestoreInProgressEmbed = {
+	color      : COLOR.ERROR,
+	title      : 'Restore In Progress',
+	description: `
+I can't snapshot this server while it is being restored - the result would be a half restored server frozen in time.
+
+Wait for the restore to finish, then try again.`
+} as const;
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -48,10 +69,10 @@ export default {
 			.setName('manage')
 			.setDescription('Manage a snapshot (alias for list)')
 		)
-		// .addSubcommand(x => x
-		// 	.setName('restore')
-		// 	.setDescription('Restore a snapshot (alias for list)')
-		// )
+		.addSubcommand(x => x
+			.setName('restore')
+			.setDescription('Restore a snapshot (alias for list)')
+		)
 		.addSubcommand(x => x
 			.setName('disable')
 			.setDescription('Disable server snapshots')
@@ -113,35 +134,34 @@ Or you can use [this link](https://discord.com/oauth2/authorize?client_id=106510
 			}
 		}
 
-		if (subcommand === 'list' || subcommand === 'manage') {
+		if (subcommand === 'list' || subcommand === 'manage' || subcommand === 'restore') {
 
-			// if (isGuildRestoring(interaction.guild.id)) {
-			// 	// give a warning and ask for confirmation
-			// 	return interaction.editReply({
-			// 		embeds: [ RestoreWarningEmbed ],
-			// 		components: [{
-			// 			type: 1,
-			// 			components: [{
-			// 				type: 2,
-			// 				style: 4, // Danger button
-			// 				label: 'I understand the risks',
-			// 				custom_id: 'snapshot-list',
-			// 				emoji: '⚠️'
-			// 			}]
-			// 		}]
-			// 	});
-			// }
+			if (IsRestoreRunning(interaction.guildId!)) {
+				// A warning rather than a block - reading the snapshot list mid-restore is harmless,
+				// and this is how an admin finds the snapshot that rolls the restore back
+				return {
+					embeds: [ RestoreWarningEmbed ],
+					components: [{
+						type: 1,
+						components: [{
+							type: 2,
+							style: 4, // Danger button
+							label: 'I understand the risks',
+							custom_id: 'snapshot-list',
+							emoji: { name: EMOJI.WARNING }
+						}]
+					}]
+				}
+			}
 
 			const button = client.buttons.get('snapshot-list')!;
 			return button.execute(interaction as unknown as ButtonInteraction, client, []);
 		}
 
 		if (subcommand === 'create') {
-			// if (isGuildRestoring(interaction.guild.id)) {
-			// 	return interaction.editReply({
-			// 		embeds: [ RestoreInProgressEmbed ]
-			// 	});
-			// }
+			if (IsRestoreRunning(interaction.guildId!)) {
+				return { embeds: [ RestoreInProgressEmbed ] }
+			}
 
 			// @ts-expect-error | editReply is stripped by NoReply<...>, but we need an early progress update before the handler's own return value replies
 			void interaction.editReply({ embeds: [ RandomLoadingEmbed() ] });

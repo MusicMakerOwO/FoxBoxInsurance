@@ -1,6 +1,7 @@
 export * from "./Exports/index.js";
 export * from "./Imports/index.js";
 export * from "./Snapshots/index.js";
+export * from "./Restore/index.js";
 
 export { default as Activity } from "./Activity.js";
 export { default as Close } from "./Close.js";

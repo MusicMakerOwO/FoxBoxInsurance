@@ -9,3 +9,4 @@ export { default as History } from "./History.js";
 export { default as Info } from "./Info.js";
 export { default as TOSAccept } from "./TOSAccept.js";
 export { default as DataCollection } from "./DataCollectionPreferences.js";
+export { default as SetTimezone } from "./SetTimezone.js";

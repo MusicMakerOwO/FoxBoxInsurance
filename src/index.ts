@@ -1,5 +1,8 @@
 const preloadStart = process.hrtime.bigint();
 
+// Must stay the first import - see the file for why
+import "./Utils/ProcessTimezone.js";
+
 import "source-map-support/register.js";
 
 import { fileURLToPath } from "node:url";

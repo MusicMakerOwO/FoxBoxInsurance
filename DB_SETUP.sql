@@ -218,6 +218,11 @@ CREATE TABLE IF NOT EXISTS SnapshotExports (
 );
 CREATE INDEX IF NOT EXISTS snapshot_exports_user_id ON SnapshotExports (user_id);
 
+CREATE TABLE IF NOT EXISTS UserTimezones (
+    user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+#     IANA Zone - i.e. America/New_York
+    timezone VARCHAR(64) NOT NULL
+);
 
 
 -- No primary key

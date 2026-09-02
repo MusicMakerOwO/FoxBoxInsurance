@@ -17,7 +17,11 @@ class DatabaseWrapper {
 			process.exit(1);
 		}
 
-		this.connection_pool = createPool(process.env.MARIADB_URI);
+		// The connector decodes DATETIME columns as local time (see Utils/ProcessTimezone.ts), so the
+		// session has to hand them over in the same clock this process runs on. Forcing it here means a
+		// server whose global time_zone is not UTC cannot silently reintroduce the offset.
+		const uri = process.env.MARIADB_URI;
+		this.connection_pool = createPool(`${uri}${uri.includes('?') ? '&' : '?'}timezone=Z`);
 	}
 
 	async getConnection() {

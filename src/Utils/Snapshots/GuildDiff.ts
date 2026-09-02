@@ -19,7 +19,11 @@ const ALLOWED_CHANNEL_TYPES = new Set([
 	ChannelType.GuildMedia
 ]);
 
-type DiffEntry<T extends object> = Omit<T, 'snapshot_id' | 'deleted'> & { change_type: ObjectValues<typeof DIFF_CHANGE_TYPE> }
+type DiffEntry<T extends object> = Omit<T, 'snapshot_id' | 'deleted'> & {
+	change_type: ObjectValues<typeof DIFF_CHANGE_TYPE>;
+	/** Human-readable summary of which fields changed - UPDATE only, e.g. "name, topic, 2 overwrites" */
+	detail?: string;
+}
 
 export type GuildDiff = {
 	roles: Map<SnapshotRole   ['id'], DiffEntry<SnapshotRole>>,
@@ -73,6 +77,45 @@ function MoveBotRoleToTop(roleList: SnapshotComparable['roles']) {
 	}
 }
 
+function CountOverwriteDiffs(
+	base: SnapshotChannel['permission_overwrites'],
+	target: SnapshotChannel['permission_overwrites']
+): number {
+	const keys = new Set([...Object.keys(base), ...Object.keys(target)]);
+	let count = 0;
+	for (const key of keys) {
+		const a = base[key];
+		const b = target[key];
+		if (!a || !b || !DeepEquals(a, b)) count++;
+	}
+	return count;
+}
+
+/** Both sides are the pre-diff comparables, so this only ever runs when the caller already knows they differ */
+function DescribeRoleChange(base: ComparableEntry<SnapshotRole>, target: ComparableEntry<SnapshotRole>): string {
+	const changes: string[] = [];
+	if (base.name !== target.name) changes.push('name');
+	if (base.color !== target.color) changes.push('color');
+	if (+base.hoist !== +target.hoist) changes.push('hoist');
+	if (base.position !== target.position) changes.push('position');
+	if (base.permissions !== target.permissions) changes.push('permissions');
+	return changes.join(', ');
+}
+
+function DescribeChannelChange(base: ComparableEntry<SnapshotChannel>, target: ComparableEntry<SnapshotChannel>): string {
+	const changes: string[] = [];
+	if (base.name !== target.name) changes.push('name');
+	if (base.parent_id !== target.parent_id) changes.push('category');
+	if (base.position !== target.position) changes.push('position');
+	if (base.topic !== target.topic) changes.push('topic');
+	if (+base.nsfw !== +target.nsfw) changes.push('nsfw');
+
+	const overwriteDiffs = CountOverwriteDiffs(base.permission_overwrites, target.permission_overwrites);
+	if (overwriteDiffs > 0) changes.push(`${overwriteDiffs} overwrite${overwriteDiffs === 1 ? '' : 's'}`);
+
+	return changes.join(', ');
+}
+
 export type ComparableEntry<T extends object> = Omit<T, 'snapshot_id' | 'deleted'>;
 
 export type SnapshotComparable = {
@@ -119,6 +162,7 @@ export function CreateSnapshotDiff(baseSnapshot: SnapshotComparable, targetSnaps
 		) {
 			globalDiff.roles.set(RoleCacheKey, {
 				change_type: DIFF_CHANGE_TYPE.UPDATE,
+				detail: DescribeRoleChange(baseRole, targetRole),
 				... targetRole
 			})
 		}
@@ -145,6 +189,7 @@ export function CreateSnapshotDiff(baseSnapshot: SnapshotComparable, targetSnaps
 		) {
 			globalDiff.channels.set(ChannelCacheKey, {
 				change_type: DIFF_CHANGE_TYPE.UPDATE,
+				detail: DescribeChannelChange(baseChannel, targetChannel),
 				... targetChannel
 			})
 		}

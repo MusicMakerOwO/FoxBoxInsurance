@@ -123,7 +123,7 @@ describe('CreateSnapshotDiff', () => {
 			const diff = CreateSnapshotDiff(base, target);
 
 			expect(diff.roles.size).toBe(1);
-			expect(diff.roles.get(2n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, ...updatedRole });
+			expect(diff.roles.get(2n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, detail: 'name', ...updatedRole });
 		});
 	});
 
@@ -161,7 +161,7 @@ describe('CreateSnapshotDiff', () => {
 			const diff = CreateSnapshotDiff(base, target);
 
 			expect(diff.channels.size).toBe(1);
-			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, ...updatedChannel });
+			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, detail: 'name', ...updatedChannel });
 		});
 	});
 
@@ -176,7 +176,7 @@ describe('CreateSnapshotDiff', () => {
 
 			const diff = CreateSnapshotDiff(base, target);
 
-			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, ...updatedChannel });
+			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, detail: '1 overwrite', ...updatedChannel });
 		});
 
 		it('returns updated channel with removed permission', () => {
@@ -189,7 +189,7 @@ describe('CreateSnapshotDiff', () => {
 
 			const diff = CreateSnapshotDiff(base, target);
 
-			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, ...updatedChannel });
+			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, detail: '1 overwrite', ...updatedChannel });
 		});
 
 		it('returns updated channel with modified permission', () => {
@@ -202,7 +202,7 @@ describe('CreateSnapshotDiff', () => {
 
 			const diff = CreateSnapshotDiff(base, target);
 
-			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, ...updatedChannel });
+			expect(diff.channels.get(10n)).toEqual({ change_type: DIFF_CHANGE_TYPE.UPDATE, detail: '1 overwrite', ...updatedChannel });
 		});
 	});
 

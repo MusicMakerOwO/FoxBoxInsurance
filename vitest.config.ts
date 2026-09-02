@@ -11,7 +11,7 @@ process.env.TZ = 'UTC';
 
 export default defineConfig({
 	test: {
-		include: ['./src/Tests/**/*.ts'],
+		include: ['./src/Tests/**/*.test.ts'],
 		fileParallelism: true
 	}
 })

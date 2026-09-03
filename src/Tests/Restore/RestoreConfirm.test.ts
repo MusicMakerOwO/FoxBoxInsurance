@@ -13,8 +13,12 @@ import { BOT_USER_ID, GUILD_ID, makeGuild } from './Fixtures.js';
 /**
  * §13 of the test plan: the confirm modal's shape (`Buttons/Restore/Confirm.ts`) and its submit
  * (`Modals/RestoreStart.ts`) - every refuse branch, in file order, plus the happy path and the
- * catch-all. The `db`-kind lines in the checklist (concurrent submits, snapshot_id/import_id
- * discrimination at the DB layer) stay out of scope - they need MARIADB_URI and belong with §7.
+ * catch-all.
+ *
+ * `CRUD/SnapshotRestores.ts` is mocked, so what is asserted here is the hand-off: which run fields
+ * and which actions the handler passes to `CreateRestoreRun`. What that module then does with them
+ * is `SnapshotRestores.test.ts`'s job. The checklist's `db`-kind lines are closed out as a scope
+ * call - `npm test` has no database, and the live path is covered by the §16 manual script.
  */
 
 vi.mock('../../Client.js', () => ({
@@ -407,7 +411,15 @@ describe('Modals/RestoreStart - happy path', () => {
 				channel_id: 30n,
 				mask: MASK
 			}),
-			expect.any(Array)
+			// The plan's actions reach the CRUD layer intact, bigints included - the handler neither
+			// reshapes nor pre-serializes them, which is what lets `CreateRestoreRun` own that
+			[expect.objectContaining({
+				category: RESTORE_OPTIONS.ROLES,
+				change_type: DIFF_CHANGE_TYPE.UPDATE,
+				target_id: 100n,
+				label: '@Mod',
+				payload: { id: 100n, permissions: 8n }
+			})]
 		);
 		expect(SetRestoreMessage).toHaveBeenCalledWith(1, 40n);
 		expect(result.embeds![0].title).toBe('Restore Started');

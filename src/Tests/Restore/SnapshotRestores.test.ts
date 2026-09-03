@@ -1,6 +1,226 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Database } from '../../Database.js';
-import {
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DIFF_CHANGE_TYPE, RESTORE_OPTIONS, RESTORE_RESULT, RESTORE_STATUS } from '../../Utils/Constants.js';
+
+/**
+ * §7 of the restore test plan: `CRUD/SnapshotRestores.ts`, which hand-rolls bigint<->JSON coercion
+ * on the `payload` column (`SerializePayload`/`HydratePayload`) and does its own truncation and
+ * chunking on the way to the database.
+ *
+ * `../../Database.js` is mocked, like everywhere else in the suite - but with an in-memory store
+ * rather than bare spies, because a spy cannot show a payload surviving the trip out and back. The
+ * fake keeps `payload` as **the JSON text the code handed it**, never the live object, so hydration
+ * really parses. MariaDB's `JSON` type is LONGTEXT and the driver parses it for us by default;
+ * `store.parseJSONColumn` flips that off to exercise the `typeof stored === 'string'` branch.
+ *
+ * What the fake cannot speak to is MariaDB's own behavior - column-level truncation, `ON DELETE
+ * CASCADE`, `JSON_VALID`. Those are schema guarantees rather than guarantees about this module, and
+ * are pinned against `DB_SETUP.sql` in `DBSchemaGuards.test.ts` instead.
+ */
+
+const { store, Database } = vi.hoisted(() => {
+	type Row = Record<string, unknown>;
+
+	const store = {
+		runs   : [] as Row[],
+		actions: [] as Row[],
+		nextRunID: 1,
+		/** Whether the driver parses the JSON column for us. True is the real default */
+		parseJSONColumn: true,
+		commits  : 0,
+		rollbacks: 0,
+		reset() {
+			store.runs = [];
+			store.actions = [];
+			store.nextRunID = 1;
+			store.parseJSONColumn = true;
+			store.commits = 0;
+			store.rollbacks = 0;
+		}
+	};
+
+	/** Reads hand back copies, so a test holding a result cannot reach into the store through it */
+	function readRun(row: Row): Row {
+		return { ...row };
+	}
+
+	function readAction(row: Row): Row {
+		const payload = row.payload as string | null;
+		return { ...row, payload: payload === null ? null : (store.parseJSONColumn ? JSON.parse(payload) : payload) };
+	}
+
+	function bySeq(a: Row, b: Row): number {
+		return (a.seq as number) - (b.seq as number);
+	}
+
+	/**
+	 * Dispatches on the statement, the way `Tests/ChannelPurge.test.ts` does. Values are stored
+	 * exactly as they arrive, which is also what the driver round-trips: BIGINT columns come back
+	 * as `bigint`, INT columns as `number`.
+	 */
+	function query(sql: string, params: unknown[] = []): unknown {
+		if (sql.includes('INSERT INTO SnapshotRestoreActions')) {
+			const [restore_id, seq, category, change_type, target_id, label, payload, result] = params;
+			store.actions.push({ restore_id, seq, category, change_type, target_id, label, payload, result, new_id: null, error: null });
+			return { affectedRows: 1n };
+		}
+
+		if (sql.includes('INSERT INTO SnapshotRestores')) {
+			const [guild_id, snapshot_id, import_id, safety_snapshot_id, user_id, channel_id, mask, status, total_actions, started_at] = params;
+			const id = store.nextRunID++;
+			store.runs.push({
+				id, guild_id, snapshot_id, import_id, safety_snapshot_id, user_id, channel_id,
+				message_id: null, mask, status, total_actions, applied_actions: 0, started_at, finished_at: null
+			});
+			return { insertId: BigInt(id) };
+		}
+
+		if (sql.includes('UPDATE SnapshotRestoreActions')) {
+			// MarkRunningRestoresInterrupted - every PENDING action of every RUNNING run
+			if (sql.includes('restore_id IN (SELECT')) {
+				const [result, fromResult, runStatus] = params;
+				const running = new Set(store.runs.filter(run => run.status === runStatus).map(run => run.id));
+				for (const action of store.actions) {
+					if (action.result === fromResult && running.has(action.restore_id)) action.result = result;
+				}
+				return { affectedRows: 0n };
+			}
+
+			// SkipRestoreActions - one chunk of seqs, new_id cleared by the statement itself
+			if (sql.includes('new_id = NULL')) {
+				const [result, error, restoreID, ...seqs] = params;
+				for (const action of store.actions) {
+					if (action.restore_id === restoreID && (seqs as number[]).includes(action.seq as number)) {
+						Object.assign(action, { result, new_id: null, error });
+					}
+				}
+				return { affectedRows: 0n };
+			}
+
+			// RecordActionResult - exactly one (restore_id, seq)
+			const [result, newID, error, restoreID, seq] = params;
+			for (const action of store.actions) {
+				if (action.restore_id === restoreID && action.seq === seq) {
+					Object.assign(action, { result, new_id: newID, error });
+				}
+			}
+			return { affectedRows: 0n };
+		}
+
+		if (sql.includes('UPDATE SnapshotRestores')) {
+			if (sql.includes('message_id')) {
+				const [messageID, restoreID] = params;
+				for (const run of store.runs) if (run.id === restoreID) run.message_id = messageID;
+				return { affectedRows: 0n };
+			}
+
+			if (sql.includes('applied_actions')) { // FinishRestoreRun
+				const [status, appliedActions, finishedAt, restoreID] = params;
+				for (const run of store.runs) {
+					if (run.id === restoreID) Object.assign(run, { status, applied_actions: appliedActions, finished_at: finishedAt });
+				}
+				return { affectedRows: 0n };
+			}
+
+			if (sql.includes('finished_at = NULL')) { // ReopenRestoreRun
+				const [status, restoreID] = params;
+				for (const run of store.runs) if (run.id === restoreID) Object.assign(run, { status, finished_at: null });
+				return { affectedRows: 0n };
+			}
+
+			// MarkRunningRestoresInterrupted - every RUNNING run, no guild filter
+			const [status, finishedAt, fromStatus] = params;
+			for (const run of store.runs) {
+				if (run.status === fromStatus) Object.assign(run, { status, finished_at: finishedAt });
+			}
+			return { affectedRows: 0n };
+		}
+
+		if (sql.includes('FROM SnapshotRestoreActions')) {
+			const [restoreID, result] = params;
+			return store.actions
+				.filter(action => action.restore_id === restoreID && (result === undefined || action.result === result))
+				.sort(bySeq)
+				.map(readAction);
+		}
+
+		if (sql.includes('FROM SnapshotRestores')) {
+			if (sql.includes('WHERE status = ?')) {
+				const [status] = params;
+				return store.runs.filter(run => run.status === status).map(readRun);
+			}
+
+			const [restoreID] = params;
+			return store.runs.filter(run => run.id === restoreID).map(readRun);
+		}
+
+		throw new Error(`Unrecognised SQL in the fake database:\n${sql}`);
+	}
+
+	/**
+	 * `beginTransaction` snapshots the store and `rollback` puts it back, so a rolled-back run
+	 * really does leave nothing behind rather than merely being reported as rolled back.
+	 */
+	function makeConnection() {
+		let snapshot: { runs: Row[], actions: Row[], nextRunID: number } | null = null;
+
+		return {
+			query: vi.fn(async (sql: string, params?: unknown[]) => query(sql, params)),
+			batch: vi.fn(async (sql: string, rows: unknown[][]) => {
+				for (const row of rows) query(sql, row);
+			}),
+			beginTransaction: vi.fn(async () => {
+				snapshot = {
+					runs     : store.runs.map(row => ({ ...row })),
+					actions  : store.actions.map(row => ({ ...row })),
+					nextRunID: store.nextRunID
+				};
+			}),
+			commit: vi.fn(async () => {
+				store.commits++;
+				snapshot = null;
+			}),
+			rollback: vi.fn(async () => {
+				store.rollbacks++;
+				if (snapshot) {
+					store.runs = snapshot.runs;
+					store.actions = snapshot.actions;
+					store.nextRunID = snapshot.nextRunID;
+					snapshot = null;
+				}
+			}),
+			release: vi.fn(async () => {})
+		};
+	}
+
+	// Mirrors the real wrapper in src/Database.ts, same as Tests/ChannelPurge.test.ts's transaction
+	const Database = {
+		getConnection: vi.fn(async () => makeConnection()),
+		releaseConnection: vi.fn(),
+		query: vi.fn(async (sql: string, params?: unknown[]) => query(sql, params)),
+		batch: vi.fn(async (sql: string, rows: unknown[][]) => {
+			for (const row of rows) query(sql, row);
+		}),
+		transaction: vi.fn(async (callback: (connection: unknown) => unknown) => {
+			const connection = await Database.getConnection();
+			try {
+				await connection.beginTransaction();
+				const result = await callback(connection);
+				await connection.commit();
+				return result;
+			} catch (error) {
+				await connection.rollback();
+				throw error;
+			} finally {
+				Database.releaseConnection(connection);
+			}
+		})
+	};
+
+	return { store, Database };
+});
+vi.mock('../../Database.js', () => ({ Database }));
+
+const {
 	CreateRestoreRun,
 	FinishRestoreRun,
 	GetRestoreActions,
@@ -8,52 +228,26 @@ import {
 	HydratePayload,
 	ListRunningRestores,
 	MarkRunningRestoresInterrupted,
-	NewRestoreAction,
-	NewRestoreRun,
-	RecordActionResult,
 	ReopenRestoreRun,
+	RecordActionResult,
+	SetRestoreMessage,
 	SkipRestoreActions
-} from '../../CRUD/SnapshotRestores.js';
-import { DIFF_CHANGE_TYPE, RESTORE_OPTIONS, RESTORE_RESULT, RESTORE_STATUS, SNAPSHOT_TYPE } from '../../Utils/Constants.js';
+} = await import('../../CRUD/SnapshotRestores.js');
+
+type NewRestoreAction = import('../../CRUD/SnapshotRestores.js').NewRestoreAction;
+type NewRestoreRun = import('../../CRUD/SnapshotRestores.js').NewRestoreRun;
 
 // RehydrateRemap is a pure function, but it lives in RestoreRunner.ts, which imports the real
-// discord.js client from Client.js at module scope - mock it like every other consumer of
-// RestoreRunner.ts does, purely to satisfy that import (this file's real-DB nature is unaffected).
+// discord.js client from Client.js at module scope - mock it like every other consumer does,
+// purely to satisfy that import.
 vi.mock('../../Client.js');
 const { RehydrateRemap } = await import('../../Services/RestoreRunner.js');
 
-/**
- * This is the only test file in the repo that talks to a real database instead of mocking
- * `../../Database.js` - `CRUD/SnapshotRestores.ts` hand-rolls bigint<->JSON coercion on the
- * `payload` column (`SerializePayload`/`HydratePayload`), and only a real round trip through
- * MariaDB's JSON column and driver can verify that survives.
- *
- * Every test gets its own throwaway `Guilds` row (a high, timestamp-derived ID kept well outside
- * real Discord snowflake range) and deletes it in `afterEach` - the `ON DELETE CASCADE` on
- * `SnapshotRestores.guild_id` takes every run and action row with it, so no per-row cleanup is
- * needed. `snapshot_id`/`safety_snapshot_id` are deliberately FK-less, so no `Snapshots` row is
- * required to satisfy them.
- */
+const GUILD_ID = 10n;
 
-let guildCounter = 0n;
-const TEST_GUILD_BASE = 900_000_000_000_000_000n + BigInt(Date.now());
-function nextGuildID(): bigint {
-	return TEST_GUILD_BASE + guildCounter++;
-}
-
-async function makeGuild(): Promise<bigint> {
-	const id = nextGuildID();
-	await Database.query('INSERT INTO Guilds (id, name, features) VALUES (?, ?, ?)', [id, 'Restore CRUD test guild', 0]);
-	return id;
-}
-
-async function deleteGuild(id: bigint): Promise<void> {
-	await Database.query('DELETE FROM Guilds WHERE id = ?', [id]);
-}
-
-function baseRun(guildID: bigint): NewRestoreRun {
+function baseRun(): NewRestoreRun {
 	return {
-		guild_id: guildID,
+		guild_id: GUILD_ID,
 		snapshot_id: 1,
 		import_id: null,
 		safety_snapshot_id: null,
@@ -63,12 +257,19 @@ function baseRun(guildID: bigint): NewRestoreRun {
 	};
 }
 
-let guildID: bigint;
-beforeEach(async () => {
-	guildID = await makeGuild();
-});
-afterEach(async () => {
-	await deleteGuild(guildID);
+/** `count` bare actions, so a run can be seeded at whatever size a case needs */
+function actions(count: number): NewRestoreAction[] {
+	return Array.from({ length: count }, (_, index) => ({
+		category   : RESTORE_OPTIONS.ROLES,
+		change_type: DIFF_CHANGE_TYPE.CREATE,
+		target_id  : BigInt(index + 1),
+		label      : `r${index}`,
+		payload    : null
+	}));
+}
+
+beforeEach(() => {
+	store.reset();
 });
 
 describe('HydratePayload', () => {
@@ -97,13 +298,35 @@ describe('CreateRestoreRun / GetRestoreActions - payload round-trip', () => {
 			}
 		};
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [action]);
+		const restoreID = await CreateRestoreRun(baseRun(), [action]);
 		const [row] = await GetRestoreActions(restoreID);
 
 		expect(row.payload).toEqual(action.payload);
 		expect(typeof (row.payload as { id: unknown }).id).toBe('bigint');
 		expect(typeof (row.payload as { permissions: unknown }).permissions).toBe('bigint');
 		expect(typeof (row.payload as { managed_by: unknown }).managed_by).toBe('bigint');
+	});
+
+	/**
+	 * The round-trips above only mean something if the trip is real - a fake that handed the live
+	 * object back would pass every one of them without `SerializePayload` ever running. Bigints do
+	 * not survive `JSON.stringify` unaided (hence `JSONReplacer`), so this is also what proves they
+	 * are written as strings rather than throwing.
+	 */
+	it('stores the payload as JSON text, not as a live object', async () => {
+		const restoreID = await CreateRestoreRun(baseRun(), [{
+			category: RESTORE_OPTIONS.ROLES,
+			change_type: DIFF_CHANGE_TYPE.CREATE,
+			target_id: 456n,
+			label: '@Test Role',
+			payload: { id: 456n, name: 'Test Role', color: 0, hoist: 0, position: 1, permissions: 8n, managed_by: null }
+		}]);
+
+		const stored = store.actions.find(action => action.restore_id === restoreID)!.payload;
+		expect(typeof stored).toBe('string');
+		expect(JSON.parse(stored as string)).toEqual({
+			id: '456', name: 'Test Role', color: 0, hoist: 0, position: 1, permissions: '8', managed_by: null
+		});
 	});
 
 	it('round-trips a channel payload - id/parent_id as bigint, overwrite allow/deny as strings, nsfw/position/type intact', async () => {
@@ -126,7 +349,7 @@ describe('CreateRestoreRun / GetRestoreActions - payload round-trip', () => {
 			}
 		};
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [action]);
+		const restoreID = await CreateRestoreRun(baseRun(), [action]);
 		const [row] = await GetRestoreActions(restoreID);
 		const payload = row.payload as Extract<typeof row.payload, { parent_id: unknown }>;
 
@@ -151,13 +374,29 @@ describe('CreateRestoreRun / GetRestoreActions - payload round-trip', () => {
 			payload: { id: 321n, reason: 'raided the server' }
 		};
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [action]);
+		const restoreID = await CreateRestoreRun(baseRun(), [action]);
 		const [row] = await GetRestoreActions(restoreID);
 		const payload = row.payload as { id: bigint, reason: string };
 
 		expect(payload.id).toBe(321n);
 		expect(typeof payload.id).toBe('bigint');
 		expect(payload.reason).toBe('raided the server');
+	});
+
+	/** The same round trip with the driver's JSON parsing turned off - `HydratePayload` absorbs it */
+	it('round-trips unchanged when the driver hands back the raw column text', async () => {
+		store.parseJSONColumn = false;
+
+		const restoreID = await CreateRestoreRun(baseRun(), [{
+			category: RESTORE_OPTIONS.ROLES,
+			change_type: DIFF_CHANGE_TYPE.CREATE,
+			target_id: 456n,
+			label: '@Test Role',
+			payload: { id: 456n, name: 'Test Role', color: 0, hoist: 0, position: 1, permissions: 8n, managed_by: 123n }
+		}]);
+		const [row] = await GetRestoreActions(restoreID);
+
+		expect(row.payload).toEqual({ id: 456n, name: 'Test Role', color: 0, hoist: 0, position: 1, permissions: 8n, managed_by: 123n });
 	});
 
 	it('keeps parent_id null, not 0n, when the payload has no parent', async () => {
@@ -172,7 +411,7 @@ describe('CreateRestoreRun / GetRestoreActions - payload round-trip', () => {
 			}
 		};
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [action]);
+		const restoreID = await CreateRestoreRun(baseRun(), [action]);
 		const [row] = await GetRestoreActions(restoreID);
 
 		expect((row.payload as { parent_id: unknown }).parent_id).toBeNull();
@@ -187,7 +426,7 @@ describe('CreateRestoreRun / GetRestoreActions - payload round-trip', () => {
 			payload: { id: 457n, name: 'Unmanaged Role', color: 0, hoist: 0, position: 1, permissions: 0n, managed_by: null }
 		};
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [action]);
+		const restoreID = await CreateRestoreRun(baseRun(), [action]);
 		const [row] = await GetRestoreActions(restoreID);
 
 		expect((row.payload as { managed_by: unknown }).managed_by).toBeNull();
@@ -202,10 +441,11 @@ describe('CreateRestoreRun / GetRestoreActions - payload round-trip', () => {
 			payload: null
 		};
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [action]);
+		const restoreID = await CreateRestoreRun(baseRun(), [action]);
 		const [row] = await GetRestoreActions(restoreID);
 
 		expect(row.payload).toBeNull();
+		expect(store.actions[0].payload).toBeNull();
 	});
 });
 
@@ -224,24 +464,26 @@ describe('CreateRestoreRun - atomicity and shape', () => {
 			payload: circular as never
 		};
 
-		await expect(CreateRestoreRun(baseRun(guildID), [action])).rejects.toThrow();
+		await expect(CreateRestoreRun(baseRun(), [action])).rejects.toThrow();
 
-		const rows = await Database.query('SELECT * FROM SnapshotRestores WHERE guild_id = ?', [guildID]);
-		expect(rows).toHaveLength(0);
+		expect(store.rollbacks).toBe(1);
+		expect(store.commits).toBe(0);
+		expect(store.runs).toHaveLength(0);
+		expect(store.actions).toHaveLength(0);
 	});
 
 	it('creates a run with zero actions - total_actions = 0, the action batch is skipped', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), []);
+		const restoreID = await CreateRestoreRun(baseRun(), []);
 
 		const run = await GetRestoreRun(restoreID);
 		expect(run!.total_actions).toBe(0);
 
-		const actions = await GetRestoreActions(restoreID);
-		expect(actions).toHaveLength(0);
+		expect(await GetRestoreActions(restoreID)).toHaveLength(0);
+		expect(store.commits).toBe(1);
 	});
 
 	it('persists rows in exactly the plan order (seq = array index)', async () => {
-		const actions: NewRestoreAction[] = Array.from({ length: 5 }, (_, i) => ({
+		const plan: NewRestoreAction[] = Array.from({ length: 5 }, (_, i) => ({
 			category: RESTORE_OPTIONS.BANS,
 			change_type: DIFF_CHANGE_TYPE.CREATE,
 			target_id: BigInt(100 + i),
@@ -249,16 +491,18 @@ describe('CreateRestoreRun - atomicity and shape', () => {
 			payload: { id: BigInt(100 + i), reason: 'test' }
 		}));
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), actions);
+		const restoreID = await CreateRestoreRun(baseRun(), plan);
 		const rows = await GetRestoreActions(restoreID);
 
 		expect(rows.map(r => r.label)).toEqual(['ban-0', 'ban-1', 'ban-2', 'ban-3', 'ban-4']);
 		expect(rows.map(r => r.seq)).toEqual([0, 1, 2, 3, 4]);
 	});
 
-	it('truncates a label at 200 characters (VARCHAR(200)) without erroring', async () => {
+	// The column is VARCHAR(200), so an over-long label would be the database's error to raise -
+	// this truncates in code first, precisely so it never gets that far
+	it('truncates a label at 200 characters without erroring', async () => {
 		const longLabel = '#' + 'x'.repeat(300);
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [{
+		const restoreID = await CreateRestoreRun(baseRun(), [{
 			category: RESTORE_OPTIONS.CHANNELS,
 			change_type: DIFF_CHANGE_TYPE.DELETE,
 			target_id: 1n,
@@ -272,8 +516,8 @@ describe('CreateRestoreRun - atomicity and shape', () => {
 	});
 
 	it('discriminates snapshot_id vs import_id and round-trips the correct type for each', async () => {
-		const snapshotRunID = await CreateRestoreRun({ ...baseRun(guildID), snapshot_id: 5, import_id: null }, []);
-		const importRunID = await CreateRestoreRun({ ...baseRun(guildID), snapshot_id: null, import_id: 'ABCD-1234' }, []);
+		const snapshotRunID = await CreateRestoreRun({ ...baseRun(), snapshot_id: 5, import_id: null }, []);
+		const importRunID = await CreateRestoreRun({ ...baseRun(), snapshot_id: null, import_id: 'ABCD-1234' }, []);
 
 		const snapshotRun = await GetRestoreRun(snapshotRunID);
 		expect(snapshotRun!.snapshot_id).toBe(5);
@@ -283,11 +527,44 @@ describe('CreateRestoreRun - atomicity and shape', () => {
 		expect(importRun!.snapshot_id).toBeNull();
 		expect(importRun!.import_id).toBe('ABCD-1234');
 	});
+
+	it('starts a run RUNNING, with no message id and nothing applied yet', async () => {
+		const restoreID = await CreateRestoreRun(baseRun(), actions(2));
+		const run = await GetRestoreRun(restoreID);
+
+		expect(run!.status).toBe(RESTORE_STATUS.RUNNING);
+		expect(run!.total_actions).toBe(2);
+		expect(run!.applied_actions).toBe(0);
+		expect(run!.message_id).toBeNull();
+		expect(run!.finished_at).toBeNull();
+		expect(typeof run!.started_at).toBe('bigint');
+	});
+
+	it('leaves every action PENDING, with no new_id and no error', async () => {
+		const restoreID = await CreateRestoreRun(baseRun(), actions(2));
+		const rows = await GetRestoreActions(restoreID);
+
+		expect(rows.every(a => a.result === RESTORE_RESULT.PENDING)).toBe(true);
+		expect(rows.every(a => a.new_id === null && a.error === null)).toBe(true);
+	});
+});
+
+describe('SetRestoreMessage', () => {
+	// The step log message is posted after the run row exists, so its ID lands in a second write
+	it('writes the message id onto the run without touching anything else', async () => {
+		const restoreID = await CreateRestoreRun(baseRun(), []);
+
+		await SetRestoreMessage(restoreID, 40n);
+		const run = await GetRestoreRun(restoreID);
+
+		expect(run!.message_id).toBe(40n);
+		expect(run!.status).toBe(RESTORE_STATUS.RUNNING);
+	});
 });
 
 describe('RecordActionResult / GetRestoreActions filtering', () => {
 	it('truncates a recorded error at 500 characters', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [{
+		const restoreID = await CreateRestoreRun(baseRun(), [{
 			category: RESTORE_OPTIONS.ROLES, change_type: DIFF_CHANGE_TYPE.UPDATE, target_id: 1n, label: '@role', payload: null
 		}]);
 		const longError = 'E'.repeat(2000);
@@ -300,7 +577,7 @@ describe('RecordActionResult / GetRestoreActions filtering', () => {
 	});
 
 	it('updates only the targeted (restore_id, seq) row, leaving siblings untouched', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [
+		const restoreID = await CreateRestoreRun(baseRun(), [
 			{ category: RESTORE_OPTIONS.ROLES, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 1n, label: 'r1', payload: null },
 			{ category: RESTORE_OPTIONS.ROLES, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 2n, label: 'r2', payload: null }
 		]);
@@ -314,8 +591,18 @@ describe('RecordActionResult / GetRestoreActions filtering', () => {
 		expect(rows[1].new_id).toBeNull();
 	});
 
+	// `seq` is unique per run, not globally - a sibling run's row at the same seq must not move
+	it('does not reach into another run at the same seq', async () => {
+		const first = await CreateRestoreRun(baseRun(), actions(1));
+		const second = await CreateRestoreRun(baseRun(), actions(1));
+
+		await RecordActionResult(first, 0, RESTORE_RESULT.OK, 999n);
+
+		expect((await GetRestoreActions(second))[0].result).toBe(RESTORE_RESULT.PENDING);
+	});
+
 	it('filters GetRestoreActions by result, staying seq-ordered', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [
+		const restoreID = await CreateRestoreRun(baseRun(), [
 			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 1n, label: 'a', payload: null },
 			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 2n, label: 'b', payload: null },
 			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 3n, label: 'c', payload: null }
@@ -332,19 +619,8 @@ describe('RecordActionResult / GetRestoreActions filtering', () => {
 });
 
 describe('SkipRestoreActions', () => {
-	/** `n` bare actions, so a run can be seeded at whatever size a case needs */
-	function actions(count: number): NewRestoreAction[] {
-		return Array.from({ length: count }, (_, index) => ({
-			category   : RESTORE_OPTIONS.ROLES,
-			change_type: DIFF_CHANGE_TYPE.CREATE,
-			target_id  : BigInt(index + 1),
-			label      : `r${index}`,
-			payload    : null
-		}));
-	}
-
 	it('skips only the listed seqs and clears their new_id', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), actions(4));
+		const restoreID = await CreateRestoreRun(baseRun(), actions(4));
 
 		await RecordActionResult(restoreID, 1, RESTORE_RESULT.FAILED, 777n, 'boom');
 		await SkipRestoreActions(restoreID, [1, 3], 'stopped before this action ran');
@@ -360,7 +636,7 @@ describe('SkipRestoreActions', () => {
 	});
 
 	it('truncates the error at 500 characters, like RecordActionResult', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), actions(1));
+		const restoreID = await CreateRestoreRun(baseRun(), actions(1));
 		const longError = 'E'.repeat(2000);
 
 		await SkipRestoreActions(restoreID, [0], longError);
@@ -370,34 +646,40 @@ describe('SkipRestoreActions', () => {
 	});
 
 	it('is a no-op for an empty seq list', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), actions(2));
+		const restoreID = await CreateRestoreRun(baseRun(), actions(2));
+		Database.query.mockClear();
 
 		await SkipRestoreActions(restoreID, [], 'stopped before this action ran');
 		const rows = await GetRestoreActions(restoreID);
 
 		expect(rows.every(a => a.result === RESTORE_RESULT.PENDING)).toBe(true);
+		// Not merely harmless - an empty list must not reach the database at all, since
+		// `seq IN ()` is a syntax error rather than a match-nothing
+		expect(Database.query.mock.calls.filter(([sql]) => sql.includes('UPDATE'))).toHaveLength(0);
 	});
 
 	// The whole point of the helper is draining a large plan in as few round trips as possible, so the
 	// case that spills past one `IN (...)` list has to update every row, not just the first chunk
 	it('updates every row when the seq list spans more than one chunk', async () => {
 		const total = 1201; // > 2 chunks of 500
-		const restoreID = await CreateRestoreRun(baseRun(guildID), actions(total));
+		const restoreID = await CreateRestoreRun(baseRun(), actions(total));
+		Database.query.mockClear();
 
 		await SkipRestoreActions(restoreID, Array.from({ length: total }, (_, index) => index), 'stopped');
 		const rows = await GetRestoreActions(restoreID);
 
 		expect(rows).toHaveLength(total);
 		expect(rows.every(a => a.result === RESTORE_RESULT.SKIPPED)).toBe(true);
+		expect(Database.query.mock.calls.filter(([sql]) => sql.includes('UPDATE'))).toHaveLength(3);
 	});
 });
 
-describe('RehydrateRemap - db round trip', () => {
-	it('rebuilds target_id -> new_id from real rows, for a retry re-parenting through a recreated category', async () => {
+describe('RehydrateRemap', () => {
+	it('rebuilds target_id -> new_id from persisted rows, for a retry re-parenting through a recreated category', async () => {
 		const categoryID = 500n;
 		const newCategoryID = 999n;
 
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [
+		const restoreID = await CreateRestoreRun(baseRun(), [
 			{
 				category: RESTORE_OPTIONS.CHANNELS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: categoryID,
 				label: '#category', payload: { id: categoryID, type: 4, name: 'category', position: 0, topic: null, nsfw: 0, parent_id: null, permission_overwrites: {} }
@@ -413,8 +695,7 @@ describe('RehydrateRemap - db round trip', () => {
 		// seq 1 (the child) failed before it could be created, so it never received a new_id.
 		await RecordActionResult(restoreID, 1, RESTORE_RESULT.FAILED, null, 'boom');
 
-		const actions = await GetRestoreActions(restoreID);
-		const remap = RehydrateRemap(actions);
+		const remap = RehydrateRemap(await GetRestoreActions(restoreID));
 
 		expect(remap.get(categoryID)).toBe(newCategoryID);
 		expect(remap.has(501n)).toBe(false);
@@ -423,7 +704,7 @@ describe('RehydrateRemap - db round trip', () => {
 
 describe('Run lifecycle - FinishRestoreRun / ReopenRestoreRun', () => {
 	it('FinishRestoreRun sets status, applied_actions and finished_at', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), []);
+		const restoreID = await CreateRestoreRun(baseRun(), []);
 		expect((await GetRestoreRun(restoreID))!.finished_at).toBeNull();
 
 		await FinishRestoreRun(restoreID, RESTORE_STATUS.COMPLETE, 5);
@@ -436,7 +717,7 @@ describe('Run lifecycle - FinishRestoreRun / ReopenRestoreRun', () => {
 	});
 
 	it('ReopenRestoreRun puts a finished run back to RUNNING and clears finished_at', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), []);
+		const restoreID = await CreateRestoreRun(baseRun(), []);
 		await FinishRestoreRun(restoreID, RESTORE_STATUS.FAILED, 0);
 
 		await ReopenRestoreRun(restoreID);
@@ -448,150 +729,36 @@ describe('Run lifecycle - FinishRestoreRun / ReopenRestoreRun', () => {
 });
 
 describe('ListRunningRestores', () => {
-	it('returns only status = RUNNING runs, and not this guild\'s finished run', async () => {
-		const runningID = await CreateRestoreRun(baseRun(guildID), []);
-		const finishedID = await CreateRestoreRun(baseRun(guildID), []);
+	it('returns only status = RUNNING runs, not the finished one', async () => {
+		const runningID = await CreateRestoreRun(baseRun(), []);
+		const finishedID = await CreateRestoreRun(baseRun(), []);
 		await FinishRestoreRun(finishedID, RESTORE_STATUS.COMPLETE, 0);
 
 		const running = await ListRunningRestores();
-		const ids = running.map(r => r.id);
 
-		expect(ids).toContain(runningID);
-		expect(ids).not.toContain(finishedID);
+		expect(running.map(r => r.id)).toEqual([runningID]);
 		expect(running.every(r => r.status === RESTORE_STATUS.RUNNING)).toBe(true);
 	});
 });
 
-describe('FK cascade', () => {
-	it('deleting the Guilds row deletes the run and its actions', async () => {
-		const restoreID = await CreateRestoreRun(baseRun(guildID), [
-			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 1n, label: 'a', payload: null }
-		]);
-
-		await deleteGuild(guildID);
-
-		const runRows = await Database.query('SELECT * FROM SnapshotRestores WHERE id = ?', [restoreID]);
-		const actionRows = await Database.query('SELECT * FROM SnapshotRestoreActions WHERE restore_id = ?', [restoreID]);
-		expect(runRows).toHaveLength(0);
-		expect(actionRows).toHaveLength(0);
-
-		// afterEach's deleteGuild(guildID) is now a no-op DELETE against an already-gone row - fine.
-	});
-});
-
 /**
- * §14: a retry replays the payloads on `SnapshotRestoreActions`, which is only true for as long as
- * deleting the source snapshot leaves those rows alone.
- *
- * `SnapshotRoles`/`SnapshotChannels`/`SnapshotBans` all cascade from `Snapshots(id)`; `SnapshotRestores`
- * deliberately does not - it has a foreign key on `guild_id` only, so `snapshot_id` and
- * `safety_snapshot_id` are plain columns. That asymmetry is the whole guarantee, and a later migration
- * adding the "missing" foreign key would break retry silently, which is why it is pinned here rather
- * than left to a live-bot check.
+ * Note this function has no guild filter - it interrupts every RUNNING run in the database, which
+ * is correct at startup (nothing can be running yet) and would be destructive anywhere else.
  */
-describe('source snapshot deletion', () => {
-	async function makeSnapshot(): Promise<number> {
-		const result = await Database.query(
-			'INSERT INTO Snapshots (guild_id, type, pinned) VALUES (?, ?, 0)',
-			[guildID, SNAPSHOT_TYPE.MANUAL]
-		) as { insertId: bigint };
-
-		return Number(result.insertId);
-	}
-
-	it('leaves the run row and its payloads intact when the snapshot it came from is deleted', async () => {
-		const snapshotID = await makeSnapshot();
-
-		const restoreID = await CreateRestoreRun({ ...baseRun(guildID), snapshot_id: snapshotID }, [
-			{
-				category: RESTORE_OPTIONS.ROLES, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 600n,
-				label: '@Admin',
-				payload: { id: 600n, name: 'Admin', color: 0xFF00FF, hoist: 1, position: 7, permissions: 8n, managed_by: null }
-			},
-			{
-				category: RESTORE_OPTIONS.CHANNELS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 601n,
-				label: '#logs',
-				payload: { id: 601n, type: 0, name: 'logs', position: 0, topic: null, nsfw: 0, parent_id: 602n, permission_overwrites: {} }
-			}
-		]);
-
-		const before = await GetRestoreActions(restoreID);
-		await Database.query('DELETE FROM Snapshots WHERE id = ?', [snapshotID]);
-
-		const run = await GetRestoreRun(restoreID);
-		expect(run).not.toBeNull();
-		// Not cascaded away, and not nulled out either - `RunLabel` still renders "Snapshot #N"
-		expect(run!.snapshot_id).toBe(snapshotID);
-		expect(run!.total_actions).toBe(2);
-
-		const after = await GetRestoreActions(restoreID);
-		expect(after).toEqual(before);
-		// The parent a retry re-parents through lives in the payload, not in the deleted snapshot
-		expect((after[1].payload as { parent_id: unknown }).parent_id).toBe(602n);
-	});
-
-	it('does cascade the snapshot\'s own entity rows, which is what makes the run rows the exception', async () => {
-		const snapshotID = await makeSnapshot();
-		await Database.query(
-			'INSERT INTO SnapshotRoles (snapshot_id, id, name, color, position, hoist, permissions) VALUES (?, ?, ?, ?, ?, ?, ?)',
-			[snapshotID, 700n, 'Admin', 0, 1, 0, 8n]
-		);
-
-		const restoreID = await CreateRestoreRun({ ...baseRun(guildID), snapshot_id: snapshotID }, [
-			{ category: RESTORE_OPTIONS.ROLES, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 700n, label: '@Admin', payload: null }
-		]);
-
-		await Database.query('DELETE FROM Snapshots WHERE id = ?', [snapshotID]);
-
-		const roleRows = await Database.query('SELECT * FROM SnapshotRoles WHERE snapshot_id = ?', [snapshotID]);
-		expect(roleRows).toHaveLength(0);
-
-		expect(await GetRestoreRun(restoreID)).not.toBeNull();
-		expect(await GetRestoreActions(restoreID)).toHaveLength(1);
-	});
-
-	it('leaves a run whose safety snapshot was rotated away readable, minus the way back', async () => {
-		const safetyID = await makeSnapshot();
-		const restoreID = await CreateRestoreRun({ ...baseRun(guildID), safety_snapshot_id: safetyID }, []);
-
-		// `safety_snapshot_id` is FK-less for the same reason, but a different one: DB_SETUP.sql notes
-		// the snapshot may be unpinned and rotated away long after the run finished
-		await Database.query('DELETE FROM Snapshots WHERE id = ?', [safetyID]);
-
-		const run = await GetRestoreRun(restoreID);
-		expect(run!.safety_snapshot_id).toBe(safetyID);
-	});
-});
-
 describe('MarkRunningRestoresInterrupted', () => {
-	/**
-	 * This function has no guild filter - it interrupts every RUNNING run in the database. Against
-	 * a shared/real local dev DB (see the file-level comment) that is only safe to exercise if
-	 * nothing outside this test's own guild is actually RUNNING right now. Guard rather than assume.
-	 */
 	it('interrupts PENDING actions to SKIPPED and the run to INTERRUPTED, leaves finished runs alone', async () => {
-		const runningID = await CreateRestoreRun(baseRun(guildID), [
+		const runningID = await CreateRestoreRun(baseRun(), [
 			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 1n, label: 'a', payload: null },
 			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 2n, label: 'b', payload: null }
 		]);
 		await RecordActionResult(runningID, 0, RESTORE_RESULT.OK);
 		// seq 1 is left PENDING on purpose
 
-		const finishedID = await CreateRestoreRun(baseRun(guildID), [
+		const finishedID = await CreateRestoreRun(baseRun(), [
 			{ category: RESTORE_OPTIONS.BANS, change_type: DIFF_CHANGE_TYPE.CREATE, target_id: 3n, label: 'c', payload: null }
 		]);
 		await RecordActionResult(finishedID, 0, RESTORE_RESULT.OK);
 		await FinishRestoreRun(finishedID, RESTORE_STATUS.COMPLETE, 1);
-
-		const otherRunning = (await ListRunningRestores()).filter(r => r.id !== runningID);
-		if (otherRunning.length > 0) {
-			throw new Error(
-				`Refusing to run MarkRunningRestoresInterrupted: ${otherRunning.length} RUNNING restore(s) ` +
-				`exist outside this test (guild(s): ${otherRunning.map(r => r.guild_id).join(', ')}). ` +
-				'This function has no guild filter and would interrupt real, unrelated restores. ' +
-				'Re-run once nothing else is actually restoring against this database.'
-			);
-		}
 
 		await MarkRunningRestoresInterrupted();
 
@@ -609,15 +776,14 @@ describe('MarkRunningRestoresInterrupted', () => {
 		expect(finishedActions[0].result).toBe(RESTORE_RESULT.OK); // untouched
 	});
 
-	it('is a no-op when no other RUNNING rows exist for this guild', async () => {
-		const otherRunning = await ListRunningRestores();
-		if (otherRunning.length > 0) {
-			throw new Error(
-				`Refusing to run MarkRunningRestoresInterrupted: ${otherRunning.length} RUNNING restore(s) ` +
-				'exist outside this test. This function has no guild filter.'
-			);
-		}
+	it('is a no-op when nothing is RUNNING', async () => {
+		const finishedID = await CreateRestoreRun(baseRun(), actions(1));
+		await FinishRestoreRun(finishedID, RESTORE_STATUS.COMPLETE, 1);
 
 		await expect(MarkRunningRestoresInterrupted()).resolves.toBeUndefined();
+
+		const run = await GetRestoreRun(finishedID);
+		expect(run!.status).toBe(RESTORE_STATUS.COMPLETE);
+		expect((await GetRestoreActions(finishedID))[0].result).toBe(RESTORE_RESULT.PENDING);
 	});
 });

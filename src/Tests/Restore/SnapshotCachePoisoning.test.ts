@@ -10,9 +10,9 @@ import { BOT_USER_ID, makeGuild, role } from './Fixtures.js';
  * Drives the real (unmocked) `GetSnapshot`/`BuildRestorePlan` code paths against a mocked
  * `Database.js` rather than a live MariaDB - the thing actually under test is the module-level LRU
  * cache in `CRUD/Snapshots.ts`, which is pure in-memory JS and does not need a real database to
- * exercise honestly. `SnapshotCachePoisoning` is kept out of `SnapshotRestores.test.ts` deliberately:
- * that file is the one suite that talks to a real database, and mixing a mocked-`Database.js` file
- * into it would blur which convention applies where.
+ * exercise honestly. Kept out of `SnapshotRestores.test.ts` because that file's fake `Database.js`
+ * models the two restore tables specifically, and would have to grow a `Snapshots` table it has no
+ * other use for.
  */
 
 vi.mock('../../Client.js', () => ({ client: { user: { id: BOT_USER_ID } } }));

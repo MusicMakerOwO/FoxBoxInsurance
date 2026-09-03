@@ -547,7 +547,7 @@ describe('RetryRestore', () => {
 /**
  * §14: a retry replays the payloads persisted on `SnapshotRestoreActions`, so it is unaffected by the
  * source snapshot being deleted in between - there is no foreign key from `SnapshotRestores.snapshot_id`
- * to `Snapshots(id)` (see the `db` half in `SnapshotRestores.test.ts`) and nothing on this path reads
+ * to `Snapshots(id)` (pinned in `DBSchemaGuards.test.ts`) and nothing on this path reads
  * the snapshot tables. That is deliberate: rebuilding the plan would diff against the server as it is
  * *now* and could surface actions the admin never confirmed.
  */

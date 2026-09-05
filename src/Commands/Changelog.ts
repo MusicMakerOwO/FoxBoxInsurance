@@ -295,6 +295,9 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"A safety snapshot is taken automatically before every restore, so a restore can itself be undone",
 			"Restores post a live progress log in the channel, and can be stopped partway through",
 			"Deleting a channel takes its message history with it - we cannot bring those back, so read the preview",
+			"Added a group of charts to view server activity - last week, month, year",
+			"Added a timezone selected to the charts for your convenience",
+			"Fixed some small internal bugs (special thanks to @sevryn.devyxi)"
 		]
 	}
 } as const;

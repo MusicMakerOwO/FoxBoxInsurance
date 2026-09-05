@@ -5,7 +5,8 @@ import { renderYearView, DayBucket as YearDayBucket } from "../Utils/Activity/re
 import { AggregateMessageHistory } from "../Utils/Activity/AggregateMessageHistory.js";
 import { SECONDS } from "../Utils/Constants.js";
 import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes.js";
-import { GetTimezone, IANAToTimezone } from "../CRUD/UserTimezones.js";
+import { GetTimezone } from "../CRUD/UserTimezones.js";
+import { TimezoneLabel } from "../Utils/Timezones.js";
 import { ZonedDate, ZonedDayStarts } from "../Utils/ZonedTime.js";
 
 const Month = [
@@ -79,7 +80,7 @@ export default {
 		const initials = (interaction.guild?.name ?? "MH").slice(0, 2).toUpperCase();
 
 		const userTimezone = await GetTimezone(interaction.user.id);
-		const timezoneLabel = IANAToTimezone(userTimezone);
+		const timezoneLabel = TimezoneLabel(userTimezone, Date.now());
 
 		let image: Buffer;
 
@@ -204,6 +205,7 @@ export default {
 		}
 
 		return {
+			embeds: [],
 			files: [{
 				attachment: image,
 				name: 'history.png'

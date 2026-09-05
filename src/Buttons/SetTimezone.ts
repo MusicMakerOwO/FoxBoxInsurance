@@ -1,5 +1,6 @@
 import { ButtonHandler } from "../Typings/HandlerTypes.js";
-import { GetTimezone, IANAToTimezone } from "../CRUD/UserTimezones.js";
+import { GetTimezone } from "../CRUD/UserTimezones.js";
+import { TimezoneLabel } from "../Utils/Timezones.js";
 
 export default {
 	tos_features: [],
@@ -10,7 +11,7 @@ export default {
 	customID: 'set-timezone',
 	execute: async function (interaction, client, args) {
 		const currentTimezone = await GetTimezone(interaction.user.id);
-		const pretty = IANAToTimezone(currentTimezone);
+		const pretty = TimezoneLabel(currentTimezone);
 
 		return {
 			title: 'Set Your Timezone',
@@ -20,9 +21,9 @@ export default {
 				components: [{
 					type: 4,
 					custom_id: 'data',
-					label: 'Timezone (EST, GMT, etc.)',
+					label: 'Timezone',
 					style: 1,
-					placeholder: 'Enter a timezone...',
+					placeholder: 'EST, UTC+2, Europe/London...',
 					value: pretty,
 					required: true
 				}]

@@ -11,7 +11,7 @@
  *
  * Known limitation: callers that bucket at whole hours (`AggregateMessageHistory`) floor to epoch
  * hour multiples, which line up with local hour boundaries only in whole-hour zones. In the half
- * hour zones `TIMEZONE_ZONES` offers - `Asia/Kolkata` (+5:30), `America/St_Johns` (-3:30),
+ * hour zones `Utils/Timezones.ts` offers - `Asia/Kolkata` (+5:30), `America/St_Johns` (-3:30),
  * `Australia/Adelaide` (+9:30) - the day still starts on local midnight, but each hourly slot
  * covers HH:30 to HH:30 local. Fixing that needs 30 minute buckets, not a different day start.
  */
@@ -43,7 +43,7 @@ function Formatter(zone: string): Intl.DateTimeFormat {
  * Resolved at `timestamp`, so the same zone returns different values either side of a daylight
  * saving transition - `America/Chicago` is -5h in July and -6h in January.
  *
- * @param zone      IANA zone, ie one of the values in `TIMEZONE_ZONES`
+ * @param zone      IANA zone, ie an `iana` value from `Utils/Timezones.ts`
  * @param timestamp Milliseconds, as from `Date.now()`
  */
 export function ZoneOffset(zone: string, timestamp: number): number {
@@ -73,7 +73,7 @@ export function ZoneOffset(zone: string, timestamp: number): number {
  * already reads dates with `getUTC*` (every activity renderer does) without touching that code.
  * Do not use it for arithmetic against real timestamps.
  *
- * @param zone      IANA zone, ie one of the values in `TIMEZONE_ZONES`
+ * @param zone      IANA zone, ie an `iana` value from `Utils/Timezones.ts`
  * @param timestamp Milliseconds, as from `Date.now()`
  */
 export function ZonedDate(zone: string, timestamp: number): Date {
@@ -102,7 +102,7 @@ function StartOfDay(zone: string, year: number, month: number, day: number): num
  * gap between neighbours is 23, 24 or 25 hours depending on daylight saving, and every entry lands
  * on local midnight regardless.
  *
- * @param zone      IANA zone, ie one of the values in `TIMEZONE_ZONES`
+ * @param zone      IANA zone, ie an `iana` value from `Utils/Timezones.ts`
  * @param timestamp Milliseconds, as from `Date.now()`
  * @param count     How many days the window covers, including the day `timestamp` is in
  */

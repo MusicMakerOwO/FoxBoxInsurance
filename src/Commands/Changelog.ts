@@ -287,7 +287,7 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 		]
 	},
 	"5.2.0": {
-		date: "2026 August 29th",
+		date: "2026 September 5th",
 		changes: [
 			"Added snapshot restore - roll a server back until its channels, roles and bans match a snapshot",
 			"Restores show you every single change first, grouped by category, with the destructive ones called out",

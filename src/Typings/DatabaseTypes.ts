@@ -2,7 +2,6 @@ import { ObjectValues } from "./HelperTypes.js";
 import { APIEmbed, APIMessageTopLevelComponent } from "discord-api-types/v10";
 import { DIFF_CHANGE_TYPE, FORMAT, RESTORE_OPTIONS, RESTORE_RESULT, RESTORE_STATUS, SNAPSHOT_TYPE } from "../Utils/Constants.js";
 import { JSONStringify } from "../JSON.js";
-import { TIMEZONE_ZONES } from "../CRUD/UserTimezones.js";
 
 export const ASSET_TYPE = {
 	GUILD     : 0,
@@ -90,9 +89,9 @@ export type SimpleEmoji = {
 }
 
 export type SimpleUserTimezone = {
-	id: bigint,
+	user_id: bigint,
 	/** IANA zone, i.e. America/New_York */
-	timezone: ObjectValues<typeof TIMEZONE_ZONES>
+	timezone: string
 }
 
 export type SimpleSticker = {

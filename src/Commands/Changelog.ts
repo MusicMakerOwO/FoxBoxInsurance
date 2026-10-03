@@ -1,6 +1,7 @@
 import {SlashCommandBuilder} from "discord.js";
+import {APIEmbed} from "discord-api-types/v10";
 import {COLOR} from "../Utils/Constants.js";
-import {CommandHandler} from "../Typings/HandlerTypes.js";
+import {CommandHandler, InteractionResponse} from "../Typings/HandlerTypes.js";
 
 const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 	"2.0.1": {
@@ -302,12 +303,29 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 	}
 } as const;
 
-export const LATEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => b.localeCompare(a))[0];
-
 function ParseSemver(input: string): [major: string, minor: string, patch: string] {
 	const parts = input.split('.');
 	if (parts.length !== 3) throw new Error(`Invalid semver: ${input}`);
 	return parts as ReturnType<typeof ParseSemver>;
+}
+
+/** Oldest first. Compares each part as a number - as text, 5.10.0 sorts below 5.9.0 */
+export function CompareSemver(a: string, b: string): number {
+	const partsA = ParseSemver(a).map(Number);
+	const partsB = ParseSemver(b).map(Number);
+	return (partsA[0] - partsB[0]) || (partsA[1] - partsB[1]) || (partsA[2] - partsB[2]);
+}
+
+export const LATEST_VERSION = Object.keys(CHANGELOG).sort((a, b) => CompareSemver(b, a))[0];
+
+const EMBED_DESCRIPTION_LIMIT = 4096;
+/** Discord's cap on the text of every embed in one message combined */
+const MESSAGE_EMBED_LIMIT = 6000;
+/** Room kept for the "older releases not shown" line */
+const OLDER_NOTE_RESERVE = 100;
+
+function NotFound(description: string): InteractionResponse {
+	return { embeds: [{ color: COLOR.ERROR, description }] };
 }
 
 export default {
@@ -333,10 +351,11 @@ export default {
 			const majors = Array.from( new Set(Object.keys(CHANGELOG).map(v => ParseSemver(v)[0] )) );
 			return [
 				{ name: 'Latest', value: 'latest' },
-				... majors.map(major => ({ name: `v${major}`, value: `${major}.0.0` }))
+				// `N.0` is what execute reads as "every release of this major"
+				... majors.map(major => ({ name: `v${major}`, value: `${major}.0` }))
 			]
 		} else {
-			const versions = Object.keys(CHANGELOG).filter(v => v.startsWith(input) || v.startsWith(`v${input}`)).sort((a, b) => a.localeCompare(b)).slice(0, 25);
+			const versions = Object.keys(CHANGELOG).filter(v => v.startsWith(input) || v.startsWith(`v${input}`)).sort(CompareSemver).slice(0, 25);
 			return versions.map(v => ({ name: `v${v} - ${CHANGELOG[v].date}`, value: v }));
 		}
 	},
@@ -348,35 +367,47 @@ export default {
 			const majorNum = majorMatch[1];
 			const entries = Object.entries(CHANGELOG)
 			.filter(([v]) => v.startsWith(`${majorNum}.`))
-			.sort((a, b) => b[0].localeCompare(a[0]));
+			.sort((a, b) => CompareSemver(b[0], a[0]));
 
 			if (!entries.length) {
-				return { content: `No changelog found for major version \`${majorNum}.x\``, ephemeral: true };
+				return NotFound(`No changelog found for major version \`${majorNum}.x\``);
 			}
 
-			const embed = {
-				color: COLOR.PRIMARY,
-				title: `Fox Box Insurance : v${majorNum}.x`,
-				description: ''
-			};
+			const title = `Fox Box Insurance : v${majorNum}.x`;
+			const embeds: APIEmbed[] = [{ color: COLOR.PRIMARY, title, description: '' }];
 
+			// A whole major does not fit one description. Spill into further embeds, and stop at
+			// Discord's total for a message - the newest releases are the ones that make it
+			let budget = MESSAGE_EMBED_LIMIT - title.length - OLDER_NOTE_RESERVE;
+			let shown = 0;
 			for (const [ver, data] of entries) {
-				embed.description += `**${ver}** - \`${data.date}\`\n`;
-				embed.description += `${data.changes.map(x => `\\- ${x}`).join('\n')}\n\n`;
+				const block = `**${ver}** - \`${data.date}\`\n${data.changes.map(x => `\\- ${x}`).join('\n')}\n\n`;
+				if (block.length > budget || block.length > EMBED_DESCRIPTION_LIMIT) break;
+
+				if (embeds.at(-1)!.description!.length + block.length > EMBED_DESCRIPTION_LIMIT) {
+					embeds.push({ color: COLOR.PRIMARY, description: '' });
+				}
+				embeds.at(-1)!.description += block;
+				budget -= block.length;
+				shown++;
 			}
 
-			return { embeds: [embed] };
+			if (shown < entries.length) {
+				const note = `-# ${entries.length - shown} older release(s) not shown, use \`/changelog <version>\` to view one`;
+				if (embeds.at(-1)!.description!.length + note.length > EMBED_DESCRIPTION_LIMIT) {
+					embeds.push({ color: COLOR.PRIMARY, description: '' });
+				}
+				embeds.at(-1)!.description += note;
+			}
+
+			return { embeds };
 		}
 
 		const version = input === 'latest' ? LATEST_VERSION : input;
 
 		const data = CHANGELOG[version];
 		if (!data) {
-			console.error(`Changelog for version "${input}" not found`);
-			return {
-				content: `No changelog found for version \`${input}\``,
-				ephemeral: true
-			}
+			return NotFound(`No changelog found for version \`${input}\``);
 		}
 
 		const embed = {

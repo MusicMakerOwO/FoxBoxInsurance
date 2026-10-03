@@ -2,6 +2,12 @@ import {CommandHandler} from "../Typings/HandlerTypes.js";
 import {SlashCommandBuilder} from "discord.js";
 import {COLOR} from "../Utils/Constants.js";
 import {DiscordActionRow, DiscordStringSelect} from "../Typings/DiscordTypes.js";
+import {IClient} from "../Client.js";
+
+/** Every command once, without its aliases, sorted by name */
+function RootCommands(client: IClient): CommandHandler[] {
+	return Array.from(new Set(client.commands.values())).sort((a, b) => a.data.name.localeCompare(b.data.name));
+}
 
 export default {
 	tos_features  : [],
@@ -25,18 +31,18 @@ export default {
 			.setAutocomplete(true)
 		),
 	autocomplete: async function (interaction, client) {
-		const commandList = Array.from(client.commands.keys()).sort((a, b) => a.localeCompare(b));
-
 		let focusedValue = interaction.options.getFocused();
 		if (!focusedValue) {
-			return commandList.map(x => ({ name: '/' + x, value: x }));
+			return RootCommands(client).map(x => ({ name: '/' + x.data.name, value: x.data.name }));
 		}
 
 		if (focusedValue.startsWith('/')) {
 			focusedValue = focusedValue.slice(1);
 		}
 
-		const filtered = commandList.filter(x => x.includes(focusedValue));
+		// Aliases can be searched for too. Discord rejects more than 25 choices
+		const commandList = Array.from(client.commands.keys()).sort((a, b) => a.localeCompare(b));
+		const filtered = commandList.filter(x => x.includes(focusedValue)).slice(0, 25);
 		return filtered.map(x => ({ name: '/' + x, value: x }))
 	},
 	execute: async function (interaction, client) {
@@ -75,8 +81,7 @@ export default {
 			};
 
 			return {
-				embeds: [embed],
-				ephemeral: true,
+				embeds: [embed]
 			}
 		}
 
@@ -89,15 +94,18 @@ export default {
 			}],
 		}
 
+		// Aliases share their command's entry - listed separately they pushed the dropdown past Discord's 25 options
+		const rootCommands = RootCommands(client);
+
 		const lines = [];
 		lines.push('```');
-		lines.push(`Available commands (${client.commands.size} total)`);
-		const commandList = Array.from(client.commands.keys()).sort((a, b) => a.localeCompare(b));
-		for (const commandName of commandList) {
-			lines.push(`  /${commandName}`);
+		lines.push(`Available commands (${rootCommands.length} total)`);
+		for (const command of rootCommands) {
+			const aliases = command.aliases?.length ? ` (${command.aliases.join(', ')})` : '';
+			lines.push(`  /${command.data.name}${aliases}`);
 			dropdown.components[0].options.push({
-				label: '/' + commandName,
-				value: commandName
+				label: '/' + command.data.name,
+				value: command.data.name
 			});
 		}
 		lines.push('\nUse `/help <command>` for more information on a specific command.');

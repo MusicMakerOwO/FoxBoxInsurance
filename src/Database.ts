@@ -5,6 +5,8 @@ import {Awaitable} from "./Typings/HelperTypes.js";
 const connection_warning = new WeakMap(); // Connection => timeoutID
 const connection_location = new WeakMap(); // Connection => stack trace
 
+export type DisposableConnection = PoolConnection & Disposable & AsyncDisposable;
+
 class DatabaseWrapper {
 	connection_pool: Pool | undefined;
 
@@ -24,20 +26,31 @@ class DatabaseWrapper {
 		this.connection_pool = createPool(`${uri}${uri.includes('?') ? '&' : '?'}timezone=Z`);
 	}
 
-	async getConnection() {
+	/**
+	 * Check out a connection for multi-statement work. Prefer `using connection = await Database.getConnection()`
+	 * so it's released when the scope exits, throw or not; the manual `releaseConnection` pairing is legacy.
+	 */
+	async getConnection(): Promise<DisposableConnection> {
 		await this.Initialize();
 
-		const connection = await this.connection_pool!.getConnection();
+		const connection = await this.connection_pool!.getConnection() as DisposableConnection;
 		const timeoutID = setTimeout(() => {
 			const stack = connection_location.get(connection);
 			Log('ERROR', `A database connection has been checked out for over 10 seconds. Did you forget to release it?${stack ? '\n' + stack : ''}`);
 		}, 10_000);
 		connection_warning.set(connection, timeoutID);
 		connection_location.set(connection, new Error().stack!.split('\n').slice(1).join('\n'));
+
+		// mariadb attaches its own asyncDispose, but it calls the raw release() and would leave the warning armed
+		connection[Symbol.dispose] = () => Database.releaseConnection(connection);
+		connection[Symbol.asyncDispose] = async () => Database.releaseConnection(connection);
 		return connection;
 	}
 
 	releaseConnection(connection: PoolConnection) {
+		// Already released - an explicit release inside a `using` scope must not hand it back to the pool twice
+		if (!connection_warning.has(connection)) return;
+
 		// no await because we don't care about the result
 		void connection.release();
 

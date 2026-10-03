@@ -69,3 +69,57 @@ describe('Database.query / batch / transaction leak tracking', () => {
 		expect(Log).toHaveBeenCalledWith('ERROR', expect.stringContaining('checked out for over 10 seconds'));
 	});
 });
+
+describe('Database.getConnection disposal', () => {
+	it('releases once when a `using` scope exits, and the warning never fires', async () => {
+		const connection = makeConnection();
+		getConnection.mockResolvedValue(connection);
+
+		{
+			using _connection = await Database.getConnection();
+		}
+		await vi.advanceTimersByTimeAsync(10_000);
+
+		expect(connection.release).toHaveBeenCalledOnce();
+		expect(Log).not.toHaveBeenCalled();
+	});
+
+	// mariadb's own asyncDispose calls the raw release() and would leave the warning armed
+	it('routes `await using` through releaseConnection too', async () => {
+		const connection = makeConnection();
+		getConnection.mockResolvedValue(connection);
+
+		{
+			await using _connection = await Database.getConnection();
+		}
+		await vi.advanceTimersByTimeAsync(10_000);
+
+		expect(connection.release).toHaveBeenCalledOnce();
+		expect(Log).not.toHaveBeenCalled();
+	});
+
+	it('releases when the scope throws', async () => {
+		const connection = makeConnection();
+		getConnection.mockResolvedValue(connection);
+
+		async function Throws() {
+			using _connection = await Database.getConnection();
+			throw new Error('query failed');
+		}
+
+		await expect(Throws()).rejects.toThrow('query failed');
+		expect(connection.release).toHaveBeenCalledOnce();
+	});
+
+	it('does not release twice when released by hand inside a `using` scope', async () => {
+		const connection = makeConnection();
+		getConnection.mockResolvedValue(connection);
+
+		{
+			using checkedOut = await Database.getConnection();
+			Database.releaseConnection(checkedOut);
+		}
+
+		expect(connection.release).toHaveBeenCalledOnce();
+	});
+});

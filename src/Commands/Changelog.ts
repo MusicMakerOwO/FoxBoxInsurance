@@ -300,6 +300,23 @@ const CHANGELOG: Record<string, { date: string, changes: string[] }> = {
 			"Added a timezone selected to the charts for your convenience",
 			"Fixed some small internal bugs (special thanks to @sevryn.devyxi)"
 		]
+	},
+	"5.2.1": {
+		date: "2026 October 3rd",
+		changes: [
+			"Fixed a security issue where a snapshot from another server could be viewed or restored",
+			"Viewing and importing snapshots now requires Administrator, like the rest of the snapshot menu",
+			"Any Administrator can now delete a snapshot, not just the server owner",
+			"Fixed `/help` not working",
+			"Fixed `/changelog` not showing every release of a major version",
+			"Fixed buttons sometimes getting stuck on \"thinking...\" instead of showing an error",
+			"Fixed old buttons staying on screen after an error or an expired menu",
+			"Fixed the \"Last\" page button breaking in snapshot lists",
+			"Fixed wrong numbers in the global message stats",
+			"Fixed typing 0 or text as an export message count silently exporting 100 messages",
+			"An uploaded snapshot no longer shows up in your list until you confirm the import",
+			"Added nearly 400 new internal tests, which found and fixed over 60 bugs",
+		]
 	}
 } as const;
 

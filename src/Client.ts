@@ -16,7 +16,6 @@ interface IClient extends Client<true> {
 const client = new Client({
 	intents: [
 		'Guilds',
-		'GuildMembers',
 		'MessageContent',
 		'GuildMessages',
 		'DirectMessages',

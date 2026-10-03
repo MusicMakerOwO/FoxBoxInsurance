@@ -38,6 +38,13 @@ export type InteractionResponse = {
 	embeds?: APIEmbed[],
 	components?: (DiscordActionRow<DiscordButton> | DiscordActionRow<DiscordStringSelect>)[]
 	files?: AttachmentPayload[]
+	/** Delete the deferred message instead of editing it - the dispatcher calls `deleteReply()` */
+	delete?: true
+	/**
+	 * Send this as an ephemeral follow-up and leave the deferred message as it was - for refusing
+	 * input without costing the user the screen they were on. Set nothing else alongside it.
+	 */
+	followUp?: InteractionResponse
 }
 
 export interface CommandHandler extends ComponentSettings {

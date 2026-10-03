@@ -2,7 +2,7 @@ import { EventHandler } from "../../Typings/HandlerTypes.js";
 import { SelectMenuInteraction } from "discord.js";
 import { COLOR } from "../../Utils/Constants.js";
 import { Log } from "../../Utils/Log.js";
-import { CheckHandlerAccess } from "../../Utils/CheckHandlerAccess.js";
+import { RunComponentHandler } from "./Respond.js";
 import { client } from "../../Client.js";
 
 export default {
@@ -23,21 +23,6 @@ export default {
 			});
 		}
 
-		const errorResponse = await CheckHandlerAccess(interaction, handler);
-		if (errorResponse) {
-			return interaction.deferred || interaction.replied
-				? interaction.editReply(errorResponse)
-				: interaction.reply(errorResponse);
-		}
-
-		const response = await handler.execute(interaction, client, args);
-		if (!response) throw new Error('No response received from handler - possible error?');
-
-		if (handler.response_type === 'modal') {
-			if (!('title' in response)) throw new Error('Component cannot defer and send a modal at the same time');
-			void interaction.showModal(response);
-		} else {
-			void interaction.editReply(response);
-		}
+		await RunComponentHandler(interaction, handler, args);
 	}
 } as EventHandler;

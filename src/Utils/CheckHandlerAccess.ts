@@ -73,7 +73,8 @@ export async function CheckHandlerAccess(
 				embeds: [{
 					title: 'Feature Unavailable',
 					description: 'This feature is not available to you because it requires terms that are no longer available.'
-				}]
+				}],
+				components: []
 			};
 		}
 
@@ -126,6 +127,7 @@ You can also view the full terms here: https://notfbi.dev/terms/${nextTOSVersion
 ${EMOJI.WARNING} This feature has been disabled within this server
 If you believe this is a mistake please contact the server admins`
 				}],
+				components: []
 			}
 		}
 	}
@@ -140,7 +142,8 @@ If you believe this is a mistake please contact the server admins`
 You cannot use this feature at this time :(
 You are missing the following permissions:
 ${missingPermissions.map(permission => '\\- ' + permission).join("\n")}`
-			}]
+			}],
+			components: []
 		}
 	}
 

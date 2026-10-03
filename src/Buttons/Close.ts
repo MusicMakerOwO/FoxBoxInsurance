@@ -7,8 +7,7 @@ export default {
 	response_type : 'update',
 	hidden        : false,
 	customID      : 'close',
-	execute       : async function(interaction) {
-		void interaction.deleteReply();
-		return {};
+	execute       : async function() {
+		return { delete: true };
 	}
 } satisfies ButtonHandler as ButtonHandler;

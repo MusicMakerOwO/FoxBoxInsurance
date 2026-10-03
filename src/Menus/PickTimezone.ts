@@ -2,6 +2,8 @@ import { InteractionResponse, SelectMenuHandler } from "../Typings/HandlerTypes.
 import { SetTimezone } from "../CRUD/UserTimezones.js";
 import { ResolveTimezone } from "../Utils/Timezones.js";
 import { COLOR } from "../Utils/Constants.js";
+import { IsActivitySpan } from "../Buttons/Activity.js";
+import { TryAgainRow } from "../Modals/SetTimezone.js";
 import { ButtonInteraction } from "discord.js";
 
 /**
@@ -16,16 +18,21 @@ export default {
 	hidden        : false,
 	customID      : 'pick-timezone',
 	execute       : async function(interaction, client, args) {
+		// Refused before the zone is stored rather than by the chart afterwards
+		if (!IsActivitySpan(args[0])) throw new Error(`Invalid time interval: ${args[0]}`);
+
 		// The value came from a menu we built, but it still arrives from the client, so it goes through
 		// the same resolution as typed input rather than straight into the database
-		const resolution = ResolveTimezone(interaction.values[0]);
+		const resolution = ResolveTimezone(interaction.values[0] ?? '');
 		if (resolution.kind !== 'resolved') {
 			return {
 				embeds: [{
 					color: COLOR.ERROR,
 					title: 'Unknown timezone',
-					description: 'That option is no longer valid - open the timezone menu again.'
-				}]
+					description: 'That option is no longer valid - enter your timezone again.'
+				}],
+				files: [],
+				components: [TryAgainRow(args)]
 			};
 		}
 

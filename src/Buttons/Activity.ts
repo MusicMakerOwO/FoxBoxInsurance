@@ -8,6 +8,8 @@ import { DiscordActionRow, DiscordButton } from "../Typings/DiscordTypes.js";
 import { GetTimezone } from "../CRUD/UserTimezones.js";
 import { TimezoneLabel } from "../Utils/Timezones.js";
 import { ZonedDate, ZonedDayStarts } from "../Utils/ZonedTime.js";
+import { TOS_FEATURES } from "../TOSConstants.js";
+import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 
 const Month = [
 	'Jan',
@@ -63,16 +65,27 @@ export function buildDayBuckets(dayStarts: number[], zone: string, buckets: { st
 	return days;
 }
 
+export const ACTIVITY_SPANS = ['week', 'month', 'year'] as const;
+export type ActivitySpan = typeof ACTIVITY_SPANS[number];
+
+/**
+ * Whether a custom_id arg names a chart span. The timezone modal and menu check this before they
+ * store anything, since they hand their args straight on to the chart.
+ */
+export function IsActivitySpan(value: string | undefined): value is ActivitySpan {
+	return (ACTIVITY_SPANS as readonly (string | undefined)[]).includes(value);
+}
+
 export default {
-	tos_features: [],
-	guild_features: [],
+	tos_features: [TOS_FEATURES.MESSAGE_EXPORTS],
+	guild_features: [GUILD_FEATURES.MESSAGE_HISTORY],
 	permissions: [],
 	response_type: 'update',
 	hidden: false,
 	customID: 'activity',
 	execute: async function (interaction, client, args): Promise<InteractionResponse> {
 		const timeSpan = args[0];
-		if (timeSpan !== 'week' && timeSpan !== 'month' && timeSpan !== 'year') {
+		if (!IsActivitySpan(timeSpan)) {
 			throw new Error(`Invalid time interval: ${timeSpan}`);
 		}
 

@@ -102,10 +102,11 @@ export function makeGuild(roles: RoleFixture[], channels: ChannelFixture[], opti
 	} as unknown as Guild;
 }
 
-/** A stored snapshot - Map-backed, keyed on bigint IDs, exactly as `GetSnapshot` returns it */
+/** A stored snapshot of GUILD_ID - Map-backed, keyed on bigint IDs, exactly as `GetSnapshot` returns it */
 export function makeSnapshot(id: number, roles: RoleFixture[], channels: ChannelFixture[], bans: BanFixture[] = []): Snapshot {
 	return {
 		id,
+		guild_id: BigInt(GUILD_ID),
 		roles   : new Map(roles   .map(r => [r.id, r])),
 		channels: new Map(channels.map(c => [c.id, c])),
 		bans    : new Map(bans    .map(b => [b.id, b]))

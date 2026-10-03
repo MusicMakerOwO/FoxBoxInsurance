@@ -156,7 +156,7 @@ beforeEach(() => {
 	GetImportsForGuild.mockReset();
 	GetImportsForGuild.mockReturnValue(new Map());
 	GetSnapshot.mockReset();
-	GetSnapshot.mockResolvedValue({ id: Number(SNAPSHOT_ID), type: SNAPSHOT_TYPE.MANUAL });
+	GetSnapshot.mockResolvedValue({ id: Number(SNAPSHOT_ID), guild_id: BigInt(GUILD_ID), type: SNAPSHOT_TYPE.MANUAL });
 	CreateSnapshot.mockReset();
 	CreateSnapshot.mockResolvedValue(143);
 	SetSnapshotPinStatus.mockReset();
@@ -263,6 +263,26 @@ describe('Modals/RestoreStart - refuse paths', () => {
 		const result = await run(interaction);
 
 		expect(result.embeds![0].title).toBe('Snapshot Not Found');
+	});
+
+	it("refuses another guild's stored snapshot", async () => {
+		GetSnapshot.mockResolvedValue({ id: Number(SNAPSHOT_ID), guild_id: BigInt(GUILD_ID) + 1n, type: SNAPSHOT_TYPE.MANUAL });
+
+		const result = await run(makeInteraction({ guild: bareGuild() }));
+
+		expect(result.embeds![0].title).toBe('Snapshot Not Found');
+		expect(CreateRestoreRun).not.toHaveBeenCalled();
+	});
+
+	it('an expired import whose id starts with digits never resolves to a stored snapshot', async () => {
+		GetImportsForGuild.mockReturnValue(new Map());
+		GetSnapshot.mockResolvedValue({ id: 2345, guild_id: BigInt(GUILD_ID), type: SNAPSHOT_TYPE.MANUAL });
+
+		const result = await run(makeInteraction({ guild: bareGuild() }), [ '2345-ABCD-EFGH-JKLM', String(MASK) ]);
+
+		expect(result.embeds![0].title).toBe('Snapshot Not Found');
+		expect(GetSnapshot).not.toHaveBeenCalled();
+		expect(CreateRestoreRun).not.toHaveBeenCalled();
 	});
 
 	it('refuses when the cached preview expired', async () => {
@@ -397,7 +417,7 @@ describe('Modals/RestoreStart - happy path', () => {
 	});
 
 	it('discriminates snapshot_id vs import_id and writes the run + message id', async () => {
-		GetSnapshot.mockResolvedValue({ id: Number(SNAPSHOT_ID), type: SNAPSHOT_TYPE.MANUAL });
+		GetSnapshot.mockResolvedValue({ id: Number(SNAPSHOT_ID), guild_id: BigInt(GUILD_ID), type: SNAPSHOT_TYPE.MANUAL });
 		const interaction = makeInteraction({ guild: bareGuild() });
 
 		const result = await run(interaction);

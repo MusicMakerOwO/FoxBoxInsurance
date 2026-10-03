@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ButtonInteraction, Guild, StringSelectMenuInteraction } from 'discord.js';
-import { APIEmbed } from 'discord-api-types/v10';
 import {
 	COLOR,
 	DIFF_CHANGE_TYPE,
@@ -10,10 +9,11 @@ import {
 	RESTORE_PRESETS,
 	SNAPSHOT_TYPE
 } from '../../Utils/Constants.js';
-import { DiscordButton, DiscordButtonStyle, DiscordStringSelect } from '../../Typings/DiscordTypes.js';
+import { DiscordButton, DiscordButtonStyle } from '../../Typings/DiscordTypes.js';
 import { DiscordPermissions } from '../../Utils/DiscordConstants.js';
-import { ButtonHandler, InteractionResponse, SelectMenuHandler } from '../../Typings/HandlerTypes.js';
+import { ButtonHandler, SelectMenuHandler } from '../../Typings/HandlerTypes.js';
 import { IClient } from '../../Client.js';
+import { HandlerResult, buttonsOf, customIDs, embedOf, screen, selectsOf } from '../Components/Helpers.js';
 import { BOT_ROLE, BOT_USER_ID, EVERYONE, GUILD_ID, channel, makeGuild, makeSnapshot, role } from './Fixtures.js';
 
 /**
@@ -86,39 +86,9 @@ const { FormatCount } = await import('../../Buttons/Restore/Actions.js');
 const SNAPSHOT_ID = '5';
 
 type Handler = ButtonHandler | SelectMenuHandler;
-type HandlerResult = Awaited<ReturnType<ButtonHandler['execute']>>;
-
 function run(handler: Handler, guild: Guild, args: string[], values: string[] = [], client: IClient = {} as IClient): Promise<HandlerResult> {
 	const interaction = { guildId: guild.id, guild, values } as unknown as ButtonInteraction & StringSelectMenuInteraction;
 	return (handler as ButtonHandler).execute(interaction, client, args);
-}
-
-/** Every §12 handler returns a screen; a modal (`title`) means the wrong branch was taken */
-function screen(result: HandlerResult): InteractionResponse {
-	if ('title' in result) throw new Error('expected an interaction response, got a modal');
-	return result;
-}
-
-function embedOf(result: HandlerResult): APIEmbed {
-	const embeds = screen(result).embeds;
-	if (!embeds || embeds.length === 0) throw new Error('expected an embed');
-	return embeds[0];
-}
-
-function componentsOf(result: HandlerResult): (DiscordButton | DiscordStringSelect)[] {
-	return (screen(result).components ?? []).flatMap(row => row.components as (DiscordButton | DiscordStringSelect)[]);
-}
-
-function buttonsOf(result: HandlerResult): DiscordButton[] {
-	return componentsOf(result).filter((component): component is DiscordButton => component.type === 2);
-}
-
-function selectsOf(result: HandlerResult): DiscordStringSelect[] {
-	return componentsOf(result).filter((component): component is DiscordStringSelect => component.type === 3);
-}
-
-function customIDs(result: HandlerResult): string[] {
-	return buttonsOf(result).map(button => 'custom_id' in button ? button.custom_id : button.url);
 }
 
 function planAction(category: RestoreAction['category'], change_type: number, label: string, target_id = 100n, detail: string | null = null): RestoreAction {
@@ -934,5 +904,49 @@ describe('Buttons/Restore/Plan', () => {
 		expect(embedOf(result).title).toBe('Could Not Build Restore Plan');
 		expect(embedOf(result).color).toBe(COLOR.ERROR);
 		expect(UploadCDN).not.toHaveBeenCalled();
+	});
+});
+
+//////////////////
+// Snapshot lookup - every screen that resolves an id
+//////////////////
+
+describe('snapshot lookup is scoped to the guild', () => {
+	const IMPORT_ID = '2345-ABCD-EFGH-JKLM';
+
+	// [ handler, args after the id ]
+	const screens: [ string, Handler, string[] ][] = [
+		[ 'restore-options', RestoreOptions  , [] ],
+		[ 'restore-preview', RestorePreview  , [ '7' ] ],
+		[ 'restore-actions', RestoreActions  , [ '7', String(RESTORE_OPTIONS.CHANNELS), '0', '' ] ],
+		[ 'restore-plan'   , RestorePlanBtn  , [ '7' ] ]
+	];
+
+	it.each(screens)("%s: another guild's stored snapshot -> Snapshot Not Found", async (_, handler, rest) => {
+		GetSnapshot.mockResolvedValue({ ...makeSnapshot(Number(SNAPSHOT_ID), [], []), guild_id: BigInt(GUILD_ID) + 1n });
+
+		const result = await run(handler, bareGuild(), [ SNAPSHOT_ID, ...rest ]);
+
+		expect(embedOf(result).title).toBe('Snapshot Not Found');
+		expect(BuildRestorePlan).not.toHaveBeenCalled();
+	});
+
+	it.each(screens)('%s: an expired import whose id starts with digits never resolves to a stored snapshot', async (_, handler, rest) => {
+		GetImportsForGuild.mockReturnValue(new Map());
+		GetSnapshot.mockResolvedValue(makeSnapshot(2345, [], []));
+
+		const result = await run(handler, bareGuild(), [ IMPORT_ID, ...rest ]);
+
+		expect(embedOf(result).title).toBe('Snapshot Not Found');
+		expect(GetSnapshot).not.toHaveBeenCalled();
+		expect(BuildRestorePlan).not.toHaveBeenCalled();
+	});
+
+	it.each(screens.filter(([ , handler ]) => handler.response_type === 'update'))('%s: not found clears the previous screen\'s components', async (_, handler, rest) => {
+		GetSnapshot.mockResolvedValue(null);
+
+		const result = await run(handler, bareGuild(), [ SNAPSHOT_ID, ...rest ]);
+
+		expect(screen(result).components).toEqual([]);
 	});
 });

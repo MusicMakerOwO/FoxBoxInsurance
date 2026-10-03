@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ButtonInteraction, Guild } from 'discord.js';
-import { APIEmbed } from 'discord-api-types/v10';
 import {
 	COLOR,
 	DIFF_CHANGE_TYPE,
@@ -10,9 +9,9 @@ import {
 	RESTORE_STATUS
 } from '../../Utils/Constants.js';
 import { GUILD_FEATURES, SnapshotRestoreAction } from '../../Typings/DatabaseTypes.js';
-import { DiscordButton } from '../../Typings/DiscordTypes.js';
-import { ButtonHandler, InteractionResponse } from '../../Typings/HandlerTypes.js';
+import { ButtonHandler } from '../../Typings/HandlerTypes.js';
 import { IClient } from '../../Client.js';
+import { HandlerResult, buttonsOf, embedOf } from '../Components/Helpers.js';
 import { RESTORE_NOW as NOW, ResetActionSeq, restoreAction as action, restoreRecord as record } from './Fixtures.js';
 
 /**
@@ -84,28 +83,11 @@ const RestoreSafety = (await import('../../Buttons/Restore/Safety.js')).default;
 // Helpers
 //////////////////
 
-type HandlerResult = Awaited<ReturnType<ButtonHandler['execute']>>;
-
 function run(handler: ButtonHandler, args: string[], guildId = GUILD_ID): Promise<HandlerResult> {
 	const guild = { id: guildId, name: 'Test Guild' } as unknown as Guild;
 	const interaction = { guildId, guild } as unknown as ButtonInteraction;
 
 	return handler.execute(interaction, {} as IClient, args);
-}
-
-function screen(result: HandlerResult): InteractionResponse {
-	if ('title' in result) throw new Error('expected an interaction response, got a modal');
-	return result;
-}
-
-function embedOf(result: HandlerResult): APIEmbed {
-	const embeds = screen(result).embeds;
-	if (!embeds || embeds.length === 0) throw new Error('expected an embed');
-	return embeds[0];
-}
-
-function buttonsOf(result: HandlerResult): DiscordButton[] {
-	return (screen(result).components ?? []).flatMap(row => row.components as DiscordButton[]);
 }
 
 function failedRole(label: string, error = 'above my highest role'): SnapshotRestoreAction {

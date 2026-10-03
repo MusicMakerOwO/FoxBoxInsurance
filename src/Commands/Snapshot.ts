@@ -9,7 +9,7 @@ import {Log} from "../Utils/Log.js";
 import { TOS_FEATURES } from "../TOSConstants.js";
 import { DiscordPermissions } from "../Utils/DiscordConstants.js";
 import { GetFeatureFlag, SetFeatureFlag } from "../Services/GuildFeatures.js";
-import { SaveImportForGuild } from "../CRUD/SnapshotImports.js";
+import { StageImportForGuild } from "../CRUD/SnapshotImports.js";
 import { IsRestoreRunning } from "../Services/RestoreRunner.js";
 
 /** Shown when a restore is in flight and the admin is about to look at snapshot data anyway */
@@ -225,7 +225,8 @@ ${error.message}
 				return {};
 			}
 
-			SaveImportForGuild(interaction.guildId!, importData);
+			// Staged, not listed - `import-confirm` lists it once the warning has been read
+			StageImportForGuild(interaction.guildId!, importData);
 
 			const importSnapshot = client.buttons.get('import')!;
 			return importSnapshot.execute(interaction as unknown as ButtonInteraction, client, [importData.id]);

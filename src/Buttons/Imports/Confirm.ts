@@ -1,6 +1,8 @@
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
-import {COLOR, EMOJI, SECONDS} from "../../Utils/Constants.js";
-import {GetImportsForGuild, SaveImportForGuild} from "../../CRUD/SnapshotImports.js";
+import {COLOR, EMOJI} from "../../Utils/Constants.js";
+import {SaveImportForGuild} from "../../CRUD/SnapshotImports.js";
+import {FindImport} from "../../Services/SnapshotLookup.js";
+import {ImportNotFound} from "../Snapshots/View/Render.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
@@ -15,19 +17,11 @@ export default {
 	execute       : async function(interaction, client, args) {
 		const importID = args[0];
 
-		const importData = GetImportsForGuild(interaction.guildId!).get(importID);
-		if (!importData) {
-			return {
-				embeds: [{
-					color: COLOR.ERROR,
-					title: 'Import Not Found',
-					description: 'The import does not exist or has expired.\nPlease import the file and try again.'
-				}],
-				components: []
-			}
-		}
+		// Staged is the normal case; already listed means the same file was uploaded and confirmed twice
+		const found = FindImport(interaction.guildId!, importID);
+		if (!found) return ImportNotFound();
 
-		SaveImportForGuild(interaction.guildId!, importData);
+		const expiresAt = SaveImportForGuild(interaction.guildId!, found.data);
 
 		return {
 			embeds: [{
@@ -35,7 +29,7 @@ export default {
 				title: 'Snapshot Imported',
 				description: `
 The snapshot has been added to your list, check it out with \`/snapshot list\`
-It will be removed from your list <t:${~~(Date.now() / 1000) + SECONDS.HOUR}:R>`
+It will be removed from your list <t:${Math.floor(expiresAt / 1000)}:R>`
 			}],
 			components: [{
 				type: 1,

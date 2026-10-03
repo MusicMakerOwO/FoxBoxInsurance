@@ -25,17 +25,17 @@ export default {
 		const processUptime = process.uptime(); // seconds
 		const uptime = CalculateUptime(processUptime);
 
-		const connection = await Database.getConnection();
-
-		const guilds = await connection.query(`SELECT COUNT(*) as count FROM Guilds`).then((rows: [{ count: bigint }]) => rows[0].count);
+		const [ guilds, messages ] = await Promise.all([
+			Database.query(`SELECT COUNT(*) as count FROM Guilds`).then((rows: [{ count: bigint }]) => rows[0].count),
+			Database.query(`SELECT COUNT(*) as count FROM Messages`).then((rows: [{ count: bigint }]) => rows[0].count)
+		]);
 		const channels = Array.from<Guild>( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.channels.cache.size, 0);
 		const users = Array.from<Guild>( client.guilds.cache.values() ).reduce((acc, guild) => acc + guild.memberCount, 0);
-		const messages = await connection.query(`SELECT COUNT(*) as count FROM Messages`).then((rows: [{ count: bigint }]) => rows[0].count);
 
 		const embed = {
 			color: COLOR.PRIMARY,
 			thumbnail: { url: client.user!.displayAvatarURL({ size: 256 }) },
-			title: 'Fox Bot Insurance',
+			title: 'Fox Box Insurance',
 			description: `
 **Owner** : @musicmaker
 **Version** : ${LATEST_VERSION}
@@ -50,8 +50,6 @@ export default {
 
 **Support Server** : https://discord.gg/q7bUuVq4vB`
 		}
-
-		Database.releaseConnection(connection);
 
 		return {
 			embeds: [embed],

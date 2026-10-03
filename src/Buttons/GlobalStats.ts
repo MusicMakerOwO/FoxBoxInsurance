@@ -21,22 +21,37 @@ function FileSize(bytes: number): string {
 	return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
 
-let lastOutput = {};
+/** `a / b`, or 0 when there is nothing to divide by - an empty sample renders 0, not NaN or Infinity */
+function Ratio(a: number, b: number): number {
+	return b === 0 ? 0 : a / b;
+}
+
+const NO_DATA: APIEmbed = {
+	color: COLOR.PRIMARY,
+	title: '📊 Stats for nerds',
+	description: 'No messages have been saved yet, check back later!'
+}
+
+let lastOutput: APIEmbed | null = null;
 let lastRun = 0;
 async function CalculateMessageStats(): Promise<APIEmbed> {
 	// only compute every 30 minutes
-	if (Date.now() - lastRun < SECONDS.MINUTE * 1000 * 30) {
+	if (lastOutput && Date.now() - lastRun < SECONDS.MINUTE * 1000 * 30) {
 		return lastOutput;
 	}
 
-	const connection = await Database.getConnection();
-
-	const selectedMessages = await connection.query(`
+	const selectedMessages = await Database.query(`
 		SELECT *
 		FROM Messages
 		ORDER BY id DESC
 		LIMIT ${STAT_SIZE}
 	`) as SimpleMessage[];
+
+	// Not cached, so the real stats show up as soon as there is something to count
+	if (selectedMessages.length === 0) return NO_DATA;
+
+	// The table can hold fewer than STAT_SIZE, every figure below is out of what was actually read
+	const messageCount = selectedMessages.length;
 
 	// messages are returned in reverse chronological order
 	const endDate = selectedMessages[0].created_at;
@@ -45,60 +60,62 @@ async function CalculateMessageStats(): Promise<APIEmbed> {
 	const guildIDs = new Set<SimpleMessage['guild_id']>();
 	const channelIDs = new Set<SimpleMessage['channel_id']>();
 	const userIDs = new Set<SimpleMessage['user_id']>();
-	const stickerIDs = new Set<NonNullable<SimpleMessage['sticker_id']>>();
+	let stickerMessages = 0;
 
 	for (const message of selectedMessages) {
 		guildIDs.add(message.guild_id);
 		channelIDs.add(message.channel_id);
 		userIDs.add(message.user_id);
-		if (message.sticker_id) stickerIDs.add(message.sticker_id);
+		if (message.sticker_id) stickerMessages++;
 	}
 
-	const avgLength = selectedMessages.reduce((acc, msg) => acc + (msg.length ?? 0), 0) / selectedMessages.length;
+	const avgLength = selectedMessages.reduce((acc, msg) => acc + (msg.length ?? 0), 0) / messageCount;
 
 	const messagesWithDiscordEmojis = selectedMessages.filter(msg => msg.data.emoji_ids.length > 0);
-	const avgEmojis = messagesWithDiscordEmojis.reduce((acc, msg) => acc + msg.data.emoji_ids.length, 0) / messagesWithDiscordEmojis.length;
+	const totalEmojis = messagesWithDiscordEmojis.reduce((acc, msg) => acc + msg.data.emoji_ids.length, 0);
+	const avgEmojis = Ratio(totalEmojis, messagesWithDiscordEmojis.length);
 	const maxEmojis = messagesWithDiscordEmojis.reduce((max, msg) => Math.max(max, msg.data.emoji_ids.length), 0);
 
 	const messagesWithAttachments = selectedMessages.filter(msg => msg.data.attachments.length > 0);
-	const attachmentAssets = await connection.query(`
-		SELECT * FROM Assets WHERE discord_id IN (${new Array(messagesWithAttachments.length).fill('?').join(',')})
-	`, messagesWithAttachments.flatMap(msg => msg.data.attachments.map(x => x.id))) as Asset[];
+	const attachmentIDs = messagesWithAttachments.flatMap(msg => msg.data.attachments.map(x => x.id));
+	// `IN ()` is a syntax error, and a message can hold several attachments - one placeholder per ID
+	const attachmentAssets = attachmentIDs.length === 0 ? [] : await Database.query(`
+		SELECT * FROM Assets WHERE discord_id IN (${new Array(attachmentIDs.length).fill('?').join(',')})
+	`, attachmentIDs) as Asset[];
 
-	const totalFiles = messagesWithAttachments.reduce( (acc, msg) => acc + msg.data.attachments.length, 0);
+	const totalFiles = attachmentIDs.length;
 	const maxFileSize = attachmentAssets.reduce( (max, asset) => Math.max(max, asset.size), 0);
-	const minFileSize = attachmentAssets.reduce( (min, asset) => Math.min(min, asset.size), Infinity);
-
-	Database.releaseConnection(connection);
+	const minFileSize = attachmentAssets.length === 0 ? 0 : attachmentAssets.reduce( (min, asset) => Math.min(min, asset.size), Infinity);
 
 	const timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
-	const rate = STAT_SIZE / (timeDiff / 1000 / 60); // messages per minute
+	const rate = Ratio(messageCount, timeDiff / 1000 / 60); // messages per minute
+	const messagesPerUser = Ratio(messageCount, userIDs.size).toFixed(2);
 
 	const output: APIEmbed = {
 		color: COLOR.PRIMARY,
 		title: '📊 Stats for nerds',
 		description: `\`\`\`
-Last ${STAT_SIZE} messages
+Last ${messageCount} messages
 - Guilds: ${guildIDs.size}
 - Channels: ${channelIDs.size}
-- Users: ${userIDs.size} (${(STAT_SIZE / userIDs.size).toFixed(2)} msg/user)
+- Users: ${userIDs.size} (${messagesPerUser} msg/user)
 
 - Avg Length: ${Math.round(avgLength)} characters
 
-Emoji Stats (${messagesWithDiscordEmojis.length} emojis) *
+Emoji Stats (${totalEmojis} emojis) *
 - Max emojis: ${maxEmojis} emojis
 - Avg emojis: ${avgEmojis.toFixed(2)} emojis/msg
 
 Files Stats (${totalFiles} files) **
 - Max size: ${ FileSize(maxFileSize) }
 - Min size: ${ FileSize(minFileSize) }
-- Avg files: ${(totalFiles / messagesWithAttachments.length).toFixed(2)} files/msg
+- Avg files: ${Ratio(totalFiles, messagesWithAttachments.length).toFixed(2)} files/msg
 \`\`\`
 
 **Quick Facts** \`\`\`
-Only ${(stickerIDs.size / STAT_SIZE * 100).toFixed(2)}% of messages have a sticker
-Only ${(messagesWithAttachments.length / STAT_SIZE * 100).toFixed(2)}% of messages have a file
-The average user sent ${(STAT_SIZE / userIDs.size).toFixed(2)} messages
+Only ${(stickerMessages / messageCount * 100).toFixed(2)}% of messages have a sticker
+Only ${(messagesWithAttachments.length / messageCount * 100).toFixed(2)}% of messages have a file
+The average user sent ${messagesPerUser} messages
 On average, ${rate.toFixed(2)} messages are sent per minute
 \`\`\`
 -# \\* Only messages with emojis are counted

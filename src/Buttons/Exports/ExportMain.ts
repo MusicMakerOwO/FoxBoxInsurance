@@ -1,5 +1,5 @@
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
-import {GetExportCache} from "../../Utils/Caching/GetExportCache.js";
+import { GetExportCache, SESSION_EXPIRED_RESPONSE } from "../../Utils/Caching/GetExportCache.js";
 import {Database} from "../../Database.js";
 import { COLOR, EMOJI, FORMAT_EMOJIS, FORMAT_NAMES } from "../../Utils/Constants.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
@@ -12,10 +12,9 @@ export default {
 	response_type : 'update',
 	hidden        : false,
 	customID      : 'export-main',
-	execute       : async function(interaction) {
-		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
-		const exportOptions = await GetExportCache(interaction);
-		if (!exportOptions) return {};
+	execute       : async function(interaction, client) {
+		const exportOptions = GetExportCache(client, interaction);
+		if (!exportOptions) return SESSION_EXPIRED_RESPONSE;
 
 		const channel = interaction.guild!.channels.cache.get(exportOptions.channelID.toString());
 		const channelName = channel

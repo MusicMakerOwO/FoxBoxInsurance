@@ -1,9 +1,12 @@
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
 import { COLOR, FORMAT, FORMAT_EMOJIS } from "../../Utils/Constants.js";
-import {GetExportCache} from "../../Utils/Caching/GetExportCache.js";
+import { GetExportCache, SESSION_EXPIRED_RESPONSE } from "../../Utils/Caching/GetExportCache.js";
 import {ObjectValues} from "../../Typings/HelperTypes.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { CreateExportCacheKey } from "../../Typings/CacheEntries.js";
+
+const PICKABLE_FORMATS = new Set<number>([ FORMAT.TEXT, FORMAT.JSON, FORMAT.HTML ]);
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -13,16 +16,16 @@ export default {
 	hidden        : false,
 	customID      : 'export-format',
 	execute       : async function(interaction, client, args) {
-		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
-		const exportOptions = await GetExportCache(interaction);
-		if (!exportOptions) return {};
+		const exportOptions = GetExportCache(client, interaction);
+		if (!exportOptions) return SESSION_EXPIRED_RESPONSE;
 
-		const selection = args[0];
+		const selection = Number(args[0]);
 
-		if (selection) {
-			exportOptions.format = parseInt(selection) as ObjectValues<typeof FORMAT>;
+		// Only what the picker offers - CSV is deprecated and errors when generated
+		if (PICKABLE_FORMATS.has(selection)) {
+			exportOptions.format = selection as ObjectValues<typeof FORMAT>;
 			client.exportCache.set(
-				`export_${interaction.guildId}_${interaction.channelId}_${interaction.user.id}`,
+				CreateExportCacheKey(interaction.channelId, interaction.user.id),
 				exportOptions
 			);
 		}

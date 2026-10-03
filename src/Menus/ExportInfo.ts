@@ -1,5 +1,7 @@
 import {COLOR, FORMAT_NAMES} from "../Utils/Constants.js";
 import {Database} from "../Database.js";
+import {GetGuild} from "../CRUD/Guilds.js";
+import {GetChannel} from "../CRUD/Channels.js";
 import {SelectMenuHandler} from "../Typings/HandlerTypes.js";
 import {SimpleMessageExport} from "../Typings/DatabaseTypes.js";
 
@@ -16,19 +18,14 @@ export default {
 	hidden        : true,
 	customID      : 'exportInfo',
 	execute       : async function(interaction) {
-		const connection = await Database.getConnection();
-
 		const exportID = interaction.values[0];
-		const exportData = await connection.query(`SELECT * FROM Exports WHERE id = ?`, [exportID]).then(x => x[0]) as SimpleMessageExport | null;
+		const exportData = await Database.query(`SELECT * FROM Exports WHERE id = ?`, [exportID]).then(x => x[0]) as SimpleMessageExport | undefined;
 		if (!exportData) {
-			Database.releaseConnection(connection);
 			return { embeds: [NoExportEmbed], components: [] }
 		}
 
-		const guild_name   = await connection.query(`SELECT name FROM Guilds   WHERE id = ?`, [exportData.guild_id  ]).then(res => res[0]?.name || 'Unknown Guild'  ) as string;
-		const channel_name = await connection.query(`SELECT name FROM Channels WHERE id = ?`, [exportData.channel_id]).then(res => res[0]?.name || 'Unknown Channel') as string;
-
-		Database.releaseConnection(connection);
+		const guild_name   = (await GetGuild(exportData.guild_id))?.name     || 'Unknown Guild';
+		const channel_name = (await GetChannel(exportData.channel_id))?.name || 'Unknown Channel';
 
 		const embed = {
 			color: COLOR.PRIMARY,

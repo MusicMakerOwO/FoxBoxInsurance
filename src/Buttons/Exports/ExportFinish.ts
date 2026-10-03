@@ -1,4 +1,4 @@
-import {GetExportCache} from "../../Utils/Caching/GetExportCache.js";
+import { GetExportCache, SESSION_EXPIRED_RESPONSE } from "../../Utils/Caching/GetExportCache.js";
 import {COLOR} from "../../Utils/Constants.js";
 import {DownloadAssets} from "../../Utils/Processing/Images.js";
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
@@ -17,10 +17,22 @@ export default {
 	response_type : 'update',
 	hidden        : false,
 	customID      : 'export-finish',
-	execute       : async function(interaction) {
-		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
-		const exportOptions = await GetExportCache(interaction);
-		if (!exportOptions) return {};
+	execute       : async function(interaction, client) {
+		const exportOptions = GetExportCache(client, interaction);
+		if (!exportOptions) return SESSION_EXPIRED_RESPONSE;
+
+		// Export is disabled at 0 messages, but a stale or replayed click can still get here. Nothing
+		// went wrong, so this isn't an Export Failed report, and the menu stays as it was.
+		if (exportOptions.messageCount < 1) {
+			return {
+				followUp: {
+					embeds: [{
+						color: COLOR.ERROR,
+						description: 'There are no messages to export - Pick a channel with saved messages first'
+					}]
+				}
+			};
+		}
 
 		// flush all the caches first to make sure we have the latest data
 		// We don't want any missing assets or holes in the data
@@ -28,8 +40,28 @@ export default {
 		await UploadFiles(); // upload files to the CDN
 
 		let file: Awaited<ReturnType<typeof ExportChannel>>;
+		let lookup: string;
 		try {
 			file = await ExportChannel(exportOptions);
+
+			// upload to the cdn server for easy access
+			lookup = await UploadCDN(file.name, file.data, 1); // 1 url = 1 download
+
+			// insert the export into the database
+			await Database.query(`
+				INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash_algorithm, hash, lookup)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`, [
+				file.id,
+				exportOptions.guildID,
+				exportOptions.channelID,
+				exportOptions.userID,
+				exportOptions.messageCount,
+				exportOptions.format,
+				file.hash[0],
+				file.hash[1],
+				lookup
+			]);
 		} catch (error) {
 			Log('ERROR', error);
 			return {
@@ -43,25 +75,6 @@ The error has been reported automatically and a fix is being worked on`
 				components: []
 			}
 		}
-
-		// upload to the cdn server for easy access
-		const lookup = await UploadCDN(file.name, file.data, 1); // 1 url = 1 download
-
-		// insert the export into the database
-		await Database.query(`
-			INSERT INTO Exports (id, guild_id, channel_id, user_id, message_count, format, hash_algorithm, hash, lookup)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, [
-			file.id,
-			exportOptions.guildID,
-			exportOptions.channelID,
-			exportOptions.userID,
-			exportOptions.messageCount,
-			exportOptions.format,
-			file.hash[0],
-			file.hash[1],
-			lookup
-		]);
 
 		return {
 			components: [{

@@ -2,6 +2,7 @@ import {ButtonHandler} from "../../Typings/HandlerTypes.js";
 import {COLOR, EMOJI} from "../../Utils/Constants.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
+import { CreateExportCacheKey } from "../../Typings/CacheEntries.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -11,11 +12,10 @@ export default {
 	hidden        : false,
 	customID      : 'export-cancel',
 	execute       : async function(interaction, client, args) {
-		const confirm = !!args[0];
-
-		if (confirm) {
-			void interaction.deleteReply();
-			return {};
+		if (args[0] === 'confirm') {
+			// Otherwise an export-main / export-finish left in another message could still export it
+			client.exportCache.delete(CreateExportCacheKey(interaction.channelId, interaction.user.id));
+			return { delete: true };
 		}
 
 		return {

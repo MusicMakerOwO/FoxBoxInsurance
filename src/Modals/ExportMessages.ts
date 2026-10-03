@@ -1,4 +1,4 @@
-import {GetExportCache} from "../Utils/Caching/GetExportCache.js";
+import { GetExportCache, SESSION_EXPIRED_RESPONSE } from "../Utils/Caching/GetExportCache.js";
 import {Database} from "../Database.js";
 import { InteractionResponse, ModalHandler } from "../Typings/HandlerTypes.js";
 import {ButtonInteraction} from "discord.js";
@@ -6,6 +6,21 @@ import {CreateExportCacheKey} from "../Typings/CacheEntries.js";
 import { TOS_FEATURES } from "../TOSConstants.js";
 import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 import { COLOR, EMOJI } from "../Utils/Constants.js";
+
+const MIN_MESSAGES = 20;
+const MAX_MESSAGES = 10_000;
+
+/** An ephemeral follow-up, leaving the export menu as it was so the user can try again */
+function Refuse(reason: string): InteractionResponse {
+	return {
+		followUp: {
+			embeds: [{
+				color: COLOR.ERROR,
+				description: `${EMOJI.WARNING} ${reason}`
+			}]
+		}
+	};
+}
 
 export default {
 	tos_features  : [ TOS_FEATURES.MESSAGE_EXPORTS ],
@@ -16,42 +31,20 @@ export default {
 	customID      : 'export-messages',
 	execute       : async function(interaction, client) {
 
-		const input = interaction.fields.getTextInputValue('data');
+		// Validated before the session is read, so a typo never costs the user their export menu
+		const digits = interaction.fields.getTextInputValue('data').replace(/\D/g, ''); // 10,000 -> 10000
+		if (digits === '') return Refuse('Please enter a number of messages to export');
 
-		const targetMessageCount = parseInt(input.replace(/\D/g, '')) || 100; // 10,000 -> 10000
+		const targetMessageCount = parseInt(digits);
+		if (targetMessageCount < MIN_MESSAGES) return Refuse(`Cannot export less than ${MIN_MESSAGES} messages`);
+		if (targetMessageCount > MAX_MESSAGES) return Refuse(`Cannot export more than 10,000 messages`);
 
-		if (targetMessageCount < 20) {
-			// @ts-expect-error | followUp is stripped by NoReply<...>, but we need to send a validation error before the handler's own return value replies
-			void interaction.followUp({
-				embeds: [{
-					color: COLOR.ERROR,
-					description: `${EMOJI.WARNING} Cannot export less than 20 messages`
-				}],
-				flags: 64
-			});
-			return {};
-		}
-		if (targetMessageCount > 10_000) {
-			// @ts-expect-error | followUp is stripped by NoReply<...>, but we need to send a validation error before the handler's own return value replies
-			void interaction.followUp({
-				embeds: [{
-					color: COLOR.ERROR,
-					description: `${EMOJI.WARNING} Cannot export more than 10,000 messages`
-				}],
-				flags: 64
-			});
-			return {};
-		}
-
-		const inputNumber = Math.max(20, Math.min(10_000, targetMessageCount)); // [20, 10_000]
-
-		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
-		const exportOptions = await GetExportCache(interaction);
-		if (!exportOptions) return {};
+		const exportOptions = GetExportCache(client, interaction);
+		if (!exportOptions) return SESSION_EXPIRED_RESPONSE;
 
 		const channelMessageCount = await Database.query('SELECT COUNT(*) as count FROM Messages WHERE channel_id = ?', [exportOptions.channelID]).then(x => x[0].count) as bigint;
 
-		exportOptions.messageCount = Math.min(inputNumber, Number(channelMessageCount));
+		exportOptions.messageCount = Math.min(targetMessageCount, Number(channelMessageCount));
 
 		client.exportCache.set(
 			CreateExportCacheKey(interaction.channelId!, interaction.user.id),

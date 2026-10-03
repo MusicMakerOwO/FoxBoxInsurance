@@ -23,31 +23,38 @@ export default {
 	execute       : async function(interaction, client, args) {
 		const input = args[0];
 
-		const connection = await Database.getConnection();
-
-		const exportCount = await connection.query(`SELECT COUNT(*) as count FROM Exports WHERE user_id = ?`, [interaction.user.id]).then(res => Number(res[0].count)) as number;
-		if (exportCount === 0) {
-			return { embeds: [NoExportsEmbed] }
-		}
-
+		let exportCount: number;
 		let page: number;
-		if (input === 'first') {
-			page = 0;
-		} else if (input === 'last') {
-			page = Math.ceil(exportCount / PAGE_SIZE) - 1;
-		} else {
-			page = parseInt(input);
-			if (isNaN(page) || page < 0) page = 0;
+		let exports: SimpleMessageExport[];
+
+		// Scoped so the connection is back in the pool before GetGuild / GetChannel check out their own
+		{
+			using connection = await Database.getConnection();
+
+			exportCount = await connection.query(`SELECT COUNT(*) as count FROM Exports WHERE user_id = ?`, [interaction.user.id]).then(res => Number(res[0].count)) as number;
+			if (exportCount === 0) {
+				return { embeds: [NoExportsEmbed], components: [] }
+			}
+
+			const lastPage = Math.ceil(exportCount / PAGE_SIZE) - 1;
+			if (input === 'first') {
+				page = 0;
+			} else if (input === 'last') {
+				page = lastPage;
+			} else {
+				page = parseInt(input);
+				if (isNaN(page) || page < 0) page = 0;
+				// Past the end would render an empty select, which Discord rejects
+				page = Math.min(page, lastPage);
+			}
+
+			exports = await connection.query(`
+				SELECT * FROM Exports
+				WHERE user_id = ?
+				ORDER BY created_at DESC, id ASC
+				LIMIT ${PAGE_SIZE} OFFSET ?
+			`, [interaction.user.id, page * PAGE_SIZE]) as SimpleMessageExport[]; // 0-5, 6-10, 11-15, etc.
 		}
-
-		const exports = await connection.query(`
-			SELECT * FROM Exports
-			WHERE user_id = ?
-			ORDER BY created_at DESC, id ASC
-			LIMIT ${PAGE_SIZE} OFFSET ?
-		`, [interaction.user.id, page * PAGE_SIZE]) as SimpleMessageExport[]; // 0-5, 6-10, 11-15, etc.
-
-		Database.releaseConnection(connection);
 
 		const embed = {
 			color: COLOR.PRIMARY,

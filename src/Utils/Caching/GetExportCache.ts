@@ -1,22 +1,22 @@
-import { ModalSubmitInteraction } from "discord.js";
-import { ButtonInteraction } from "discord.js";
-import { client } from "../../Client.js";
+import { ButtonInteraction, ModalSubmitInteraction } from "discord.js";
+import { IClient } from "../../Client.js";
 import { ChannelExport, CreateExportCacheKey } from "../../Typings/CacheEntries.js";
+import { InteractionResponse } from "../../Typings/HandlerTypes.js";
 import { COLOR } from "../Constants.js";
 
-export async function GetExportCache(interaction: ButtonInteraction | ModalSubmitInteraction): Promise<ChannelExport | null> {
-	const exportOptions = client.exportCache.get( CreateExportCacheKey(interaction.channelId!, interaction.user.id) );
-	if (!exportOptions) {
-		await interaction.editReply({
-			embeds: [{
-				color: COLOR.ERROR,
-				description: 'Your session has timed out - Please re-run the command'
-			}],
-			components: [],
-			files: []
-		});
-		return null;
-	} else {
-		return exportOptions;
-	}
+/** What an export handler returns when its session is gone - clears the dead menu and any attachment */
+export const SESSION_EXPIRED_RESPONSE = {
+	embeds: [{
+		color: COLOR.ERROR,
+		description: 'Your session has timed out - Please re-run the command'
+	}],
+	components: [],
+	files: []
+} satisfies InteractionResponse;
+
+type SessionInteraction = Pick<ButtonInteraction | ModalSubmitInteraction, 'channelId' | 'user'>;
+
+/** The caller's export session, or null when it has expired - reading it refreshes its TTL */
+export function GetExportCache(client: IClient, interaction: SessionInteraction): ChannelExport | null {
+	return client.exportCache.get( CreateExportCacheKey(interaction.channelId!, interaction.user.id) );
 }

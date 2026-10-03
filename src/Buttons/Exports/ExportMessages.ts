@@ -1,5 +1,4 @@
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
-import {GetExportCache} from "../../Utils/Caching/GetExportCache.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 
@@ -10,11 +9,10 @@ export default {
 	response_type : 'modal',
 	hidden        : false,
 	customID      : 'export-messages',
-	execute       : async function(interaction) {
-		// @ts-expect-error | GetExportCache calls interaction.editReply, which NoReply<...> strips from the handler interaction type
-		const exportOptions = await GetExportCache(interaction);
-		if (!exportOptions) return {};
-
+	execute       : async function() {
+		// No session check: a modal has to be shown within Discord's 3 second window and this
+		// interaction is never deferred, so there is nothing to render an expiry onto. The modal
+		// submit re-reads the session and reports the timeout.
 		return {
 			title: 'Export Messages',
 			custom_id: 'export-messages',
@@ -24,7 +22,7 @@ export default {
 					type: 4,
 					custom_id: 'data',
 					label: 'How many messages to export?',
-					placeholder: 'Enter a number between 1 and 10,000',
+					placeholder: 'Enter a number between 20 and 10,000',
 					style: 1,
 					min_length: 1,
 					max_length: 6,

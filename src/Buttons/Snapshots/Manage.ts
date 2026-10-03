@@ -1,7 +1,7 @@
 import {ButtonHandler, InteractionResponse} from "../../Typings/HandlerTypes.js";
 import {COLOR, EMOJI, SNAPSHOT_TYPE} from "../../Utils/Constants.js";
-import {GetImportsForGuild} from "../../CRUD/SnapshotImports.js";
-import {GetSnapshot} from "../../CRUD/Snapshots.js";
+import {GetGuildSnapshot} from "../../Services/SnapshotLookup.js";
+import {SnapshotNotFound} from "./View/Render.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { DiscordActionRow, DiscordButton } from "../../Typings/DiscordTypes.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
@@ -14,20 +14,8 @@ import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
  * the runner owns - updating it in place would destroy the run's own report. See Buttons/Restore/Safety.ts
  */
 export async function RenderSnapshotManage(guildID: string, snapshotID: string): Promise<InteractionResponse> {
-	const importedSnapshots = GetImportsForGuild(guildID);
-	const snapshotData = importedSnapshots.get(snapshotID) ?? await GetSnapshot( parseInt(snapshotID) );
-	if (!snapshotData) {
-		return {
-			embeds: [{
-				color: COLOR.ERROR,
-				title: 'Snapshot Not Found',
-				description: `
-Snapshot not found or already deleted
-Create one using \`/snapshot create\``
-			}],
-			components: []
-		}
-	}
+	const snapshotData = await GetGuildSnapshot(guildID, snapshotID);
+	if (!snapshotData) return SnapshotNotFound();
 
 	const embed = {
 		color: COLOR.PRIMARY,
@@ -62,7 +50,7 @@ Create one using \`/snapshot create\``
 				type: 2,
 				style: 2,
 				label: 'View',
-				custom_id: snapshotData.type === SNAPSHOT_TYPE.IMPORT ? `import-view_${snapshotData.id}_1` : `snapshot-view_${snapshotData.id}`,
+				custom_id: snapshotData.type === SNAPSHOT_TYPE.IMPORT ? `import-view_${snapshotData.id}` : `snapshot-view_${snapshotData.id}`,
 				emoji: { name: EMOJI.SEARCH }
 			},
 			{

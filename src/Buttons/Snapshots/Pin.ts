@@ -1,9 +1,21 @@
 import {COLOR, EMOJI} from "../../Utils/Constants.js";
-import {ButtonHandler} from "../../Typings/HandlerTypes.js";
+import {ButtonHandler, InteractionResponse} from "../../Typings/HandlerTypes.js";
+import { ParseStoredSnapshotID } from "../../Services/SnapshotLookup.js";
 import { ListSnapshotsForGuild, MaxSnapshotsForGuild, SetSnapshotPinStatus } from "../../CRUD/Snapshots.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
+
+const SNAPSHOTS_FULL = {
+	embeds: [{
+		color: COLOR.ERROR,
+		title: 'Snapshots Full',
+		description: `
+You have reached the maximum number of pinned snapshots for this server.
+Please unpin a snapshot before pinning another.`
+	}],
+	components: []
+} satisfies InteractionResponse;
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -13,37 +25,31 @@ export default {
 	hidden        : true,
 	customID      : 'snapshot-pin',
 	execute       : async function(interaction, client, args) {
-		const snapshotID = parseInt(args[0]);
-		if (isNaN(snapshotID) || snapshotID < 1) {
+		const snapshotID = ParseStoredSnapshotID(args[0]);
+		if (snapshotID === null) {
 			throw new Error(`Invalid snapshot ID provided: ${args[0]}`);
 		}
 		const confirm = args[1] === 'confirm';
+		const unpin = !!args[2];
+
+		// Read on both paths - the confirm button can be clicked long after the prompt was rendered
+		const snapshots = await ListSnapshotsForGuild(interaction.guildId!);
+		const targetSnapshot = snapshots.find(x => x.id === snapshotID);
+		if (!targetSnapshot) return {
+			embeds: [{
+				color: COLOR.ERROR,
+				description: 'Snapshot does not exist - Was it deleted?',
+			}],
+			components: []
+		}
+
+		// Only pinning is capped - unpinning must always be possible, or a full server could never free a slot
+		const pinnedCount = snapshots.reduce((acc, snapshot) => acc + +snapshot.pinned, 0);
+		const maxSnapshots = await MaxSnapshotsForGuild(interaction.guildId!);
+		const pinning = confirm ? !unpin : !targetSnapshot.pinned;
+		if (pinning && !targetSnapshot.pinned && pinnedCount >= maxSnapshots) return SNAPSHOTS_FULL;
 
 		if (!confirm) {
-			const snapshots = await ListSnapshotsForGuild(interaction.guildId!);
-			const pinnedCount = snapshots.reduce((acc, snapshot) => acc + +snapshot.pinned, 0)
-			const maxSnapshots = await MaxSnapshotsForGuild(interaction.guildId!);
-
-			if (pinnedCount >= maxSnapshots) {
-				return {
-					embeds: [{
-						color: COLOR.ERROR,
-						title: 'Snapshots Full',
-						description: `
-You have reached the maximum number of pinned snapshots for this server.
-Please unpin a snapshot before pinning another.`
-					}]
-				}
-			}
-
-			const targetSnapshot = snapshots.find(x => x.id === snapshotID);
-			if (!targetSnapshot) return {
-				embeds: [{
-					color: COLOR.ERROR,
-					description: 'Snapshot does not exist - Was it deleted?',
-				}]
-			}
-
 			return {
 				embeds: [ targetSnapshot.pinned ? {
 					color: COLOR.PRIMARY,
@@ -90,10 +96,10 @@ Pinned snapshots still count towards your snapshot limit!
 			}
 		}
 
-		await SetSnapshotPinStatus(snapshotID, !args[2])
+		await SetSnapshotPinStatus(snapshotID, !unpin);
 
 		return {
-			embeds: [ args[2] ? {
+			embeds: [ unpin ? {
 				color: COLOR.PRIMARY,
 				description: `${EMOJI.DELETE} The snapshot has been unpinned successfully!`
 			} : {

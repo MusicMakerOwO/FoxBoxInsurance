@@ -76,7 +76,9 @@ Create one using \`/snapshot create\``
 			}
 		}
 
-		if ( ! isFinite(page) ) page = Math.floor(items.length / PAGE_SIZE);
+		// clamps `last` (Infinity), pages past the end and negative pages onto a real page
+		const lastPage = Math.ceil(items.length / PAGE_SIZE) - 1;
+		page = Math.max(0, Math.min(page, lastPage));
 
 		const visibleItems = items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -135,8 +137,9 @@ Created at <t:${~~(createdAt / 1000)}:d>`;
 			}
 		}
 
-		const guildHour = BigInt(interaction.guildId!) % 24n;
-		embed.description += `\n\n**Snapshots occur once per day at <t:${Number(guildHour) * 3600 + SECONDS.HOUR}:t>**`;
+		// SnapshotServers runs hourly and picks up this guild during this UTC hour, at no fixed minute
+		const guildHour = Number(BigInt(interaction.guildId!) % 24n) * SECONDS.HOUR;
+		embed.description += `\n\n**Snapshots occur once per day between <t:${guildHour}:t> and <t:${guildHour + SECONDS.HOUR}:t>**`;
 
 		const pageButtons: DiscordActionRow<DiscordButton> = {
 			type: 1,

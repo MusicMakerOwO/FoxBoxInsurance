@@ -1,12 +1,29 @@
-import {DeleteSnapshot, GetSnapshot, IsSnapshotDeletable} from "../../CRUD/Snapshots.js";
-import {ButtonHandler} from "../../Typings/HandlerTypes.js";
-import {COLOR, EMOJI} from "../../Utils/Constants.js";
+import {DeleteSnapshot} from "../../CRUD/Snapshots.js";
+import {ButtonHandler, InteractionResponse} from "../../Typings/HandlerTypes.js";
+import {COLOR, EMOJI, SNAPSHOT_TYPE} from "../../Utils/Constants.js";
+import { GetGuildSnapshot, ParseStoredSnapshotID } from "../../Services/SnapshotLookup.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
 
 // snapshot-delete_0
 // snapshot-delete_0_confirm
+
+const NOT_FOUND = {
+	embeds: [{
+		color: COLOR.ERROR,
+		description: 'Snapshot no longer exists - was it already deleted?'
+	}],
+	components: []
+} satisfies InteractionResponse;
+
+const PINNED = {
+	embeds: [{
+		color: COLOR.ERROR,
+		description: `${EMOJI.ERROR} This snapshot is pinned and cannot be deleted. Please unpin it first.`
+	}],
+	components: []
+} satisfies InteractionResponse;
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
@@ -16,41 +33,24 @@ export default {
 	hidden        : false,
 	customID      : 'snapshot-delete',
 	execute       : async function (interaction, client, args) {
-		if (interaction.guild!.ownerId !== interaction.user.id) {
-			return {
-				embeds: [{
-					color: COLOR.ERROR,
-					title: 'Missing Permissions',
-					description: 'Only the server owner can use this command'
-				}],
-				ephemeral: true
-			}
-		}
-
-		const snapshotID = parseInt(args[0]);
+		const snapshotID = ParseStoredSnapshotID(args[0]);
 		const confirm = args[1] === 'confirm';
 
-		const snapshot = await GetSnapshot(snapshotID);
-		if (!snapshot) {
-			return {
-				embeds: [{
-					color: COLOR.ERROR,
-					description: 'Snapshot no longer exists - was it already deleted?'
-				}]
-			}
-		}
-		if ( ! await IsSnapshotDeletable(snapshotID) ) {
-			return {
-				embeds: [{
-					color: COLOR.ERROR,
-					description: `${EMOJI.ERROR} This snapshot is pinned and cannot be deleted. Please unpin it first.`
-				}],
-				components: []
-			}
-		}
+		const snapshot = snapshotID === null ? null : await GetGuildSnapshot(interaction.guildId!, args[0]);
+		// Imports are never deletable - and an import id is never parsed as a stored one
+		if (snapshotID === null || !snapshot || snapshot.type === SNAPSHOT_TYPE.IMPORT) return NOT_FOUND;
+		if (snapshot.pinned) return PINNED;
 
 		if (confirm) {
-			await DeleteSnapshot(snapshotID);
+			try {
+				await DeleteSnapshot(snapshotID);
+			} catch (error) {
+				// Pinned or deleted by someone else since the check above
+				const current = await GetGuildSnapshot(interaction.guildId!, args[0]);
+				if (!current) return NOT_FOUND;
+				if ('pinned' in current && current.pinned) return PINNED;
+				throw error;
+			}
 
 			return {
 				embeds: [{

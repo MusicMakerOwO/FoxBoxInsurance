@@ -2,11 +2,12 @@ import {SelectMenuHandler} from "../Typings/HandlerTypes.js";
 import {ButtonInteraction} from "discord.js";
 import { TOS_FEATURES } from "../TOSConstants.js";
 import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
+import { DiscordPermissions } from "../Utils/DiscordConstants.js";
 
 export default {
 	tos_features  : [ TOS_FEATURES.SERVER_SNAPSHOTS ],
 	guild_features: [ GUILD_FEATURES.MANAGE_SNAPSHOTS ],
-	permissions   : [],
+	permissions   : [ DiscordPermissions.Administrator ],
 	response_type : 'update',
 	hidden        : true,
 	customID      : 'snapshot-view',

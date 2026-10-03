@@ -1,5 +1,6 @@
 import {COLOR} from "../../Utils/Constants.js";
-import {ExportSnapshot, GetSnapshot} from "../../CRUD/Snapshots.js";
+import {ExportSnapshot} from "../../CRUD/Snapshots.js";
+import { GetGuildSnapshot, ParseStoredSnapshotID } from "../../Services/SnapshotLookup.js";
 import {SnapshotParsers} from "../../Utils/Snapshots/Imports/Parse.js";
 import {ButtonHandler} from "../../Typings/HandlerTypes.js";
 import {UploadCDN} from "../../Utils/UploadCDN.js";
@@ -16,17 +17,19 @@ export default {
 	customID      : 'snapshot-export',
 	execute       : async function (interaction, client, args) {
 
-		const snapshotID = parseInt(args[0]);
-		if (isNaN(snapshotID) || snapshotID < 1) throw new Error(`Invalid snapshot ID provided: ${args[0]}`);
+		// Imports cannot be downloaded - only stored snapshot ids are accepted
+		const snapshotID = ParseStoredSnapshotID(args[0]);
+		if (snapshotID === null) throw new Error(`Invalid snapshot ID provided: ${args[0]}`);
 
-		const snapshot = await GetSnapshot(snapshotID);
-		if (!snapshot || snapshot.guild_id !== BigInt(interaction.guildId!)) {
+		const snapshot = await GetGuildSnapshot(interaction.guildId!, args[0]);
+		if (!snapshot) {
 			return {
 				embeds: [{
 					color: COLOR.ERROR,
 					title: 'Snapshot Not Found',
 					description: `Snapshot not found or already deleted\nCreate one using \`/snapshot create\``
-				}]
+				}],
+				components: []
 			}
 		}
 

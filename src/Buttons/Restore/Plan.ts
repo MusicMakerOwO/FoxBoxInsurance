@@ -1,7 +1,6 @@
 import { ButtonHandler } from "../../Typings/HandlerTypes.js";
 import { COLOR } from "../../Utils/Constants.js";
-import { GetImportsForGuild } from "../../CRUD/SnapshotImports.js";
-import { GetSnapshot } from "../../CRUD/Snapshots.js";
+import { GetGuildSnapshot } from "../../Services/SnapshotLookup.js";
 import { TOS_FEATURES } from "../../TOSConstants.js";
 import { GUILD_FEATURES } from "../../Typings/DatabaseTypes.js";
 import { DiscordPermissions } from "../../Utils/DiscordConstants.js";
@@ -20,15 +19,15 @@ export default {
 		const [id, maskArg] = args;
 		const mask = parseInt(maskArg) || 0;
 
-		const importedSnapshots = GetImportsForGuild(interaction.guildId!);
-		const snapshotData = importedSnapshots.get(id) ?? await GetSnapshot(parseInt(id));
+		const snapshotData = await GetGuildSnapshot(interaction.guildId!, id);
 		if (!snapshotData) {
 			return {
 				embeds: [{
 					color: COLOR.ERROR,
 					title: 'Snapshot Not Found',
 					description: `Snapshot not found or already deleted\nCreate one using \`/snapshot create\``
-				}]
+				}],
+				components: []
 			}
 		}
 

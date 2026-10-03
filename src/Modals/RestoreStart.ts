@@ -3,8 +3,8 @@ import { COLOR, EMOJI, RESTORE_STATUS, SNAPSHOT_TYPE } from "../Utils/Constants.
 import { TOS_FEATURES } from "../TOSConstants.js";
 import { GUILD_FEATURES } from "../Typings/DatabaseTypes.js";
 import { DiscordPermissions } from "../Utils/DiscordConstants.js";
-import { GetImportsForGuild } from "../CRUD/SnapshotImports.js";
-import { CreateSnapshot, GetSnapshot, SetSnapshotPinStatus } from "../CRUD/Snapshots.js";
+import { GetGuildSnapshot } from "../Services/SnapshotLookup.js";
+import { CreateSnapshot, SetSnapshotPinStatus } from "../CRUD/Snapshots.js";
 import { CreateRestoreRun, FinishRestoreRun, SetRestoreMessage } from "../CRUD/SnapshotRestores.js";
 import { BuildRestorePlan, GetCachedPlan, InvalidateRestorePlans, RestorePlanError } from "../Services/RestorePlans.js";
 import { ClaimRestoreLock, IsRestoreRunning, ReleaseRestoreLock, RunRestore } from "../Services/RestoreRunner.js";
@@ -40,8 +40,7 @@ export default {
 			return Refuse('Restore In Progress', 'This server is already being restored. Wait for that run to finish before starting another.');
 		}
 
-		const importedSnapshots = GetImportsForGuild(guild.id);
-		const snapshotData = importedSnapshots.get(id) ?? await GetSnapshot(parseInt(id));
+		const snapshotData = await GetGuildSnapshot(guild.id, id);
 		if (!snapshotData) {
 			return Refuse('Snapshot Not Found', `Snapshot not found or already deleted\nCreate one using \`/snapshot create\``);
 		}
